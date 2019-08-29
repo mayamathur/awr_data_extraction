@@ -5,9 +5,10 @@
 
 # look for the following in each study:
 #  - our main RR outcome
-#  - SMD
+#  - raw difference in servings
 #  - vegetarian vs not
 #  give all of these the same unique ID so that we know not to include them in same analysis
+
 
 ################################# AMIOT ################################# 
 
@@ -36,7 +37,7 @@ dat %>% group_by(CE) %>%
 
 
 
-##### Fit Own Model #####
+##### Effect Size #1: Main RR #####
 # whether they were above or below (baseline) median 
 #  for total meat consumption at time 3, controlling for 
 # (continuous) meat consumption at baseline
@@ -53,7 +54,22 @@ summary(mod)
 library(sandwich)
 sqrt( diag( vcovHC(mod, type="HC0") ) )
 # here the sandwich SEs are smaller than naive
+# this makes sense since the outcome is common; see this from McNutt paper:
+# "For studies of common outcomes, Poisson regression is likely to
+# compute a confidence interval(s) that is conservative,
+# suggesting less precision than is true. Poisson errors are overestimates of binomial errors
+# when the outcome is common (Poisson errors approximately
+# equal binomial errors when the outcome (disease) is rare)."
 
+
+##### Effect Size #2: No Meat vs. Any Meat #####
+mod = glm( lo.t3 ~ size + CE, 
+           data = dat,
+           family = "poisson" )
+summary(mod)
+
+library(sandwich)
+sqrt( diag( vcovHC(mod, type="HC0") ) )
 
 
 # ##### Sensitivity Analysis: Convert SMD Directly #####
