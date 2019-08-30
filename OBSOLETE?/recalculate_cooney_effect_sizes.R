@@ -1,9 +1,12 @@
 
+# OBSOLETE!!
+
 original.data.dir = "~/Dropbox/Personal computer/Independent studies/2019/AWR (animal welfare review meat consumption)/Literature search/Full texts for review"
 setwd(original.data.dir)
 setwd("Cooney 2016")
 
 library(readxl)
+# don't worry about warnings
 dat = read_xlsx("cleanImpactStudyData.ForAnalysis.xlsx")
 
 

@@ -8,6 +8,10 @@ escalc_add_row = function(authoryear,
                           substudy,
                           effect.measure,
                           desired.direction,
+                          interpretation,
+                          use.rr.analysis,
+                          use.grams.analysis,
+                          use.veg.analysis,
                           ...){
   
   es = as.data.frame( escalc(...) )
@@ -16,10 +20,40 @@ escalc_add_row = function(authoryear,
                        substudy = substudy,
                        desired.direction = desired.direction,
                        effect.measure = effect.measure, # NOT passed to escalc, but used for later conversions
+                       interpretation = interpretation,
+                       use.rr.analysis,
+                       use.grams.analysis,
+                       use.veg.analysis,
                        yi = es$yi,
                        vi = es$vi )
   return(d)
 }
+
+# gets the raw RR 
+# for extracting many point estimates from the bigger articles
+# assumes outcome is called "Y"
+get_rr = function(condition,
+                  condition.var.name = "condition",
+                  control.name = "control",
+                  dat) {
+  
+  #if (condition == "activist") browser()
+  
+  # remove other interventions in case the study was more than 2 arms
+  temp = droplevels( dat[ dat[[condition.var.name]] %in% c(condition, control.name), ] )
+  
+  tab = table( temp[[condition.var.name]], temp$Y )
+  
+  library(metafor)
+  es = escalc( measure = "RR",
+               ai = tab[condition, 2], # X=1, Y=TRUE
+               bi = tab[condition, 1],  # X=1, Y=FALSE
+               ci = tab[control.name, 2], # X=0, Y=TRUE
+               di = tab[control.name, 1] ) # X=0, Y=FALSE
+  
+  return(es)
+}
+
 
 
 ################################ EFFECT-SIZE CONVERSIONS ################################

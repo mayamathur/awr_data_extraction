@@ -1,5 +1,7 @@
 
 
+# Impressions: I think all the top interventions don't make requests and are more informative or indirect
+
 ################################# PREP ################################# 
 
 data.dir = "~/Dropbox/Personal computer/Independent studies/2019/AWR (animal welfare review meat consumption)/Data extraction"
@@ -10,14 +12,27 @@ setwd(code.dir); source("helper.R")
 setwd(data.dir)
 d = read.csv("prepped_data.csv")
 
-# number of point estimates
-nrow(d)
+# should be none
+d$unique[ is.na(d$logRR) & d$use.rr.analysis == 1]
+
+# number of point estimates by analysis
+table(d$use.rr.analysis)
+
+# sanity check
+table(!is.na(d$logRR), d$use.rr.analysis)
 
 # number of studies
 length( unique(d$authoryear) )
 
+# make different datasets for different analyses
+d.veg = d[ d$use.veg.analysis == 1,]
+d.grams = d[ d$use.grams.analysis == 1,]
+d = d[ d$use.rr.analysis == 1,]  # main dataset
 
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+#                                      MAIN ANALYSES            
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
 ################################# OVERALL META-ANALYSIS #################################
 
@@ -33,11 +48,11 @@ library(metafor)
 
 
 ##### Check Normality ######
+# use only main estimates here
 std = (d$logRR - c(meta$b)) / sqrt(c(meta$tau2) + d$varlogRR)
 hist(std, breaks=20)
 shapiro.test(std)
-# not great
-# seems heavy-tailed and maybe right-skewed
+# reasonable
 
 
 ##### Robust Meta-Analysis ######
@@ -59,26 +74,97 @@ mu.hi = meta.rob$reg_table$CI.U
 mu.se = meta.rob$reg_table$SE
 mu.pval = meta.rob$reg_table$prob
 
+exp(mu)
 
+
+
+##### Proportion above RR = 1.1 ######
+# parametric: 100%
+library(MetaUtility)
+# SOMETHING IS WRONG HERE; SHAPIRO PVAL DOESN'T AGREE
+#  PROBABLY HAS TO 
+MetaUtility::prop_stronger( q = log(1.28), 
+               M = mu,
+               t2 = t2,
+               se.M = NA,
+               se.t2 = NA,
+               tail = "above",
+               boot = "never",  # no inference because of clustering
+               dat = ,
+               yi.name = "logRR",
+               vi.name = "varlogRR")  
+
+# nonparametrically using quantiles of ensemble estimates: 59%
+sum( d$ens[ d$es.group == "main"] > log(1.1) ) / length( d$ens[ d$es.group == "main"] )
+
+
+##### Proportion above RR=1.25 ######
+# parametric: 12%
+library(MetaUtility)
+prop_stronger( q = log(1.28), 
+               M = mu,
+               t2 = t2,
+               se.M = NA,
+               se.t2 = NA,
+               tail = "above",
+               dat = d,
+               yi.name = "logRR",
+               vi.name = "varlogRR",
+               boot = "never",
+               R = 500)  
+
+# nonparametrically: 51%
+sum( d$ens[ d$es.group == "main"] > log(1.25) ) / length( d$ens[ d$es.group == "main"] )
+
+
+
+
+################################# CALIBRATED ENSEMBLE ESTIMATES #################################
+
+# which individual interventions appeared most effective?
+d$ens = my_ens( yi = d$logRR, sei = sqrt(d$varlogRR) )
+
+plot( density(exp(d$ens)), main = "Ensemble estimates' KDE" )
+
+
+# 5 studies with best ensemble estimates
+best.ens = d$unique[ order(d$ens, decreasing = TRUE) ][1:5]
+
+# ...vs. 5 with best point estimates
+best.est = d$unique[ order(d$logRR, decreasing = TRUE) ][1:5]
+
+# interesting...only 3/5 best point estimates are among 5 best ensemble estimates!
+best.ens %in% best.est
+
+# correlation between point estimate rank and ensemble rank
+d$logRR.rank = rank(d$logRR)
+d$ens.rank = rank(d$ens)
+cor(d$logRR.rank, d$ens.rank)
 
 ################################# FOREST PLOT #################################
 
+# ~~ fix the fact that error bars go over the edges of forest plot
+
 # relative weight of each study in meta-analysis
-d$rel.wt = 100 * (1/d$varlogRR) / sum(1/d$varlogRR)
+d$rel.wt = NA
+d$rel.wt[d$es.group == "main"] = 100 * (1/d$varlogRR[d$es.group == "main"]) / sum(1/d$varlogRR[d$es.group == "main"] )
 
 
 # lean plotting df
-keepers = c("logRR",
-            "varlogRR",
-            "RR.lo",
-            "RR.hi",
-            "authoryear",
-            "unique",
-            "rel.wt")
-dp = d[ , keepers ]
+# keepers = c("logRR",
+#             "ens",
+#             "varlogRR",
+#             "RR.lo",
+#             "RR.hi",
+#             "authoryear",
+#             "unique",
+#             "rel.wt")
+# dp = d[ , keepers ]
+dp = d[ d$es.group == "main", ]
 
-
-dp = dp[ order(dp$logRR, decreasing = FALSE), ]
+# sort by ensemble estimate
+dp = dp[ order(dp$ens, decreasing = FALSE), ]
+#dp = dp[ order(dp$logRR, decreasing = FALSE), ]
 
 
 # add pooled point estimates as first rows
@@ -87,9 +173,10 @@ library(dplyr)
 dp = add_row( dp,
               .before = 1,
               logRR = meta.rob$b.r,
+              ens = NA,
               varlogRR = meta.rob$reg_table$SE^2,
-              RR.lo = exp( meta.rob$b.r - qnorm(.75) * meta.rob$reg_table$SE ),
-              RR.hi = exp( meta.rob$b.r + qnorm(.75) * meta.rob$reg_table$SE ),
+              RR.lo = exp(mu.lo),
+              RR.hi = exp(mu.hi),
               #X.cat = "pooled",
               #Y.cat = "pooled",
               unique = "POOLED",
@@ -106,17 +193,23 @@ dp$is.pooled = as.factor( c( "Pooled estimate", rep("Individual study", nrow(dp)
 
 
 #colors = c("red", "black", "blue")
-shapes = c(17, 19, 15)
-breaks = seq(0.4, 6.0, .2)
+
+shapes = c(10, 19, 15)
+#breaks = seq(0.4, 6.0, .2)
+
+breaks = c( seq(0.4, 1.3, .1),
+            1.5,
+            seq(1.5, 4, .5),
+            seq(4, 6, 1) )
 
 #breaks = exp( seq( log(0.4), log(6), .2 )
 
 library(ggplot2)
-ggplot( data = dp, aes( x = exp(logRR), 
-                        y = unique,
-                        size = rel.wt,
-                        shape = is.pooled ) ) +
-                        #color = X.intensiveness ) ) +
+base = ggplot( data = dp, aes( x = exp(logRR), 
+                               y = unique,
+                               size = rel.wt,
+                               shape = is.pooled ) ) +
+  #color = X.intensiveness ) ) +
   geom_errorbarh( aes(xmin = RR.lo,
                       xmax = RR.hi ),
                   lwd = .5,
@@ -125,7 +218,14 @@ ggplot( data = dp, aes( x = exp(logRR),
   
   geom_point() +
   
-  xlab( "Estimated relative risk of reduced meat" ) +
+  geom_point( data = dp, aes( x = exp(ens),
+                              y = unique
+  ),
+  size = 3,
+  shape = 4,
+  color = "red") +
+  
+  xlab( "Estimated relative risk of low vs. high meat" ) +
   ylab("") +
   
   geom_vline(xintercept = 1, lty = 2) +
@@ -144,60 +244,122 @@ ggplot( data = dp, aes( x = exp(logRR),
                       trans = "log10") +
   
   theme_bw()
-  
-  #facet_wrap( ~Y.cat)  # to facet by outcome measure type
+
+#facet_wrap( ~Y.cat)  # to facet by outcome measure type
+
+base
 
 
-################################# CALIBRATED ENSEMBLE ESTIMATES #################################
-
-# which individual interventions appeared most effective?
-d$ens = my_ens( yi = d$logRR, sei = sqrt(d$varlogRR) )
-
-plot( density(exp(d$ens)), main = "Ensemble estimates' KDE" )
-
-sort(d$ens)
+##### By Outcome Type #####
 
 
-################################# PHAT ################################# 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+#                                SECONDARY EFFECT SIZE CODINGS          
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
-##### Proportion above RR = 1.1 ######
-# parametric: 94%
-prop_stronger( q = log(1.1), 
-               M = mu,
-               t2 = t2,
-               se.M = NA,
-               se.t2 = NA,
-               tail = "above",
-               dat = d,
-               R = 500)  
-
-# nonparametrically using quantiles of ensemble estimates: 59%
-sum( d$ens > log(1.1) ) / length( d$ens )
-
-##### Proportion above RR=1.5 ######
-# parametric: 12%
-library(MetaUtility)
-prop_stronger( q = log(1.5), 
-               M = mu,
-               t2 = t2,
-               se.M = NA,
-               se.t2 = NA,
-               tail = "above",
-               dat = d,
-               R = 500)  
-
-# nonparametrically: 51%
-sum( d$ens > log(1.5) ) / length( d$ens )
+my_robu( dat = d.veg,
+         # yi.name = "yi",
+         # vi.name = "vi",
+         take.exp = TRUE )
 
 
+my_robu( dat = d.grams,
+         take.exp = FALSE )
 
-# ################################# FOR PASTING INTO WANG'S SPREADSHEET ################################# 
-# 
-# temp = data.frame( unique = d$study, 
-#                    logRR = d$logRR, 
-#                    se = d$logRR.se )
-# 
-# write.csv(temp, "bianchi_data_for_wang_spreadsheet.csv", row.names = FALSE)
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+#                              EXCLUDE BORDERLINE STUDIES            
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+#                              MODERATORS AND STUDY QUALITY            
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+
+
+################################# SUMMARIZE MODERATORS AND QUALITY VARIABLES #################################
+
+
+analysis.vars = c("effect.measure",
+                  "perc.male",
+                  "design",
+                  "published",
+                  "x.has.text",
+                  "x.has.visuals",
+                  "x.pure.animals",
+                  "x.tailored",
+                  "x.min.exposed",
+                  "y.cat",
+                  "y.lag.days"
+)
+
+quality.vars = grepl("qual", names(d))
+
+library(tableone)
+
+
+CreateTableOne(data=d[,analysis.vars], includeNA = TRUE)
+CreateTableOne(data=d[,quality.vars], includeNA = TRUE)
+
+################################# TIME LAG #################################
+
+ggplot( data = dp, aes( x = y.lag.days,
+                        y = exp(ens) ) ) + 
+  geom_point() + 
+  geom_smooth() +
+  xlab("Days elapsed between intervention and outcome") +
+  ylab("True effect estimate (RR)") +
+  geom_hline(yintercept = 1, lty = 2) +
+  theme_bw()
+
+# put exposure in terms of weeks
+d$y.lag.wks = d$y.lag.days/7
+( meta.time = robu( logRR ~ y.lag.wks >= 1, 
+                    data = d, 
+                    studynum = as.factor(authoryear),
+                    var.eff.size = varlogRR,
+                    modelweights = "HIER",
+                    small = TRUE) )
+
+
+# mu = meta.rob$b.r
+# t2 = meta.rob$mod_info$tau.sq
+# mu.lo = meta.rob$reg_table$CI.L
+# mu.hi = meta.rob$reg_table$CI.U
+# mu.se = meta.rob$reg_table$SE
+# mu.pval = meta.rob$reg_table$prob
+
+
+################################# TIME EXPOSED TO INTERVENTION #################################
+
+ggplot( data = dp, aes( x = x.min.exposed,
+                        y = exp(ens) ) ) + 
+  geom_point() + 
+  geom_smooth() +
+  xlab("Days elapsed between intervention and outcome") +
+  ylab("True effect estimate (RR)") +
+  geom_hline(yintercept = 1, lty = 2)
+theme_bw()
+
+
+( meta.intens = robu( logRR ~ x.min.exposed, 
+                      data = d, 
+                      studynum = as.factor(authoryear),
+                      var.eff.size = varlogRR,
+                      modelweights = "HIER",
+                      small = TRUE) )
+
+
+# mu = meta.rob$b.r
+# t2 = meta.rob$mod_info$tau.sq
+# mu.lo = meta.rob$reg_table$CI.L
+# mu.hi = meta.rob$reg_table$CI.U
+# mu.se = meta.rob$reg_table$SE
+# mu.pval = meta.rob$reg_table$prob
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+#                              OTHER META-ANALYSIS MEASURES            
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+
+
 
 
 ################################# PUBLICATION BIAS ################################# 
@@ -226,8 +388,7 @@ table(d$affirm)
 # mu.hi = meta.rob$reg_table$CI.U
 # mu.se = meta.rob$reg_table$SE
 
-# cannot really use selection models given substantial clustering
-# and non-normality
+# s-values to reduce to null
 res = svalue( yi = d$logRR,
               vi = d$varlogRR,
               q = log(1), 
@@ -235,69 +396,35 @@ res = svalue( yi = d$logRR,
               model = "robust" )
 
 res$svals
-# quite robust to publication bias
+
+
+# s-values to reduce effect size to RR=1.1
+res = svalue( yi = d$logRR,
+              vi = d$varlogRR,
+              q = log(1.1), 
+              clustervar = d$authoryear,
+              model = "robust" )
+
+res$svals
+
+
+
+##### Selection Model #####
+# be careful about inference
+# ~~ check ICC within studies
+
+library(weightr)
+
+# this line breaks for "data_25360660.csv"
+( m1 = weightfunct( effect = d$logRR,
+                    v = d$varlogRR,
+                    steps = c(0.025, 1),
+                    table = TRUE
+) )
+# actually makes the estimate larger! 
 
 
 
 # ~~~~ below not modified from Bianchi work
 
-################################# MODERATION BY TYPE OF APPEAL #################################
-
-##### Regress on X type ######
-
-# reference level: animals
-levels(d$X.cat)
-
-# sample size too small to say much 
-# all CIs quite wide
-library(robumeta)
-( meta.rob.Xcat = robu( logRR ~ X.cat, 
-                        data = d, 
-                        studynum = as.factor(group.with),
-                        var.eff.size = logRR.se^2,
-                        modelweights = "HIER",
-                        small = TRUE) )
-
-##### Just Animals ######
-library(robumeta)
-( meta.rob.animals = robu( logRR ~ 1, 
-                           data = d[d$X.cat == "animals",], 
-                           studynum = as.factor(group.with),
-                           var.eff.size = logRR.se^2,
-                           modelweights = "HIER",
-                           small = TRUE) )
-# again, very imprecise estimates 
-
-################################# MODERATION BY OUTCOME TYPE #################################
-
-table(d$Y.cat)
-( meta.rob.Ycat = robu( logRR ~ Y.cat, 
-                        data = d, 
-                        studynum = as.factor(group.with),
-                        var.eff.size = logRR.se^2,
-                        modelweights = "HIER",
-                        small = TRUE) )
-# again, little precision here
-
-
-################################# MODERATION BY INTENSIVENESS #################################
-
-table(d$X.intensiveness)
-
-( meta.rob.Xintens = robu( logRR ~ X.intensiveness, 
-                           data = d, 
-                           studynum = as.factor(group.with),
-                           var.eff.size = logRR.se^2,
-                           modelweights = "HIER",
-                           small = TRUE) )
-# seems like intense ones may be more effective, but low precision
-
-################################# MODERATION BY TIME LAG #################################
-
-# plot time lag vs. ensemble estimate
-ggplot( data = d, 
-        aes( x = Y.lag.days,
-             y = ens ) ) +
-  geom_point() +
-  theme_bw()
 
