@@ -1,6 +1,170 @@
 
+################################ FOR ANALYSIS ################################
+
+# analyze a subset or a moderator
+# n.tests: for Bonferroni
+analyze_one_meta = function( dat,
+                             yi.name,
+                             vi.name,
+                             meta.name,
+                             moderator = "",
+                             ql,
+                             take.exp,
+                             boot.reps = 2000,
+                             n.tests=1,
+                             digits = 2) {
+  
+  dat$yi = dat[[yi.name]]
+  dat$vyi = dat[[vi.name]]
+  
+  ##### Regular Meta-Analysis (Possibly of Moderator) #####
+  if ( moderator == "" ) {
+    
+    library(robumeta)
+    ( meta = robu( logRR ~ 1, 
+                       data = dat, 
+                       studynum = as.factor(authoryear),
+                       var.eff.size = varlogRR,
+                       modelweights = "HIER",
+                       small = TRUE) )
+    
+    est = meta$b.r
+    t2 = meta$mod_info$tau.sq
+    mu.lo = meta$reg_table$CI.L
+    mu.hi = meta$reg_table$CI.U
+    mu.se = meta$reg_table$SE
+    mu.pval = meta$reg_table$prob
+    
+ 
+    # Phat from calibrated estimates
+    Phat.l = lapply( ql,
+                     FUN = function(q) {
+                       
+                       ens = my_ens( yi = dat$yi, 
+                                     sei = sqrt(dat$vyi) )
+                       
+                       # set tail based on sign of q
+                       if (q >= 0) tail = "above"
+                       else tail = "below"
+                       if ( tail == "above" ) Phat.NP.ens = sum(ens > c(q)) / length(ens)
+                       if ( tail == "below" ) Phat.NP.ens = sum(ens < c(q)) / length(ens)
+                       
+                       library(boot)
+                       Note = NA
+                       tryCatch({
+                         boot.res.ens = boot( data = dat, 
+                                              parallel = "multicore",
+                                              R = boot.reps, 
+                                              statistic = function(original, indices) {
+                                                
+                                                b = original[indices,]
+                                                
+                                                ens.b = my_ens( yi = b$yi, 
+                                                                sei = sqrt(b$vyi) )
+                                                if ( tail == "above" ) return( sum(ens.b > c(q)) / length(ens.b) )
+                                                if ( tail == "below" ) return( sum(ens.b < c(q)) / length(ens.b) )
+                                              }
+                                            )
+                         
+                         bootCIs.ens = boot.ci(boot.res.ens, type="bca")
+                         boot.lo.ens = bootCIs.ens$bca[4]
+                         boot.hi.ens = bootCIs.ens$bca[5]
+                         
+                       }, error = function(err){
+                         boot.lo.ens <<- NA
+                         boot.hi.ens <<- NA
+                         Note <<- err$message
+                       } )  # end tryCatch
+                       
+                       return( data.frame( Est = Phat.NP.ens,
+                                           lo = boot.lo.ens,
+                                           hi = boot.hi.ens,
+                                           boot.note = Note ) )
+                     } )  # end lapply
+    
+
+    Phat.df = do.call( rbind, 
+                       Phat.l )
+    Phat.df$string = paste( round( 100*Phat.df$Est,
+                                         digits = 0 ),
+                            format_CI( 100*Phat.df$lo, 
+                                       100*Phat.df$hi,
+                                       digits = 0 ),
+                            sep = " " )
+    
+    levels = ""
+  }
+  
+  ##### Meta-Regression #####
+  if (moderator != "") {
+    library(robumeta)
+    ( meta = robu( logRR ~ d[[moderator]], 
+                   data = d, 
+                   studynum = as.factor(authoryear),
+                   var.eff.size = varlogRR,
+                   modelweights = "HIER",
+                   small = TRUE) )
+    
+    levels = levels( as.factor(d[[moderator]]) )
+    est = meta$b.r
+    t2 = meta$mod_info$tau.sq
+    mu.lo = meta$reg_table$CI.L
+    mu.hi = meta$reg_table$CI.U
+    mu.se = meta$reg_table$SE
+    mu.pval = meta$reg_table$prob
+  }
+
+  
+  ##### Put Results in Dataframe #####
+  if (take.exp == TRUE) {
+    est = exp(est)
+    lo = exp(mu.lo)
+    hi = exp(mu.hi)
+  }
+  
+  est.string = paste( round( est, digits ),
+                      format_CI( lo, 
+                                 hi,
+                                 digits),
+                      sep = " " )
+  
+  tau.string = round( sqrt(t2), digits)
+  
+  
+  new.row = data.frame( Meta = meta.name,
+                        Moderator = moderator,
+                        Level = levels,
+                        k = nrow(dat),
+                        Est = est.string,
+                        Pval = format_stat(mu.pval),
+                        Pval.Bonf = format_stat( pmin(mu.pval*n.tests, 1) ),
+                        Tau = tau.string
+                        )
+  
+  # tail is now just for string purposes
+  if ( moderator == "" ) {
+    tail = rep("above", length(unlist(ql)))
+    tail[unlist(ql) < 0] = "below"
+    if (take.exp == TRUE) q.vec = exp(unlist(ql)) else q.vec = unlist(ql)
+    Phat.names = paste( "Percent ", tail, " ", q.vec, sep = "" )
+   # new.row[, Phat.names ] = NA
+    
+    new.row[ , Phat.names ] = Phat.df$string
+  }
+
+  
+  # this should be a global variable
+  if ( !exists("resE") ){
+    resE <<- new.row
+  } else {
+    library(plyr)
+    resE <<- rbind.fill(resE, new.row)
+    detach("package:plyr", unload=TRUE)
+  }
+} 
 
 
+################################ MISCELLANEOUS ################################
 
 # arguments same as those of escalc, except for "unique"
 # df called "d" assumed to be global var
@@ -55,6 +219,21 @@ get_rr = function(condition,
 }
 
 
+
+# for strings entered as "14-28", return the mean of the two values
+hyphen_mean = Vectorize( function(string) {
+
+  # if string doesn't contain hyphen, leave alone
+  if ( grepl("-", string) == FALSE ) return(as.numeric(string))
+  
+  library(stringr)
+  lo.num = as.numeric( str_split(string, "-")[[1]][1] )
+  hi.num = as.numeric( str_split(string, "-")[[1]][2] )
+  return( unname( (lo.num+hi.num)/2 ) )
+  
+}, vectorize.args = "string" )
+
+fake = hyphen_mean(c("14-28", "28"))
 
 ################################ EFFECT-SIZE CONVERSIONS ################################
 # Borenstein conversion

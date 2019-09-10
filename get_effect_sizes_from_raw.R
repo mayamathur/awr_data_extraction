@@ -443,18 +443,19 @@ setwd("Reese 2015")
 
 library(readxl)
 
-# study 3 data
-dat3 = read_xlsx("Animal_Advocacy_Messaging_Data.xlsx", sheet = 3)
-
-# study 4 data
-dat4 = read_xlsx("Animal_Advocacy_Messaging_Data.xlsx", sheet = 4)
-
-table(dat3$condition)
-table(dat4$condition)
 
 # read in Studies 3 and 4 data
 dats = list( read_xlsx("Animal_Advocacy_Messaging_Data.xlsx", sheet = 3),
              read_xlsx("Animal_Advocacy_Messaging_Data.xlsx", sheet = 4) )
+
+# look at conditions
+table(dats[[1]]$condition)
+table(dats[[2]]$condition)
+
+# remove non-animal-welfare conditions
+dats[[1]] = dats[[1]] %>% filter( !condition %in% c("environment", 
+                                                    "health",
+                                                    "news"))
 
 
 # effect sizes from raw data

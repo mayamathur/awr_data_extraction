@@ -436,24 +436,7 @@ escalc_add_row( authoryear = "Caldwell 2017",
                 ci = round(.216 * nc),  # control intending to reduce
                 di = round( (1-0.216) * nc) )  # control not intending
 
-
-# lifestyle videos
-escalc_add_row( authoryear = "Caldwell 2017",
-                substudy = "lifestyle videos",
-                desired.direction = 1,
-                effect.measure = "log-rr",
-                interpretation = "Reduce vs. don't",
-                use.rr.analysis = 1,
-                use.grams.analysis = 0,
-                use.veg.analysis = 0,
-                measure = "RR",
-                
-                ai = round(.239 * 524), # Tx intending to reduce meat
-                bi = round( (1-.239) * 524),  # Tx not intending
-                ci = round(.216 * nc),  # control intending to reduce
-                di = round( (1-.216) * nc) )  # control not intending
-
-
+# lifestyle videos aren't animal welfare
 
 
 
@@ -703,7 +686,7 @@ d = dplyr::add_row(.data = d,
 # "how" leafelet N: 78 (page 23)
 
 # number of days subject ate meat over past week
-escalc_add_row( authoryear = "Hennessey 2016",
+escalc_add_row( authoryear = "Hennessy 2016",
                 substudy = 'why leaflet',
                 desired.direction = -1,
                 effect.measure = "smd",
@@ -722,7 +705,7 @@ escalc_add_row( authoryear = "Hennessey 2016",
                 n2i = 170 )
 
 
-escalc_add_row( authoryear = "Hennessey 2016",
+escalc_add_row( authoryear = "Hennessy 2016",
                 substudy = 'how leaflet',
                 desired.direction = -1,
                 effect.measure = "smd",
@@ -746,7 +729,7 @@ escalc_add_row( authoryear = "Hennessey 2016",
 # 10 subjects in control group went veg and 1 in each treatment arm
 # alternatively, we could have used "MeatYesterday" (did subject eat meat yesterday?), 
 #  but we chose the longer 1-week follow-up per our decision hierarchy
-escalc_add_row( authoryear = "Hennessey 2016",
+escalc_add_row( authoryear = "Hennessy 2016",
                 substudy = 'why leaflet',
                 desired.direction = -1,
                 effect.measure = "log-rr",
@@ -762,7 +745,7 @@ escalc_add_row( authoryear = "Hennessey 2016",
                 di = 170 - 10  ) # control who did not go veg
 
 # same stats as above (not a typo)
-escalc_add_row( authoryear = "Hennessey 2016",
+escalc_add_row( authoryear = "Hennessy 2016",
                 substudy = 'how leaflet',
                 desired.direction = -1,
                 effect.measure = "log-rr",
@@ -1031,6 +1014,306 @@ escalc_add_row( authoryear = "Spanikova 2015",
                 di = round( (1-p.cntrl) * n.group) )  # control not choosing veg
 
 
+##### Norris (Leafleting and Booklet Effectiveness) #####
+
+# measure the purple bars in the saved figure (post vs. pre ORs in each group)
+# start at 1, the lowest point on x-axis, and add the proportion of the 
+#  x-axis occupied by the bar
+OR.cntrl = (245/167) * 1.5
+OR.compass = 1.5  # almost exactly on a gridline = 167 px
+OR.species = (272 / 167) * 1.5
+
+# CI half-width
+OR.unit = 112  # px
+hw.cntrl = (147/OR.unit)
+hw.compass = (88/OR.unit)
+hw.species = (178/OR.unit)
+
+# sanity check: calculate lower CI limits - looks good
+OR.cntrl - hw.cntrl
+OR.compass - hw.compass
+OR.species - hw.species
+
+library(MetaUtility)
+MetaUtility::scrape_meta(type = "RR",
+                         est = )
+
+# ~~ bm
+
+# d = dplyr::add_row(.data = d,
+#                    authoryear = "Palomo-Velez 2018",
+#                    substudy = "Study 3",
+#                    desired.direction = 1,
+#                    interpretation = "Low vs. high meat buying likelihood",
+#                    use.rr.analysis = 1,
+#                    use.grams.analysis = 0,
+#                    use.veg.analysis = 0,
+#                    effect.measure = "log-rr",
+#                    yi = 0.2492,
+#                    vi = 0.0188 )
+
+
+
+##### Norris 2016 #####
+
+# this one gives the baseline probability (albeit combined for all treatment arms),
+#  so can work with the ORs
+p0 = .028
+
+# odds ratios scraped from purple bars of plot
+OR.unit = 118  # px
+# booklet order as in plot (Simple, Even, Species, Your Choice)
+OR = c(162/OR.unit, 181/OR.unit, 232/OR.unit, 134/OR.unit)
+n0 = c(628, 634, 601, 592)
+n1 = c(404, 386, 393, 356)
+
+substudy = c('"A Simple Way to Help"', 
+             '"Even If You Like Meat"',
+             '"Speciesism"',
+             '"Your Choice"')
+
+# ~~ this analysis isn't ideal because we're treating baseline and F/U as independent instead of
+#  paired, so SEs will be conservative assuming positive correlation between baseline and F/U
+#  behavior
+for (i in 1:4) {
+  # calculate probability of avoidance at F/U from OR and p0
+  # from Wolfram: solve (P/(1-P)) / (p/(1-p)) = \delta for P
+  p1 = (OR[i] * p0) / ( (OR[i] - 1) * p0 + 1 )
+  
+  escalc_add_row( authoryear = "Norris 2016",
+                  substudy = substudy[i],
+                  desired.direction = 1,
+                  effect.measure = "log-rr",
+                  interpretation = "Eating any animal product less than vs. more than once weekly",
+                  use.rr.analysis = 1,
+                  use.grams.analysis = 0,
+                  use.veg.analysis = 0,
+                  measure = "RR",
+                  
+                  ai = round(p1 * n1[i]), # F/U avoiding animal products
+                  bi = round( (1-p1) * n1[i]),  # F/U not avoiding animal products
+                  ci = round(p0 * n0[i]),  # baseline avoiding animal products
+                  di = round( (1-p0) * n0[i]) )  # baseline not intending
+}
+
+##### Byrd-Bredbenner 2010 #####
+
+# they measured pre-post changes, but change scores aren't reported, so 
+#  just using means at F/U
+escalc_add_row( authoryear = "Byrd-Bredbenner 2010",
+                substudy = NA,
+                desired.direction = 1,
+                effect.measure = "smd",
+                interpretation = "Intention to go vegetarian SMD",
+                use.rr.analysis = 1,
+                use.grams.analysis = 0,
+                use.veg.analysis = 0,
+                measure = "SMD",
+                
+                m1i = 1.94, # Table 1
+                sd1i = 0.09 * sqrt(34),  # convert SE to SD
+                n1i = 34,
+                
+                m2i = 1.66,
+                sd2i = 0.13 * sqrt(37),
+                n2i = 37 )
+
+
+##### Moleman 2018 #####
+
+# pre-intervention: 4% vegans
+# post-intervention: 20% vegans
+# hence the absurdly large point estimate
+
+# because this is self-description as vegan (not based on consumption), not using in 
+#  the vegetarian secondary analysis
+escalc_add_row( authoryear = "Moleman 2018",
+                substudy = NA,
+                desired.direction = 1,
+                effect.measure = "log-rr",
+                interpretation = "Self-describing as vegan after vs. before challenge",
+                use.rr.analysis = 1,
+                use.grams.analysis = 0,
+                use.veg.analysis = 0,
+                measure = "RR",
+                
+                ai = 697, # pre-intervention vegans
+                bi = 4727+7502+2573,  # pre-intervention non-vegans
+                ci = 799+1155+530+697,  # post- vegans
+                di = 1239+2473+4689+217+1658+2043 ) # post-non-vegans
+
+
+##### Novotna 2019 #####
+# extract post-intervention means and CI limits 
+#  in WebPlotDigitizer
+mn.cntrl = 2.96
+hw.cntrl = (mn.cntrl-2.77)
+n.cntrl = 34-8  # pg 26
+sd.cntrl = ( hw.cntrl / qt(.975, df = n.cntrl-1) ) * sqrt(n.cntrl)
+# sanity check
+#qt(.975, df = n.cntrl-1) * (sd.cntrl / sqrt(n.cntrl)); hw.cntrl
+
+mn.doc = 2.71
+hw.doc = (mn.doc-2.54)
+n.doc = 33-3  # pg 26
+sd.doc = ( hw.doc / qt(.975, df = n.doc-1) ) * sqrt(n.doc)
+
+mn.babe = 2.88
+hw.babe = (mn.babe-2.71)
+n.babe = 32-1  # pg 26
+sd.babe = ( hw.babe / qt(.975, df = n.babe-1) ) * sqrt(n.babe)
+
+
+escalc_add_row( authoryear = "Novotna 2019",
+                substudy = "Documentary",
+                desired.direction = 1,
+                effect.measure = "smd",
+                interpretation = "Meat and dairy consumption SMD",
+                use.rr.analysis = 1,
+                use.grams.analysis = 0,
+                use.veg.analysis = 0,
+                measure = "SMD",
+                
+                m1i = mn.doc, # Figure 12
+                sd1i = sd.doc,  
+                n1i = n.doc,
+                
+                m2i = mn.babe, 
+                sd2i = sd.babe,
+                n2i = n.babe )
+
+escalc_add_row( authoryear = "Novotna 2019",
+                substudy = '"Babe" movie',
+                desired.direction = 1,
+                effect.measure = "smd",
+                interpretation = "Meat and dairy consumption SMD",
+                use.rr.analysis = 1,
+                use.grams.analysis = 0,
+                use.veg.analysis = 0,
+                measure = "SMD",
+                
+                m1i = mn.babe, # Figure 13
+                sd1i = sd.babe,  
+                n1i = n.babe,
+                
+                m2i = mn.cntrl,
+                sd2i = sd.cntrl,
+                n2i = n.cntrl)
+
+
+##### Vegan Outreach 2019 (#3828; "10 Weeks to Vegan") #####
+
+escalc_add_row( authoryear = "Vegan Outreach 2019",
+                substudy = NA,
+                desired.direction = 1,
+                effect.measure = "log-rr",
+                interpretation = "Avoiding all animal products over 1 month after vs. before challenge",
+                use.rr.analysis = 1,
+                use.grams.analysis = 0,
+                use.veg.analysis = 0,
+                measure = "RR",
+                
+                ai = 43, # pre-intervention vegans
+                bi = 190+76,  # pre-intervention non-vegans
+                ci = 77,  # post- vegans
+                di = 140+92+77 ) # post-non-vegans
+
+escalc_add_row( authoryear = "Vegan Outreach 2019",
+                substudy = NA,
+                desired.direction = 1,
+                effect.measure = "log-rr",
+                interpretation = "Avoiding meat over 1 month after vs. before challenge",
+                use.rr.analysis = 0,
+                use.grams.analysis = 0,
+                use.veg.analysis = 1,
+                measure = "RR",
+                
+                ai = 43 + 76, # pre-intervention vegans + vegetarians
+                bi = 190,  # pre-intervention meat-eaters
+                ci = 77 + 92,  # post- vegans + vegetarians
+                di = 140 ) # post- meat-eaters
+
+##### Tian (2016) #####
+
+# Study 1, Chinese (Table 1, abbatoir condition)
+escalc_add_row( authoryear = "Tian 2016",
+                substudy = "Study 1, Chinese",
+                desired.direction = 1,
+                effect.measure = "smd",
+                interpretation = "Willingness to eat meat SMD",
+                use.rr.analysis = 1,
+                use.grams.analysis = 0,
+                use.veg.analysis = 0,
+                measure = "SMD",
+                
+                m1i = 3.28, 
+                sd1i = 1.46,
+                n1i = round(277/2),
+                
+                m2i = 3.68,
+                sd2i = 1.28,
+                n2i = round(277/2) )
+
+
+# Study 1, French (Table 1, abbatoir condition)
+escalc_add_row( authoryear = "Tian 2016",
+                substudy = "Study 1, French",
+                desired.direction = 1,
+                effect.measure = "smd",
+                interpretation = "Willingness to eat meat SMD",
+                use.rr.analysis = 1,
+                use.grams.analysis = 0,
+                use.veg.analysis = 0,
+                measure = "SMD",
+                
+                m1i = 3.55, 
+                sd1i = 1.30,
+                n1i = round(243/2),
+                
+                m2i = 3.78,
+                sd2i = 1.37,
+                n2i = round(243/2) )
+
+# Study 2, Chinese (Table 3, abbatoir condition)
+escalc_add_row( authoryear = "Tian 2016",
+                substudy = "Study 2, Chinese",
+                desired.direction = -1,
+                effect.measure = "smd",
+                interpretation = "Willingness to eat meat SMD",
+                use.rr.analysis = 1,
+                use.grams.analysis = 0,
+                use.veg.analysis = 0,
+                measure = "SMD",
+                
+                m1i = 3.61, 
+                sd1i = 1.29,
+                n1i = round(217/2),
+                
+                m2i = 3.53,
+                sd2i = 1.36,
+                n2i = round(217/2) )
+
+# Study 2, French (Table 3, abbatoir condition)
+escalc_add_row( authoryear = "Tian 2016",
+                substudy = "Study 2, French",
+                desired.direction = -1,
+                effect.measure = "smd",
+                interpretation = "Willingness to eat meat SMD",
+                use.rr.analysis = 1,
+                use.grams.analysis = 0,
+                use.veg.analysis = 0,
+                measure = "SMD",
+                
+                m1i = 3.84, 
+                sd1i = 1.30,
+                n1i = round(301/2),
+                
+                m2i = 3.82,
+                sd2i = 1.24,
+                n2i = round(301/2) )
+
+setwd(data.dir)
+write.csv(d, "data_prepped_stage1.csv", row.names = FALSE)
 
 
 ############################### MERGE IN QUALITATIVE DATA ############################### 
@@ -1043,6 +1326,10 @@ table(d$authoryear)
 setwd(data.dir)
 library(readxl)
 d2 = read_xlsx("Extracted qualitative data.xlsx")
+
+# for some reason, reads in years in an absurd format (e.g., "2018.0" as a string)
+library(tidyverse)
+d2$Year = str_remove(d2$Year, "[.]0")
 
 ##### unique merger variable
 d$unique = NA
@@ -1063,23 +1350,31 @@ d2$unique[ !is.na(d2$`Substudy #`) ] = paste( d2$`First author last name`[ !is.n
                                               sep = " ")
 d2$unique
 
-# ~~~ HENNESSEY GETS LOST IN MERGE, EVEN WITH ALL.X = TRUE
+# look for IDs from effect sizes that aren't in the qualitative data spreadsheet (should be none)
+d$unique[ !d$unique %in% d2$unique ]
+
+# studies in qualitative data that aren't in entered effect sizes
+# can occur if we're awaiting author help
+d2$unique[ !d2$unique %in% d$unique ]
+
 # merge them
-# d = merge( d,
-#            d2,
-#            all.x,  # DOESN'T WORK -- STILL LOSES HENNESSEY! 
-#            by.x = "unique",
-#            by.y = "unique" )
+d = merge( d,
+           d2,
+           all.x = TRUE,
+           by.x = "unique",
+           by.y = "unique" )
 
 # minimal sanity check for absurd values
-sort(d$yi)
+round( sort(d$yi), 2 )
 sort(sqrt(d$vi))
-sort(d$yi/sqrt(d$vi))
+round( sort(d$yi/sqrt(d$vi)), 2 )  # z-scores
 
 # synchronize directions so that positive is always good
 d$yi[ sign(d$yi) != sign(d$desired.direction) ] = -d$yi[ sign(d$yi) != sign(d$desired.direction) ]
 
-
+# flag a single extreme outlier for exclusion in main analyses
+d$exclude.main = 0
+d$exclude.main[ d$authoryear == "Moleman 2018" ] = 1
 
 ############################### CONVERT EFFECT SIZES - to RRs ###############################
 
@@ -1116,6 +1411,7 @@ d$varlogRR[ d$use.rr.analysis == 0 ] = NA
 d$RR.lo[ d$use.rr.analysis == 0 ] = NA
 d$RR.hi[ d$use.rr.analysis == 0 ] = NA
 
+
 ############################### MAKE NEW VARIABLES AND RENAME THE EXISTING ONES ############################### 
 
 d$published = !is.na(d$`Journal/conference (if peer-reviewed)`)
@@ -1127,12 +1423,15 @@ d = d %>%
     journal = `Journal/conference (if peer-reviewed)`,
     other.source = `Other source (if not peer-reviewed)`,
     borderline = `Borderline inclusion`,
+    mm.fave = `Among MM's favorites methodologically, exclusive of small sample size`,
     perc.male = `Percent male`,
     design = Design,
     n.paper = `N (total analyzed sample size in paper, combining all substudies included here)`, 
     x.has.text = `Intervention has text`,
+    x.suffer = `Intervention has specific description or images of animal suffering`,
     x.has.visuals = `Intervention has visuals`,
     x.pure.animals = `Intervention is purely animal welfare`,
+    x.suffer = `Intervention has specific description or images of animal suffering`,
     x.pushy = `Intervention pushiness (reduce, go vegan, go vegetarian, no request, other)`,
     x.tailored = `Intervention personally tailored`,
     x.min.exposed = `Total time exposed to intervention (minutes)`,
@@ -1143,7 +1442,7 @@ d = d %>%
     qual.missing = `Missing data (%)`,
     #qual.sdb = `Differemtial SDB and demand characteristics (good, medium, bad)`,
     #qual.self.select = `Avoidance of self-selection (e.g., by subjects already interested in animal welfare)`,
-    qual.stats = `Statistics quality as relevant for our extracted data (good, medium, bad)`,
+    #qual.stats = `Statistics quality as relevant for our extracted data (good, medium, bad)`,
     qual.prereg = Preregistered,
     qual.public.data = `Public data`,
     qual.public.code = `Public code`
@@ -1152,6 +1451,44 @@ d = d %>%
 # get rid of columns with capital letters (not used in analysis)
 has.caps = tolower(names(d)) != names(d)
 d = d[ , has.caps == FALSE | names(d) %in% c("logRR", "varlogRR", "RR.lo", "RR.hi") ]
+
+
+############################### RECODE SOME VARS ############################### 
+
+# for hyphenated ranges, take the mean
+d$y.lag.days = unname(hyphen_mean(d$y.lag.days))
+
+make.numeric = c("perc.male",
+                 "x.min.exposed",
+                 "qual.missing")
+
+d = d %>% 
+  mutate_at( make.numeric, as.numeric )
+
+# temp: look for coding issues
+analysis.vars = c("effect.measure",
+                  "perc.male",
+                  "design",
+                  "published",
+                  "x.has.text",
+                  "x.has.visuals",
+                  "x.pure.animals",
+                  "x.suffer",
+                  "x.tailored",
+                  "x.min.exposed",
+                  "y.cat",
+                  "y.lag.days" )
+
+quality.vars = grepl("qual", names(d))
+CreateTableOne(data=d[,analysis.vars])
+CreateTableOne(data=d[,quality.vars])
+
+
+d$y.lag.wks = d$y.lag.days/7
+d$y.long.lag = d$y.lag.days >= 7
+d$rct = grepl("RCT", d$design)
+d$reproducible = (d$qual.prereg == "Yes") & (d$qual.public.data == "Yes")
+
 
 ############################### WRITE PREPPED DATA ############################### 
 

@@ -21,13 +21,19 @@ table(d$use.rr.analysis)
 # sanity check
 table(!is.na(d$logRR), d$use.rr.analysis)
 
-# number of studies
-length( unique(d$authoryear) )
-
 # make different datasets for different analyses
 d.veg = d[ d$use.veg.analysis == 1,]
 d.grams = d[ d$use.grams.analysis == 1,]
-d = d[ d$use.rr.analysis == 1,]  # main dataset
+d = d[ d$use.rr.analysis == 1 & d$exclude.main == 0,]  # main dataset
+
+# number of studies in primary analysis
+length(unique(d$authoryear))
+# number of point estimates
+nrow(d)
+
+# ICC of point estimates within paper
+library(ICC)
+ICCest(authoryear, logRR, d)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
@@ -75,15 +81,15 @@ mu.se = meta.rob$reg_table$SE
 mu.pval = meta.rob$reg_table$prob
 
 exp(mu)
-
+exp(mu.lo)
+exp(mu.hi)
 
 
 ##### Proportion above RR = 1.1 ######
 # parametric: 100%
 library(MetaUtility)
-# SOMETHING IS WRONG HERE; SHAPIRO PVAL DOESN'T AGREE
-#  PROBABLY HAS TO 
-MetaUtility::prop_stronger( q = log(1.28), 
+q = 1.2
+MetaUtility::prop_stronger( q = log(q), 
                M = mu,
                t2 = t2,
                se.M = NA,
@@ -94,44 +100,44 @@ MetaUtility::prop_stronger( q = log(1.28),
                yi.name = "logRR",
                vi.name = "varlogRR")  
 
-# nonparametrically using quantiles of ensemble estimates: 59%
-sum( d$ens[ d$es.group == "main"] > log(1.1) ) / length( d$ens[ d$es.group == "main"] )
-
-
-##### Proportion above RR=1.25 ######
-# parametric: 12%
-library(MetaUtility)
-prop_stronger( q = log(1.28), 
-               M = mu,
-               t2 = t2,
-               se.M = NA,
-               se.t2 = NA,
-               tail = "above",
-               dat = d,
-               yi.name = "logRR",
-               vi.name = "varlogRR",
-               boot = "never",
-               R = 500)  
-
-# nonparametrically: 51%
-sum( d$ens[ d$es.group == "main"] > log(1.25) ) / length( d$ens[ d$es.group == "main"] )
-
+# nonparametrically using quantiles of ensemble estimates
+d$ens = my_ens(yi = d$logRR, 
+               sei = sqrt(d$varlogRR))
+sum( d$ens > log(q) ) / length( d$ens )
 
 
 
 ################################# CALIBRATED ENSEMBLE ESTIMATES #################################
 
-# which individual interventions appeared most effective?
-d$ens = my_ens( yi = d$logRR, sei = sqrt(d$varlogRR) )
+p = ggplot( data = d,
+            aes(x = exp(d$ens))) +
+  
+  geom_vline(xintercept = 1,
+             color = "gray") +
+  
+  # pooled point estimate
+  geom_vline(xintercept = exp(mu),
+             color = "red",
+             lty = 2) +
+  
+  geom_density( ) +
+  
+  xlab("Relative risk") +
+  ylab("Kernel density estimate") +
+  
+  scale_x_continuous( limits = c(0.8, 1.8),
+                      breaks = seq(0.8, 1.8, .2) ) +
+  
+  theme_classic()
 
-plot( density(exp(d$ens)), main = "Ensemble estimates' KDE" )
+plot(p)
 
 
 # 5 studies with best ensemble estimates
-best.ens = d$unique[ order(d$ens, decreasing = TRUE) ][1:5]
+( best.ens = d$unique[ order(d$ens, decreasing = TRUE) ][1:8] )
 
 # ...vs. 5 with best point estimates
-best.est = d$unique[ order(d$logRR, decreasing = TRUE) ][1:5]
+( best.est = d$unique[ order(d$logRR, decreasing = TRUE) ][1:8] )
 
 # interesting...only 3/5 best point estimates are among 5 best ensemble estimates!
 best.ens %in% best.est
@@ -147,7 +153,7 @@ cor(d$logRR.rank, d$ens.rank)
 
 # relative weight of each study in meta-analysis
 d$rel.wt = NA
-d$rel.wt[d$es.group == "main"] = 100 * (1/d$varlogRR[d$es.group == "main"]) / sum(1/d$varlogRR[d$es.group == "main"] )
+d$rel.wt = 100 * (1/d$varlogRR) / sum(1/d$varlogRR )
 
 
 # lean plotting df
@@ -160,7 +166,7 @@ d$rel.wt[d$es.group == "main"] = 100 * (1/d$varlogRR[d$es.group == "main"]) / su
 #             "unique",
 #             "rel.wt")
 # dp = d[ , keepers ]
-dp = d[ d$es.group == "main", ]
+dp = d
 
 # sort by ensemble estimate
 dp = dp[ order(dp$ens, decreasing = FALSE), ]
@@ -209,14 +215,13 @@ base = ggplot( data = dp, aes( x = exp(logRR),
                                y = unique,
                                size = rel.wt,
                                shape = is.pooled ) ) +
+  geom_point() +
   #color = X.intensiveness ) ) +
   geom_errorbarh( aes(xmin = RR.lo,
                       xmax = RR.hi ),
                   lwd = .5,
                   height = .001,
                   color = "black") +
-  
-  geom_point() +
   
   geom_point( data = dp, aes( x = exp(ens),
                               y = unique
@@ -249,10 +254,6 @@ base = ggplot( data = dp, aes( x = exp(logRR),
 
 base
 
-
-##### By Outcome Type #####
-
-
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 #                                SECONDARY EFFECT SIZE CODINGS          
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
@@ -266,9 +267,90 @@ my_robu( dat = d.veg,
 my_robu( dat = d.grams,
          take.exp = FALSE )
 
+
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
-#                              EXCLUDE BORDERLINE STUDIES            
+#                                RUN ALL MODERATOR AND SUBSET ANALYSES          
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+# bm
+
+
+if( exists("resE") ) rm(resE)
+
+# for Bonferroni
+n.tests = 10
+
+# for Phat
+ql = c(log(1), log(1.1), log(1.2))
+boot.reps = 2000
+
+digits = 2
+
+# ~~~ move to data prep
+d$long.intervention = d$x.min.exposed >= 5
+
+##### Overall and Subset Analyses #####
+subsets = list( d,
+                d[d$borderline==0,],
+                d[d$hi.qual == 1,],
+                d[ grepl("RCT", d$design) == 1, ],
+                d[d$reproducible ==1,] )
+
+subset.labels = c( "Overall",
+                   "Non-borderline",
+                   "High quality",
+                   "Randomized",
+                   "Preregistered with open data")
+
+for (i in 1:length(subsets)) {
+  analyze_one_meta( dat = subsets[[i]],
+                    meta.name = subset.labels[i],
+                    yi.name = "logRR",
+                    vi.name = "varlogRR",
+                    digits = digits,
+                    boot.reps = boot.reps, 
+                    ql = ql,
+                    take.exp = TRUE,
+                    n.tests = n.tests)
+}
+
+##### Moderators #####
+moderators = c("published",
+               "x.has.text",
+               "x.has.visuals",
+               "x.suffer",
+               "x.pushy",
+               "y.long.lag",
+               "long.intervention")
+
+moderator.labels = c("Published",
+                     "Intervention has text",
+                     "Intervention has visuals",
+                     "Intervention depicts suffering",
+                     "Intervention pushiness",
+                     "Outcome measured >1 week after intervention",
+                     "Intervention took at least 5 min")
+
+
+for (i in 1:length(moderators)) {
+  analyze_one_meta( dat = d,
+                    meta.name = moderator.labels[i],
+                    yi.name = "logRR",
+                    vi.name = "varlogRR",
+                    digits = digits,
+                    moderator = moderators[i],
+                    boot.reps = boot.reps, 
+                    ql = ql,
+                    take.exp = TRUE,
+                    n.tests = n.tests)
+}
+
+
+# remove the baseline levels for binary moderators
+View(resE %>% filter(Level != 0 & Level != FALSE))
+View(resE)
+# note that the moderators' estimates and p-values are vs. reference
+
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 #                              MODERATORS AND STUDY QUALITY            
@@ -284,6 +366,7 @@ analysis.vars = c("effect.measure",
                   "published",
                   "x.has.text",
                   "x.has.visuals",
+                  "x.graphic",
                   "x.pure.animals",
                   "x.tailored",
                   "x.min.exposed",
@@ -295,23 +378,42 @@ quality.vars = grepl("qual", names(d))
 
 library(tableone)
 
-
 CreateTableOne(data=d[,analysis.vars], includeNA = TRUE)
 CreateTableOne(data=d[,quality.vars], includeNA = TRUE)
 
+# how many meet bar of high quality?
+d = d %>% mutate( hi.qual = grepl("RCT", design) == TRUE & 
+                    qual.y.prox %in% c("Self-reported", "Actual behavior"))
+table(d$hi.qual)
+d$authoryear[ d$hi.qual == TRUE ]
+
+# analyze only high-quality ones
+( meta.hiqual = robu( logRR ~ 1, 
+                   data = d[ d$hi.qual == TRUE,], 
+                   studynum = as.factor(authoryear),
+                   var.eff.size = varlogRR,
+                   modelweights = "HIER",
+                   small = TRUE) )
+# RR = 1.04
+
 ################################# TIME LAG #################################
 
+# bm
 ggplot( data = dp, aes( x = y.lag.days,
-                        y = exp(ens) ) ) + 
-  geom_point() + 
+                        y = exp(ens),
+                        color = authoryear ))+
+                        #shape = authoryear) ) + 
+  geom_point(size = 2,
+             alpha = 1) + 
   geom_smooth() +
   xlab("Days elapsed between intervention and outcome") +
   ylab("True effect estimate (RR)") +
   geom_hline(yintercept = 1, lty = 2) +
+  scale_x_continuous(limits = c(0,100),
+                     breaks = seq(0,100,10)) +
   theme_bw()
 
 # put exposure in terms of weeks
-d$y.lag.wks = d$y.lag.days/7
 ( meta.time = robu( logRR ~ y.lag.wks >= 1, 
                     data = d, 
                     studynum = as.factor(authoryear),
@@ -334,7 +436,7 @@ ggplot( data = dp, aes( x = x.min.exposed,
                         y = exp(ens) ) ) + 
   geom_point() + 
   geom_smooth() +
-  xlab("Days elapsed between intervention and outcome") +
+  xlab("Minutes ") +
   ylab("True effect estimate (RR)") +
   geom_hline(yintercept = 1, lty = 2)
 theme_bw()
@@ -355,10 +457,19 @@ theme_bw()
 # mu.se = meta.rob$reg_table$SE
 # mu.pval = meta.rob$reg_table$prob
 
+
+################################# OTHER #################################
+
+( meta.push = robu( logRR ~ x.pushy, 
+                      data = d, 
+                      studynum = as.factor(authoryear),
+                      var.eff.size = varlogRR,
+                      modelweights = "HIER",
+                      small = TRUE) )
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 #                              OTHER META-ANALYSIS MEASURES            
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
-
 
 
 
