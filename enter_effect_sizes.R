@@ -41,13 +41,6 @@
 #    these measures and compare
 
 
-# To extract:
-# - Dowsett 2018 - 1 estimate, but need to email authors
-# - Mulkern 2013 (JN found the paper)
-#  - Silva
-#  - Kunst sent his data
-#  - Spanikova?
-
 library(metafor)
 library(dplyr)
 library(testthat)
@@ -176,6 +169,8 @@ d = dplyr::add_row(.data = d,
 # these are in terms of servings, not grams
 # convert by multiplying by grams/serving
 
+# total sample size in paper (pg 52): 179 (Table 13) + 338 (Table 46)
+
 # Table 13, personalized & not tailored
 escalc_add_row( authoryear = "Arndt 2016",
                 substudy = "Study 1, personalized & not tailored",
@@ -189,7 +184,7 @@ escalc_add_row( authoryear = "Arndt 2016",
                 
                 m1i = 2.57, 
                 sd1i = 2.68,
-                n1i = 37,
+                n1i = 37,  # sample sizes on pg 52
                 
                 m2i = 2.63,
                 sd2i = 2.02,
@@ -1014,7 +1009,7 @@ escalc_add_row( authoryear = "Spanikova 2015",
                 di = round( (1-p.cntrl) * n.group) )  # control not choosing veg
 
 
-##### Norris (Leafleting and Booklet Effectiveness) #####
+##### Norris n.d. (Leafleting and Booklet Effectiveness) #####
 
 # measure the purple bars in the saved figure (post vs. pre ORs in each group)
 # start at 1, the lowest point on x-axis, and add the proportion of the 
@@ -1314,7 +1309,7 @@ escalc_add_row( authoryear = "Tian 2016",
 
 setwd(data.dir)
 write.csv(d, "data_prepped_stage1.csv", row.names = FALSE)
-
+d = read.csv("data_prepped_stage1.csv")
 
 ############################### MERGE IN QUALITATIVE DATA ############################### 
 
@@ -1333,7 +1328,7 @@ d2$Year = str_remove(d2$Year, "[.]0")
 
 ##### unique merger variable
 d$unique = NA
-d$unique[ is.na(d$substudy) ] = d$authoryear[ is.na(d$substudy) ]
+d$unique[ is.na(d$substudy) ] = as.character(d$authoryear[ is.na(d$substudy) ])
 d$unique[ !is.na(d$substudy) ] = paste( d$authoryear[ !is.na(d$substudy) ],
                                         d$substudy[ !is.na(d$substudy) ],
                                         sep = " ")
@@ -1372,9 +1367,13 @@ round( sort(d$yi/sqrt(d$vi)), 2 )  # z-scores
 # synchronize directions so that positive is always good
 d$yi[ sign(d$yi) != sign(d$desired.direction) ] = -d$yi[ sign(d$yi) != sign(d$desired.direction) ]
 
-# flag a single extreme outlier for exclusion in main analyses
+
+# very low-quality studies to exclude in main analyses
+# Moleman is an extreme outlier
 d$exclude.main = 0
-d$exclude.main[ d$authoryear == "Moleman 2018" ] = 1
+d$exclude.main[ d$authoryear %in% c("Moleman 2018", "Vegan Outreach 2019") ] = 1
+
+
 
 ############################### CONVERT EFFECT SIZES - to RRs ###############################
 
@@ -1484,10 +1483,12 @@ CreateTableOne(data=d[,analysis.vars])
 CreateTableOne(data=d[,quality.vars])
 
 
+# variables for moderator analysis
 d$y.lag.wks = d$y.lag.days/7
 d$y.long.lag = d$y.lag.days >= 7
 d$rct = grepl("RCT", d$design)
 d$reproducible = (d$qual.prereg == "Yes") & (d$qual.public.data == "Yes")
+d$long.intervention = d$x.min.exposed >= 5
 
 
 ############################### WRITE PREPPED DATA ############################### 

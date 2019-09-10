@@ -33,10 +33,12 @@ attr(dat, "variable.labels")[names(dat)=="ysize"]
 library(dplyr)
 dat %>% group_by(CE) %>%
   summarise(size.mean = mean(size),
-            size.sd = sd(size))
+            size.sd = sd(size),
+            n = n())
 dat %>% group_by(CE) %>%
   summarise(size.mean = mean(size),
-            size.sd = sd(size))
+            size.sd = sd(size),
+            n = n())
 
 
 
@@ -191,7 +193,8 @@ dat$low.t2 = dat$diet.f2 < bl.med
 
 # raw probabilites by group
 dat %>% group_by(cond.f) %>%
-  summarise( Plow = mean(low.t2) )
+  summarise( Plow = mean(low.t2),
+             n = n())
 
 # instead use high vs. low
 # robust SEs already take care of campus clustering
@@ -398,33 +401,33 @@ escalc( measure = "RR",
         ci = tab[2,1],
         di = tab[2,2] )
 
-
-#### ~~ old
-##### Study 2 #####
-library(foreign)
-dat2 = read.spss("Study 2.sav", to.data.frame=TRUE)
-
-# they didn't save the outcome variable; make it as in their code
-dat2$MEAT_BUYINGLIKEHOOD = (dat2$BEEF_BUY + dat2$PORK_BUY + dat2$CHICKEN_BUY + dat2$RAWPORK_BUY + dat2$LAMB_BUY) / 5
-
-# ~~ problem: these are factors, with some things coded as words and others as integers...
-cntrl.med = median( dat2$MEAT_BUYINGLIKEHOOD[dat2$CONDITION == "CONTROL"] )
-dat2$lo = dat2$MEAT_BUYINGLIKEHOOD < cntrl.med
-
-# no GLM needed; there are no other covariates
-
-dat2 = dat2[ dat2$CONDITION %in% c("Neutral essay", "Moral essay"), ]
-dat1 = droplevels(dat1)
-tab = table( dat1$CONDITION, dat1$lo )
-
-library(metafor)
-escalc( measure = "RR",
-        ai = tab[1,1],
-        bi = tab[1,2],
-        ci = tab[2,1],
-        di = tab[2,2] )
-
-# ~~~ stopped here -- contact them?
+# 
+# #### ~~ old
+# ##### Study 2 #####
+# library(foreign)
+# dat2 = read.spss("Study 2.sav", to.data.frame=TRUE)
+# 
+# # they didn't save the outcome variable; make it as in their code
+# dat2$MEAT_BUYINGLIKEHOOD = (dat2$BEEF_BUY + dat2$PORK_BUY + dat2$CHICKEN_BUY + dat2$RAWPORK_BUY + dat2$LAMB_BUY) / 5
+# 
+# # ~~ problem: these are factors, with some things coded as words and others as integers...
+# cntrl.med = median( dat2$MEAT_BUYINGLIKEHOOD[dat2$CONDITION == "CONTROL"] )
+# dat2$lo = dat2$MEAT_BUYINGLIKEHOOD < cntrl.med
+# 
+# # no GLM needed; there are no other covariates
+# 
+# dat2 = dat2[ dat2$CONDITION %in% c("Neutral essay", "Moral essay"), ]
+# dat1 = droplevels(dat1)
+# tab = table( dat1$CONDITION, dat1$lo )
+# 
+# library(metafor)
+# escalc( measure = "RR",
+#         ai = tab[1,1],
+#         bi = tab[1,2],
+#         ci = tab[2,1],
+#         di = tab[2,2] )
+# 
+# # ~~~ stopped here -- contact them?
 
 
 ##### Study 2 #####

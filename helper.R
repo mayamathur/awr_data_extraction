@@ -8,6 +8,7 @@ analyze_one_meta = function( dat,
                              vi.name,
                              meta.name,
                              moderator = "",
+                             mod.continuous = FALSE,
                              ql,
                              take.exp,
                              boot.reps = 2000,
@@ -93,6 +94,7 @@ analyze_one_meta = function( dat,
                             sep = " " )
     
     levels = ""
+    k = nrow(dat)
   }
   
   ##### Meta-Regression #####
@@ -105,13 +107,30 @@ analyze_one_meta = function( dat,
                    modelweights = "HIER",
                    small = TRUE) )
     
-    levels = levels( as.factor(d[[moderator]]) )
-    est = meta$b.r
-    t2 = meta$mod_info$tau.sq
-    mu.lo = meta$reg_table$CI.L
-    mu.hi = meta$reg_table$CI.U
-    mu.se = meta$reg_table$SE
-    mu.pval = meta$reg_table$prob
+    # for factor moderator, include each level
+    if (! mod.continuous ) {
+      levels = levels( as.factor(d[[moderator]]) )
+      est = meta$b.r  # all of these are vectors
+      t2 = meta$mod_info$tau.sq
+      mu.lo = meta$reg_table$CI.L
+      mu.hi = meta$reg_table$CI.U
+      mu.se = meta$reg_table$SE
+      mu.pval = meta$reg_table$prob
+      k = as.numeric( table( as.factor(d[[moderator]]) ) ) # k in the relevant level
+    } 
+    
+    # for continuous moderator, avoid the intercept
+    else {
+      levels = "1-unit increase"
+      est = meta$b.r[2]
+      t2 = meta$mod_info$tau.sq[2]
+      mu.lo = meta$reg_table$CI.L[2]
+      mu.hi = meta$reg_table$CI.U[2]
+      mu.se = meta$reg_table$SE[2]
+      mu.pval = meta$reg_table$prob[2]
+      k = nrow(dat)
+    }
+
   }
 
   
@@ -134,7 +153,7 @@ analyze_one_meta = function( dat,
   new.row = data.frame( Meta = meta.name,
                         Moderator = moderator,
                         Level = levels,
-                        k = nrow(dat),
+                        k = k,
                         Est = est.string,
                         Pval = format_stat(mu.pval),
                         Pval.Bonf = format_stat( pmin(mu.pval*n.tests, 1) ),

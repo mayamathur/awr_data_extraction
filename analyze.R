@@ -26,12 +26,24 @@ d.veg = d[ d$use.veg.analysis == 1,]
 d.grams = d[ d$use.grams.analysis == 1,]
 d = d[ d$use.rr.analysis == 1 & d$exclude.main == 0,]  # main dataset
 
-# number of studies in primary analysis
-length(unique(d$authoryear))
-# number of point estimates
-nrow(d)
+# ~~ move this?
+d$perc.male = as.numeric(d$perc.male)
 
-# ICC of point estimates within paper
+
+################################# BASICS ################################# 
+
+# number of studies in primary analysis
+( n.studies = length(unique(d$authoryear)) )
+# number of point estimates
+( n.ests = nrow(d) )
+# total number of unique subjects
+n.paper = d$n.paper[ !duplicated(d$authoryear) ]
+( n.total = sum(n.paper) )
+
+# median n per paper
+n.median = median(n.paper)
+
+# ICC of point estimates clustered in papers
 library(ICC)
 ICCest(authoryear, logRR, d)
 
@@ -42,26 +54,9 @@ ICCest(authoryear, logRR, d)
 
 ################################# OVERALL META-ANALYSIS #################################
 
-##### First Try Regular RE Meta-Analysis ######
-# ignores potential correlation of point estimates within papers
-# and assumes normality
-library(metafor)
-
-( meta = rma.uni( yi = d$logRR,
-                  vi = d$varlogRR, 
-                  method = "REML",
-                  knha = TRUE ) )
-
-
-##### Check Normality ######
-# use only main estimates here
-std = (d$logRR - c(meta$b)) / sqrt(c(meta$tau2) + d$varlogRR)
-hist(std, breaks=20)
-shapiro.test(std)
-# reasonable
-
-
 ##### Robust Meta-Analysis ######
+# also reproduced in the subset analyses, but need to run here for 
+#  forest plotting joy 
 # allows for correlated point estimates within studies
 # and has no distributional assumptions
 library(robumeta)
@@ -85,32 +80,24 @@ exp(mu.lo)
 exp(mu.hi)
 
 
-##### Proportion above RR = 1.1 ######
-# parametric: 100%
-library(MetaUtility)
-q = 1.2
-MetaUtility::prop_stronger( q = log(q), 
-               M = mu,
-               t2 = t2,
-               se.M = NA,
-               se.t2 = NA,
-               tail = "above",
-               boot = "never",  # no inference because of clustering
-               dat = ,
-               yi.name = "logRR",
-               vi.name = "varlogRR")  
-
-# nonparametrically using quantiles of ensemble estimates
-d$ens = my_ens(yi = d$logRR, 
-               sei = sqrt(d$varlogRR))
-sum( d$ens > log(q) ) / length( d$ens )
+##### Check Normality ######
+# use only main estimates here
+std = (d$logRR - c(mu)) / sqrt(c(t2) + d$varlogRR)
+hist(std, breaks=20)
+shapiro.test(std)
+# reasonable
 
 
 
 ################################# CALIBRATED ENSEMBLE ESTIMATES #################################
 
-p = ggplot( data = d,
+d$ens = my_ens(yi = d$logRR, 
+               sei = sqrt(d$varlogRR))
+
+ggplot( data = d,
             aes(x = exp(d$ens))) +
+  
+  geom_density() +
   
   geom_vline(xintercept = 1,
              color = "gray") +
@@ -120,17 +107,13 @@ p = ggplot( data = d,
              color = "red",
              lty = 2) +
   
-  geom_density( ) +
-  
-  xlab("Relative risk") +
+  xlab("Estimated relative risk of low vs. high meat") +
   ylab("Kernel density estimate") +
   
   scale_x_continuous( limits = c(0.8, 1.8),
                       breaks = seq(0.8, 1.8, .2) ) +
-  
   theme_classic()
 
-plot(p)
 
 
 # 5 studies with best ensemble estimates
@@ -139,13 +122,9 @@ plot(p)
 # ...vs. 5 with best point estimates
 ( best.est = d$unique[ order(d$logRR, decreasing = TRUE) ][1:8] )
 
-# interesting...only 3/5 best point estimates are among 5 best ensemble estimates!
-best.ens %in% best.est
+# interesting...only 6/8 best point estimates are among 5 best ensemble estimates!
+sum(best.ens %in% best.est)
 
-# correlation between point estimate rank and ensemble rank
-d$logRR.rank = rank(d$logRR)
-d$ens.rank = rank(d$ens)
-cor(d$logRR.rank, d$ens.rank)
 
 ################################# FOREST PLOT #################################
 
@@ -157,15 +136,6 @@ d$rel.wt = 100 * (1/d$varlogRR) / sum(1/d$varlogRR )
 
 
 # lean plotting df
-# keepers = c("logRR",
-#             "ens",
-#             "varlogRR",
-#             "RR.lo",
-#             "RR.hi",
-#             "authoryear",
-#             "unique",
-#             "rel.wt")
-# dp = d[ , keepers ]
 dp = d
 
 # sort by ensemble estimate
@@ -186,6 +156,7 @@ dp = add_row( dp,
               #X.cat = "pooled",
               #Y.cat = "pooled",
               unique = "POOLED",
+              borderline = 0,
               rel.wt = 5 )
 
 
@@ -210,22 +181,25 @@ breaks = c( seq(0.4, 1.3, .1),
 
 #breaks = exp( seq( log(0.4), log(6), .2 )
 
+# for borderline status
+colors = c("black", "orange")
+
 library(ggplot2)
 base = ggplot( data = dp, aes( x = exp(logRR), 
                                y = unique,
                                size = rel.wt,
-                               shape = is.pooled ) ) +
+                               shape = is.pooled,
+                               color = as.factor(borderline) ) ) +
   geom_point() +
   #color = X.intensiveness ) ) +
   geom_errorbarh( aes(xmin = RR.lo,
                       xmax = RR.hi ),
                   lwd = .5,
-                  height = .001,
-                  color = "black") +
+                  height = .001) +
   
+  # calibrated estimates
   geom_point( data = dp, aes( x = exp(ens),
-                              y = unique
-  ),
+                              y = unique ),
   size = 3,
   shape = 4,
   color = "red") +
@@ -237,16 +211,20 @@ base = ggplot( data = dp, aes( x = exp(logRR),
   
   guides(size = guide_legend("% weight in analysis") ) +
   
-  # scale_color_manual(values = colors,
-  #                    name = "") +
+  scale_color_manual(values = colors,
+                     name = "Borderline inclusion") +
   
   scale_shape_manual(values = shapes,
                      name = "") +
   #guide=FALSE) +
   
-  scale_x_continuous( breaks = breaks,
-                      lim = c(breaks[1], breaks[length(breaks)] ),
-                      trans = "log10") +
+  # scale_x_continuous( breaks = breaks,
+  #                     lim = c(breaks[1], breaks[length(breaks)] ),
+  #                     trans = "log10") +
+  
+  scale_x_continuous( breaks = breaks, trans = "log10") +
+  # https://michaelbach.de/2012/07/22/R-ggplot2-and-axis-limits-unexpected-behaviour-solution.html
+  coord_cartesian( xlim = c(breaks[1], breaks[length(breaks)] ) ) +
   
   theme_bw()
 
@@ -268,12 +246,45 @@ my_robu( dat = d.grams,
          take.exp = FALSE )
 
 
-
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
-#                                RUN ALL MODERATOR AND SUBSET ANALYSES          
+#                              MODERATORS AND STUDY QUALITY            
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
-# bm
 
+
+################################# STUDY CHARACTERISTICS AND QUALITY TABLE #################################
+
+
+analysis.vars = c("effect.measure",
+                  "perc.male",
+                  "design",
+                  "published",
+                  "x.has.text",
+                  "x.has.visuals",
+                  "x.suffer",
+                  "x.pure.animals",
+                  "x.tailored",
+                  "x.min.exposed",
+                  "y.cat",
+                  "y.lag.days"
+                  )
+
+quality.vars = grepl("qual", names(d))
+
+library(tableone)
+
+# ** will become Tables 1-2 for paper
+CreateTableOne(data=d[,analysis.vars], includeNA = TRUE)
+CreateTableOne(data=d[,quality.vars], includeNA = TRUE)
+
+# how many meet bar of high quality?
+d = d %>% mutate( hi.qual = grepl("RCT", design) == TRUE & 
+                    qual.y.prox %in% c("Self-reported", "Actual behavior") )
+table(d$hi.qual)
+d$authoryear[ d$hi.qual == TRUE ]
+
+
+
+################################# RUN ALL MODERATOR AND SUBSET ANALYSES #################################
 
 if( exists("resE") ) rm(resE)
 
@@ -282,12 +293,21 @@ n.tests = 10
 
 # for Phat
 ql = c(log(1), log(1.1), log(1.2))
-boot.reps = 2000
+boot.reps = 500  # ~~ increase later
 
 digits = 2
 
-# ~~~ move to data prep
-d$long.intervention = d$x.min.exposed >= 5
+
+# ~~ move this?
+# recode percent male as a 10-percentage point increase
+d$perc.male.10 = d$perc.male/10
+library(car)
+d$x.pushy = recode_factor( d$x.pushy,
+                    "No request" = "a.No request",
+                    "Reduce" = "b.Reduce",
+                    "Go vegetarian" = "c.Go vegetarian",
+                    "Go vegan" = "d.Go vegan",
+                    "Mixed" = "e.Mixed")
 
 ##### Overall and Subset Analyses #####
 subsets = list( d,
@@ -315,13 +335,15 @@ for (i in 1:length(subsets)) {
 }
 
 ##### Moderators #####
+if( exists("resE") ) rm(resE)
 moderators = c("published",
                "x.has.text",
                "x.has.visuals",
                "x.suffer",
                "x.pushy",
                "y.long.lag",
-               "long.intervention")
+               "long.intervention",
+               "perc.male.10")
 
 moderator.labels = c("Published",
                      "Intervention has text",
@@ -329,9 +351,12 @@ moderator.labels = c("Published",
                      "Intervention depicts suffering",
                      "Intervention pushiness",
                      "Outcome measured >1 week after intervention",
-                     "Intervention took at least 5 min")
+                     "Intervention took at least 5 min",
+                     "10 percentage pt. increase in males")
 
+mod.continuous = c( rep(0,7), 1 )
 
+# bm
 for (i in 1:length(moderators)) {
   analyze_one_meta( dat = d,
                     meta.name = moderator.labels[i],
@@ -339,6 +364,7 @@ for (i in 1:length(moderators)) {
                     vi.name = "varlogRR",
                     digits = digits,
                     moderator = moderators[i],
+                    mod.continuous = mod.continuous[i],
                     boot.reps = boot.reps, 
                     ql = ql,
                     take.exp = TRUE,
@@ -348,98 +374,46 @@ for (i in 1:length(moderators)) {
 
 # remove the baseline levels for binary moderators
 View(resE %>% filter(Level != 0 & Level != FALSE))
-View(resE)
 # note that the moderators' estimates and p-values are vs. reference
 
 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
-#                              MODERATORS AND STUDY QUALITY            
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
 
-################################# SUMMARIZE MODERATORS AND QUALITY VARIABLES #################################
+################################# CONTINUOUS MODERATOR PLOTS #################################
 
-
-analysis.vars = c("effect.measure",
-                  "perc.male",
-                  "design",
-                  "published",
-                  "x.has.text",
-                  "x.has.visuals",
-                  "x.graphic",
-                  "x.pure.animals",
-                  "x.tailored",
-                  "x.min.exposed",
-                  "y.cat",
-                  "y.lag.days"
-)
-
-quality.vars = grepl("qual", names(d))
-
-library(tableone)
-
-CreateTableOne(data=d[,analysis.vars], includeNA = TRUE)
-CreateTableOne(data=d[,quality.vars], includeNA = TRUE)
-
-# how many meet bar of high quality?
-d = d %>% mutate( hi.qual = grepl("RCT", design) == TRUE & 
-                    qual.y.prox %in% c("Self-reported", "Actual behavior"))
-table(d$hi.qual)
-d$authoryear[ d$hi.qual == TRUE ]
-
-# analyze only high-quality ones
-( meta.hiqual = robu( logRR ~ 1, 
-                   data = d[ d$hi.qual == TRUE,], 
-                   studynum = as.factor(authoryear),
-                   var.eff.size = varlogRR,
-                   modelweights = "HIER",
-                   small = TRUE) )
-# RR = 1.04
-
-################################# TIME LAG #################################
-
-# bm
+##### time lag from intervention to outcome measurement #####
 ggplot( data = dp, aes( x = y.lag.days,
                         y = exp(ens),
-                        color = authoryear ))+
-                        #shape = authoryear) ) + 
-  geom_point(size = 2,
+                        color = authoryear,
+                        shape = authoryear) ) + 
+  geom_point(size = 4,
              alpha = 1) + 
   geom_smooth() +
   xlab("Days elapsed between intervention and outcome") +
   ylab("True effect estimate (RR)") +
   geom_hline(yintercept = 1, lty = 2) +
+  geom_vline(xintercept = 7, lty = 2, color = "red") +
   scale_x_continuous(limits = c(0,100),
                      breaks = seq(0,100,10)) +
+  scale_shape_manual(values = 1:50) +
+  #scale_colour_brewer(palette = "Set1") +
   theme_bw()
 
-# put exposure in terms of weeks
-( meta.time = robu( logRR ~ y.lag.wks >= 1, 
-                    data = d, 
-                    studynum = as.factor(authoryear),
-                    var.eff.size = varlogRR,
-                    modelweights = "HIER",
-                    small = TRUE) )
 
-
-# mu = meta.rob$b.r
-# t2 = meta.rob$mod_info$tau.sq
-# mu.lo = meta.rob$reg_table$CI.L
-# mu.hi = meta.rob$reg_table$CI.U
-# mu.se = meta.rob$reg_table$SE
-# mu.pval = meta.rob$reg_table$prob
-
-
-################################# TIME EXPOSED TO INTERVENTION #################################
-
+##### time exposed to intervention
 ggplot( data = dp, aes( x = x.min.exposed,
-                        y = exp(ens) ) ) + 
-  geom_point() + 
+                        y = exp(ens),
+                        color = authoryear,
+                        shape = authoryear) ) + 
+  geom_point(size = 4) + 
   geom_smooth() +
-  xlab("Minutes ") +
+  xlab("Total time exposed to intervention (min)") +
   ylab("True effect estimate (RR)") +
-  geom_hline(yintercept = 1, lty = 2)
-theme_bw()
+  geom_hline(yintercept = 1, lty = 2) +
+  scale_shape_manual(values = 1:50) +
+  scale_x_continuous(limits = c(0,110),
+                     breaks = seq(0,95,5)) +
+  theme_bw()
 
 
 ( meta.intens = robu( logRR ~ x.min.exposed, 
@@ -448,6 +422,8 @@ theme_bw()
                       var.eff.size = varlogRR,
                       modelweights = "HIER",
                       small = TRUE) )
+
+##### percent male subjects
 
 
 # mu = meta.rob$b.r
