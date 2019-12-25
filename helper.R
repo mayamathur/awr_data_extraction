@@ -215,13 +215,11 @@ escalc_add_row = function(authoryear,
 # gets the raw RR 
 # for extracting many point estimates from the bigger articles
 # assumes outcome is called "Y"
-get_rr = function(condition,
+get_rr_unadj = function(condition,
                   condition.var.name = "condition",
                   control.name = "control",
                   dat) {
-  
-  #if (condition == "activist") browser()
-  
+
   # remove other interventions in case the study was more than 2 arms
   temp = droplevels( dat[ dat[[condition.var.name]] %in% c(condition, control.name), ] )
   
@@ -229,12 +227,47 @@ get_rr = function(condition,
   
   library(metafor)
   es = escalc( measure = "RR",
-               ai = tab[condition, 2], # X=1, Y=TRUE
-               bi = tab[condition, 1],  # X=1, Y=FALSE
-               ci = tab[control.name, 2], # X=0, Y=TRUE
-               di = tab[control.name, 1] ) # X=0, Y=FALSE
+               ai = tab[condition, 2], # X=1, Y=1
+               bi = tab[condition, 1],  # X=1, Y=0
+               ci = tab[control.name, 2], # X=0, Y=1
+               di = tab[control.name, 1] ) # X=0, Y=0
   
   return(es)
+}
+
+
+# gets the RR, controlling for baseline consumption
+# assumes outcome is called "Y"
+
+# note that the sandwich SEs will often be smaller than naive
+# this makes sense since the outcome is common; see this from McNutt paper:
+# "For studies of common outcomes, Poisson regression is likely to
+# compute a confidence interval(s) that is conservative,
+# suggesting less precision than is true. Poisson errors are overestimates of binomial errors
+# when the outcome is common (Poisson errors approximately
+# equal binomial errors when the outcome (disease) is rare)."
+get_rr_adj = function( 
+                       condition.var.name = "condition",
+                       control.name = "control",
+                       baseline.var.name,
+                       .dat ) {
+  
+  # set levels so that contrast is treatment vs. control, not the other way around
+  current.levels = levels( factor( .dat[[condition.var.name]] ) )
+  .dat[[condition.var.name]] = factor( .dat[[condition.var.name]],
+                                       levels = c( control.name,
+                                                   current.levels[ !current.levels == control.name ] ) )
+  
+  # controlling for subject's own consumption in control condition
+  mod = glm( Y ~ .dat[[condition.var.name]] + .dat[[baseline.var.name]], 
+             data = .dat,
+             family = "poisson" )
+  yi = coef(mod)[2]
+  
+  library(sandwich)
+  vi = diag( vcovHC(mod, type="HC0") )[2]
+  
+  return( data.frame(yi, vi) )
 }
 
 
@@ -309,6 +342,7 @@ logOR_to_logRR = function( logOR,
 
 
 # uses square-root transformation (assumes common outcome; otherwise conservative)
+# and Chinn conversion
 d_to_logRR = function( smd, smd.se ) {
   logOR = smd * (pi / sqrt(3))
   varlogOR = smd.se^2 * (pi^2 / 3)

@@ -2,6 +2,8 @@
 
 # Impressions: I think all the top interventions don't make requests and are more informative or indirect
 
+# to do: update analyze_one_meta to use the new Phat function :)
+
 ################################# PREP ################################# 
 
 data.dir = "~/Dropbox/Personal computer/Independent studies/2019/AWR (animal welfare review meat consumption)/Data extraction"
@@ -124,6 +126,93 @@ ggplot( data = d,
 
 # interesting...only 6/8 best point estimates are among 5 best ensemble estimates!
 sum(best.ens %in% best.est)
+
+
+################################# NPPHAT :D #################################
+
+library(MetaUtility)
+
+# q.vec = c( log(1), log(1.1), log(1.2), log(1.5) )
+# 
+# prop_stronger( q = log(1.5),
+#                tail = "above",
+#                estimate.method = "calibrated",
+#                ci.method = "calibrated",
+#                dat = d,
+#                yi.name = "yi",
+#                vi.name = "vi" )
+
+
+
+##### Make Plotting Dataframe #####
+q.vec = seq( 0, log(2), 0.01 )
+ql = as.list(q.vec)
+
+
+
+# again pass threshold and calibrated estimates on log-RR scale
+Phat.above.vec = lapply( ql,
+                     FUN = function(.q) mean( d$ens > .q, na.rm = TRUE ) )
+
+res = data.frame( q = q.vec,
+                  Est = unlist(Phat.above.vec) )
+
+
+##### Selective Bootstrapping #####
+
+# look at just the values of q at which Phat jumps
+#  this will not exceed the number of point estimates in the meta-analysis
+res.short = res[ diff(res$Est) != 0, ]
+
+library(dplyr)
+
+# bootstrap a CI for each entry in res.short
+temp = res.short %>% rowwise() %>%
+  do( prop_stronger( q = .$q, 
+                     tail = "above",
+                     estimate.method = "calibrated",
+                     ci.method = "calibrated",
+                     dat = d,
+                     R = 2000 ) )
+
+# merge this with the full-length res dataframe, merging by Phat itself
+res = merge( res, temp, by.x = "Est", by.y = "Est")
+
+
+
+##### Make Plot #####
+library(ggplot2)
+
+ggplot( data = res,
+        aes( x = exp(q),
+             y = Est ) ) +
+  theme_bw() +
+  
+  # # proprtion "r" line
+  # geom_hline( yintercept = r, 
+  #             lty = 2,
+  #             color = "red" ) +
+  # 
+  # That line
+  geom_vline( xintercept = exp(mu),
+              lty = 2,
+              color = "black" ) +
+  
+  scale_x_continuous( limits=c(1, 1.5), breaks=seq(1, 1.5, .1) ) +
+  #scale_y_continuous(  breaks = seq(1, log(), .1) ) +
+  geom_line(lwd=1.2) +
+  
+  xlab("Threshold (RR scale)") +
+  ylab( paste( "Estimated proportion of studies with true RR above threshold" ) ) +
+  
+  geom_ribbon( aes(ymin=res$lo, ymax=res$hi), alpha=0.15, fill = "black" ) 
+
+# # parametric CI
+# geom_ribbon( aes(ymin=res$CI.lo.param, ymax=res$CI.hi.param), alpha=0.15, fill = "blue" )   
+
+# 8 x 6 works well
+
+# ~~~ look into jaggedyness
 
 
 ################################# FOREST PLOT #################################
@@ -334,6 +423,7 @@ for (i in 1:length(subsets)) {
                     n.tests = n.tests)
 }
 
+
 ##### Moderators #####
 if( exists("resE") ) rm(resE)
 moderators = c("published",
@@ -376,7 +466,7 @@ for (i in 1:length(moderators)) {
 View(resE %>% filter(Level != 0 & Level != FALSE))
 # note that the moderators' estimates and p-values are vs. reference
 
-
+# bm
 
 
 ################################# CONTINUOUS MODERATOR PLOTS #################################

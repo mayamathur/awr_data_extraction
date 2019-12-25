@@ -21,7 +21,7 @@
 #   follow-up. 
 # 
 # - When there were multiple point estimates on same subjects, but our hierarchy didn't help decide between them, 
-#   we averaged the effect sizes within a study assuming independence for a conservative SE (e.g., Hennessy).
+#   we averaged the effect sizes within a study and assumed independence for a conservative SE (e.g., Hennessy).
 # 
 # - When raw data were available, we calculated the RR for being below vs. above median meat consumption, where "median"
 #   is the median at baseline among both control and treateds in a longitudinal study, or the median among controls in a 
@@ -33,6 +33,9 @@
 #   so we could calculate multiple codings per point estimate (which were not included together in the same analysis, of course). 
 #  For "going vegetarian", this only included studies in which subjects reported how much meat they had consumed
 #  and excluded outcomes like "willingness to choose a vegetarian restaurant". 
+#
+#  - When different interventions in the study had different scopes (e.g., one leaflet says "go vegetarian" but another says
+#   "go vegan"), defined outcome based on the most stringent intervention (e.g., vegan > vegetarian). See, e.g., Cooney 2015.
 
 
 # Idea2:
@@ -96,7 +99,7 @@ d = dplyr::add_row(.data = d,
                    use.grams.analysis = 0,
                    use.veg.analysis = 0,
                    yi = 0.395127,
-                   vi = 0.2381223399^2 )
+                   vi = 5.670225e-02 )
 
 d = dplyr::add_row(.data = d,
                    authoryear = "Amiot 2018",
@@ -108,7 +111,7 @@ d = dplyr::add_row(.data = d,
                    use.grams.analysis = 0,
                    use.veg.analysis = 1,
                    yi = 1.018e-14,
-                   vi = 0.3554550562^2 )
+                   vi = 1.263483e-01 )
 
 
 d = dplyr::add_row(.data = d,
@@ -135,7 +138,7 @@ d = dplyr::add_row(.data = d,
                    use.grams.analysis = 0,
                    use.veg.analysis = 0,
                    yi = -0.5397,
-                   vi = 0.07832975^2 )
+                   vi = 0.00613555 )
 
 d = dplyr::add_row(.data = d,
                    authoryear = "Anderson 2016",
@@ -147,7 +150,7 @@ d = dplyr::add_row(.data = d,
                    use.grams.analysis = 0,
                    use.veg.analysis = 1,
                    yi = -1.038e-14,
-                   vi = 0.21344062^2 )
+                   vi = 0.003756172 )
 
 d = dplyr::add_row(.data = d,
                    authoryear = "Anderson 2016",
@@ -164,12 +167,7 @@ d = dplyr::add_row(.data = d,
 
 
 ##### Arndt (2016)
-# ~~~ asked for raw data; this is hopefully temporary
-# bm: 
-# these are in terms of servings, not grams
-# convert by multiplying by grams/serving
-
-# total sample size in paper (pg 52): 179 (Table 13) + 338 (Table 46)
+# total sample size in paper: 105 (per pg 52; Table 13) + 296 (per pg 95; Table 46)
 
 # Table 13, personalized & not tailored
 escalc_add_row( authoryear = "Arndt 2016",
@@ -209,8 +207,10 @@ escalc_add_row( authoryear = "Arndt 2016",
                 sd2i = 2.02,
                 n2i = 40 )
 
+
+
 # Table 46, self-schema & not tailored
-# ~~~ using 338/9 for all sample sizes in this table
+# using 296/9 for all sample sizes in this table; somehow the actual breakdown isn't reported
 escalc_add_row( authoryear = "Arndt 2016",
                 substudy = "Study 2, self-schema & not tailored",
                 desired.direction = 1,
@@ -223,11 +223,11 @@ escalc_add_row( authoryear = "Arndt 2016",
                 
                 m1i = 2.13, 
                 sd1i = 1.96,
-                n1i = round(338/9),
+                n1i = round(296/9),
                 
                 m2i = 2.75,
                 sd2i = 2,
-                n2i = round(338/9) )
+                n2i = round(296/9) )
 
 # Table 46, altruistic & not tailored
 escalc_add_row( authoryear = "Arndt 2016",
@@ -242,11 +242,11 @@ escalc_add_row( authoryear = "Arndt 2016",
                 
                 m1i = 2.24, 
                 sd1i = 1.96,
-                n1i = round(338/9),
+                n1i = round(296/9),
                 
                 m2i = 2.75,
                 sd2i = 2,
-                n2i = round(338/9) )
+                n2i = round(296/9) )
 
 # Table 46, egotistic & not tailored
 escalc_add_row( authoryear = "Arndt 2016",
@@ -261,11 +261,11 @@ escalc_add_row( authoryear = "Arndt 2016",
                 
                 m1i = 1.92, 
                 sd1i = 1.32,
-                n1i = round(338/9),
+                n1i = round(296/9),
                 
                 m2i = 2.75,
                 sd2i = 2,
-                n2i = round(338/9) )
+                n2i = round(296/9) )
 
 # Table 46, non-specific & not tailored
 escalc_add_row( authoryear = "Arndt 2016",
@@ -280,11 +280,11 @@ escalc_add_row( authoryear = "Arndt 2016",
                 
                 m1i = 2.57, 
                 sd1i = 2.3,
-                n1i = round(338/9),
+                n1i = round(296/9),
                 
                 m2i = 2.75,
                 sd2i = 2,
-                n2i = round(338/9) )
+                n2i = round(296/9) )
 
 # for grams of meat conversion, using 3 oz/serving (see page 42)
 grams.per.serving = 85.0486
@@ -377,9 +377,11 @@ escalc_add_row( authoryear = "Caldwell 2016",
 ##### Caldwell 2017 #####
 # reduce vs. keep consumption the same 
 # no servings variable
-# used the Tableau plots on their website for stats and the supplement for N's
-# figure out the number of control subjects
-nc = 2594 - (515+507+513+524)
+# for stats, used the Tableau plots on their website (https://mercyforanimals.lat/kinds-of-viral-videos-are-best-at-inspiring)
+#  and used the supplement for N's
+
+# got number of control subjects from raw data (see get_effect_sizes_from_raw.R)
+nc = 535
 
 # cruelty videos
 escalc_add_row( authoryear = "Caldwell 2017",
@@ -517,7 +519,7 @@ d = dplyr::add_row(.data = d,
                    use.grams.analysis = 0,
                    use.veg.analysis = 0,
                    yi = 0.17653,
-                   vi = 0.05059599^2 )
+                   vi = 0.006540234 )
 
 d = dplyr::add_row(.data = d,
                    authoryear = "Anderson 2017",
@@ -529,12 +531,14 @@ d = dplyr::add_row(.data = d,
                    use.grams.analysis = 0,
                    use.veg.analysis = 0,
                    yi = 0.07114,
-                   vi = 0.02430246^2 )
+                   vi = 0.0081253938 )
 
 
 
 ##### Bertolaso 2015, moral shocks & promotion #####
-# Table 1
+# pre-post design, but they only report marginal means at each time, not change scores,
+# so we are only using post-intervention means
+# Table 1 (pg. 53)
 escalc_add_row( authoryear = "Bertolaso 2015",
                 substudy = "moral shocks & promotion focus",
                 desired.direction = 1,
@@ -545,7 +549,7 @@ escalc_add_row( authoryear = "Bertolaso 2015",
                 use.veg.analysis = 0,
                 measure = "SMD",
                 
-                m1i = 1.6, # Table 1
+                m1i = 1.6, # Table 1, control group
                 sd1i = 0.38, 
                 n1i = 107, 
                 
@@ -652,8 +656,8 @@ d = dplyr::add_row(.data = d,
                    use.rr.analysis = 0,
                    use.grams.analysis = 0,
                    use.veg.analysis = 1,
-                     yi = -0.0107,
-                   vi = 0.0026 )
+                     yi = 0.0272,
+                   vi = 0.0003 )
 
 d = dplyr::add_row(.data = d,
                    authoryear = "Cooney 2016",
@@ -1053,6 +1057,7 @@ MetaUtility::scrape_meta(type = "RR",
 
 # this one gives the baseline probability (albeit combined for all treatment arms),
 #  so can work with the ORs
+# see page 4, "Definition of Outcome" section
 p0 = .028
 
 # odds ratios scraped from purple bars of plot
@@ -1307,9 +1312,224 @@ escalc_add_row( authoryear = "Tian 2016",
                 sd2i = 1.24,
                 n2i = round(301/2) )
 
+
+##### Earle 2019 #####
+# ~~~ emailed to try to get means and SDs
+# for now just convert the point-biserial correlation
+
+# Study 1 (Table 1)
+res = r_to_d_ptbis( r = -0.31,
+              N = 299 )
+d = dplyr::add_row(.data = d,
+                   authoryear = "Earle 2019",
+                   substudy = "Study 1",
+                   desired.direction = 1,
+                   effect.measure = "smd",
+                   interpretation = "Willingness to eat meat SMD",
+                   use.rr.analysis = 1,
+                   use.grams.analysis = 0,
+                   use.veg.analysis = 0,
+                   yi = res$d,
+                   vi = res$se^2 )
+
+# Study 2 (Table 3)
+res = r_to_d_ptbis( r = -0.35,
+                    N = 280 )
+d = dplyr::add_row(.data = d,
+                   authoryear = "Earle 2019",
+                   substudy = "Study 2",
+                   desired.direction = 1,
+                   effect.measure = "smd",
+                   interpretation = "Willingness to eat meat SMD",
+                   use.rr.analysis = 1,
+                   use.grams.analysis = 0,
+                   use.veg.analysis = 0,
+                   yi = res$d,
+                   vi = res$se^2 )
+
+
+
+
+##### Flens (2018) #####
+# ~~~ emailed to try to get non-conservative SD
+# Table 1
+# create aggregated measure: consumption of all animal products
+# by summing each category they report
+sum.trt = sum( c( -0.04, -0.90, 1.21, 0.57, 0.12 ) )
+sum.cntrl = sum( c( -0.01, -0.88, 0.84, 0.52, 0.20 ) )
+# assume independence for conservative pooled SE
+sd.trt.pooled = sqrt( 1.58^2 + 1.24^2 + 1.27^2 + 1.62^2 + 1.35^2 )
+sd.cntrl.pooled = sqrt( 1.27^2 + 1.55^2 + 1.30^2 + 1.43^2 + 1.41^2 )
+
+escalc_add_row( authoryear = "Flens 2018",
+                substudy = NA,
+                desired.direction = 1,
+                effect.measure = "smd",
+                interpretation = "Meat and dairy consumption SMD",
+                use.rr.analysis = 1,
+                use.grams.analysis = 0,
+                use.veg.analysis = 0,
+                measure = "SMD",
+                
+                m1i = sum.trt, 
+                sd1i = sd.trt.pooled,
+                n1i = 52,
+                
+                m2i = sum.cntrl,
+                sd2i = sd.cntrl.pooled,
+                n2i = 200 )
+
+##### Schwitzgebel (2019) #####
+# ~~~ sounds like they are reporting percents at individual purchase level
+#  so these calculations ignore correlation within subjects
+#  emailed them about this
+escalc_add_row( authoryear = "Schwitzgebel 2019",
+                substudy = NA,
+                desired.direction = 1,
+                effect.measure = "log-rr",
+                interpretation = "Purchase contained meat",
+                use.rr.analysis = 1,
+                use.grams.analysis = 0,
+                use.veg.analysis = 0,
+                measure = "RR",
+                
+                ai = round( 0.45 * 5981/4 ), # Tx meat purchases post-intervention
+                bi = round( (1-0.45) * 5981/4 ),  # Tx non-meat purchases post-intervention
+                ci = round( 0.52 * (5981/4) ),  # control meat purchases post-intervention
+                di = round( (1-0.52) * (5981/4) ) ) # control non-meat purchases post-intervention
+
+# sanity check: close to their error bar widths? yes.
+# sqrt( (.45*.55) / (5981/4) ) * 1.96
+# bm
+
+
+##### FIAPO (2017) #####
+
+# Study 1: leafleting
+# combine data in Table A and Table 1 to get RR of *becoming* vegan
+#  among initial non-vegans
+escalc_add_row( authoryear = "FIAPO 2017",
+                substudy = "leaflet",
+                desired.direction = 1,
+                effect.measure = "log-rr",
+                interpretation = "Going vegan",
+                use.rr.analysis = 1,
+                use.grams.analysis = 0,
+                use.veg.analysis = 0,
+                measure = "RR",
+                
+                # proportions from Table A; N's from Table 1
+                ai = round( 0.005*21 + 0.0266*146 ), # Tx who went vegan
+                bi = round( (188-21) - round(0.005*21 + 0.0266*146) ),  # Tx who did not go vegan
+                ci = round( 0 ),  # control who went vegan
+                di = round( 91-2 ) ) # control who did not go vegan
+
+# Study 2: 2D video, baseline vegetarians
+# from Table B 
+# no SDs given, so use reported "p<0.05" to conservatively get SD assuming p=0.05 exactly
+# then use Wilson's online calculator (~~~CITE IT IN PAPER!): http://www.campbellcollaboration.org/escalc/html/EffectSizeCalculator-SMD2.php
+# change score among baseline vegetarians: calculate t-value at p=0.05
+qt( p = 0.975,
+    df = 167 + 142 - 2 )
+d = dplyr::add_row(.data = d,
+                   authoryear = "FIAPO 2017",
+                   substudy = "2D video, baseline vegetarians",
+                   desired.direction = 1,
+                   effect.measure = "smd",
+                   interpretation = "Willingness to reduce animal products SMD",
+                   use.rr.analysis = 1,
+                   use.grams.analysis = 0,
+                   use.veg.analysis = 0,
+                   yi = 0.2246,
+                   vi = 0.0131 )
+
+# Study 2: 2D video, baseline non-vegetarians
+qt( p = 0.975,
+    df = 343 + 362 - 2 )
+d = dplyr::add_row(.data = d,
+                   authoryear = "FIAPO 2017",
+                   substudy = "2D video, baseline non-vegetarians",
+                   desired.direction = 1,
+                   effect.measure = "smd",
+                   interpretation = "Willingness to reduce animal products SMD",
+                   use.rr.analysis = 1,
+                   use.grams.analysis = 0,
+                   use.veg.analysis = 0,
+                   yi = 0.1478,
+                   vi = 0.0057 )
+
+# Study 3: VR video, baseline vegetarians
+qt( p = 0.975,
+    df = 220 + 98 - 2 )
+d = dplyr::add_row(.data = d,
+                   authoryear = "FIAPO 2017",
+                   substudy = "virtual reality, baseline vegetarians",
+                   desired.direction = 1,
+                   effect.measure = "smd",
+                   interpretation = "Willingness to reduce animal products SMD",
+                   use.rr.analysis = 1,
+                   use.grams.analysis = 0,
+                   use.veg.analysis = 0,
+                   yi = 0.2389,
+                   vi = 0.0148 )
+
+# Study 3: VR video, baseline non-vegetarians
+qt( p = 0.975,
+    df = 224 + 440 - 2 )
+d = dplyr::add_row(.data = d,
+                   authoryear = "FIAPO 2017",
+                   substudy = "virtual reality, baseline non-vegetarians",
+                   desired.direction = 1,
+                   effect.measure = "smd",
+                   interpretation = "Willingness to reduce animal products SMD",
+                   use.rr.analysis = 1,
+                   use.grams.analysis = 0,
+                   use.veg.analysis = 0,
+                   yi = 0.1612,
+                   vi = 0.0068 )
+
+
+escalc_add_row( authoryear = "Vegan Outreach 2019",
+                substudy = NA,
+                desired.direction = 1,
+                effect.measure = "log-rr",
+                interpretation = "Avoiding all animal products over 1 month after vs. before challenge",
+                use.rr.analysis = 1,
+                use.grams.analysis = 0,
+                use.veg.analysis = 0,
+                measure = "RR",
+                
+                ai = 43, # pre-intervention vegans
+                bi = 190+76,  # pre-intervention non-vegans
+                ci = 77,  # post- vegans
+                di = 140+92+77 ) # post-non-vegans
+
+
+
+##### Faunalytics 2019 #####
+
+# RR of being below vs. above baseline median meat consumption
+# escalc_add_row( authoryear = "Faunalytics 2019",
+#                 substudy = NA,
+#                 desired.direction = 1,
+#                 effect.measure = "log-rr",
+#                 interpretation = "Being below vs. above baseline median meat consumption",
+#                 use.rr.analysis = 1,
+#                 use.grams.analysis = 0,
+#                 use.veg.analysis = 0,
+#                 measure = "RR",
+#                 
+#                 ai = 43, # pre-intervention vegans
+#                 bi = 190+76,  # pre-intervention non-vegans
+#                 ci = 77,  # post- vegans
+#                 di = 140+92+77 ) # post-non-vegans
+# 
+
+# save intermediate dataset
 setwd(data.dir)
 write.csv(d, "data_prepped_stage1.csv", row.names = FALSE)
 d = read.csv("data_prepped_stage1.csv")
+
 
 ############################### MERGE IN QUALITATIVE DATA ############################### 
 
@@ -1368,12 +1588,6 @@ round( sort(d$yi/sqrt(d$vi)), 2 )  # z-scores
 d$yi[ sign(d$yi) != sign(d$desired.direction) ] = -d$yi[ sign(d$yi) != sign(d$desired.direction) ]
 
 
-# very low-quality studies to exclude in main analyses
-# Moleman is an extreme outlier
-d$exclude.main = 0
-d$exclude.main[ d$authoryear %in% c("Moleman 2018", "Vegan Outreach 2019") ] = 1
-
-
 
 ############################### CONVERT EFFECT SIZES - to RRs ###############################
 
@@ -1421,6 +1635,7 @@ d = d %>%
     title = Title,
     journal = `Journal/conference (if peer-reviewed)`,
     other.source = `Other source (if not peer-reviewed)`,
+    exclude.main = `Excluded challenge`,
     borderline = `Borderline inclusion`,
     mm.fave = `Among MM's favorites methodologically, exclusive of small sample size`,
     perc.male = `Percent male`,
@@ -1479,6 +1694,8 @@ analysis.vars = c("effect.measure",
                   "y.lag.days" )
 
 quality.vars = grepl("qual", names(d))
+
+library(tableone)
 CreateTableOne(data=d[,analysis.vars])
 CreateTableOne(data=d[,quality.vars])
 

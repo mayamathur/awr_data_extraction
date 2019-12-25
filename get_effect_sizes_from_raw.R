@@ -13,16 +13,17 @@
 ##### Effect Size #2: No Meat vs. Any Meat #####
 ##### Effect Size #3: Grams of Meat ######
 
-################################# AMIOT ################################# 
+################################# AMIOT 2018 ################################# 
 
 original.data.dir = "~/Dropbox/Personal computer/Independent studies/2019/AWR (animal welfare review meat consumption)/Literature search/Full texts for review"
 setwd(original.data.dir)
-setwd("Amiot 2016")
+setwd("Amiot 2018")  
 
 library(foreign)
 dat = read.spss("data.sav", to.data.frame=TRUE)
 
 # confirm which variables are total meat consumption at each time point
+attr(dat, "variable.labels")[names(dat)=="CE"]
 attr(dat, "variable.labels")[names(dat)=="size"]
 attr(dat, "variable.labels")[names(dat)=="xsize"]
 attr(dat, "variable.labels")[names(dat)=="ysize"]
@@ -40,32 +41,32 @@ dat %>% group_by(CE) %>%
             size.sd = sd(size),
             n = n())
 
-
-
 ##### Effect Size #1: Main RR #####
 # whether they were above or below (baseline) median 
 #  for total meat consumption at time 3, controlling for 
 # (continuous) meat consumption at baseline
 # dichtomize at baseline med
 bl.med = median(dat$size)
-dat$lo.t3 = dat$ysize < bl.med
-table(dat$lo.t3, dat$CE)
+dat$Y = dat$ysize < bl.med
 
-mod = glm( lo.t3 ~ size + CE, 
-           data = dat,
-           family = "poisson" )
-summary(mod)
+get_rr_adj( condition.var.name = "CE",
+            control.name = "Control",
+            baseline.var.name = "size",
+            .dat = dat )
 
-library(sandwich)
-sqrt( diag( vcovHC(mod, type="HC0") ) )
-# here the sandwich SEs are smaller than naive
-# this makes sense since the outcome is common; see this from McNutt paper:
-# "For studies of common outcomes, Poisson regression is likely to
-# compute a confidence interval(s) that is conservative,
-# suggesting less precision than is true. Poisson errors are overestimates of binomial errors
-# when the outcome is common (Poisson errors approximately
-# equal binomial errors when the outcome (disease) is rare)."
 
+##### Mediation by Positive Emotions #####
+
+library(mediation)
+# control for baseline meat consumption
+model.m = lm( emopos ~ CE + size, data = dat )
+model.y = lm( ysize ~ emopos + CE + size, data = dat )
+res = mediate(model.m,
+              model.y,
+              treat = "CE",
+              mediator = "emopos",
+              covariates = "size")
+# 13% mediated
 
 ##### Effect Size #2: No Meat vs. Any Meat #####
 table(dat$ysize == 0)  # no one stopped eating meat entirely
@@ -75,7 +76,7 @@ mod = glm( dat$ysize == 0 ~ size + CE,
 summary(mod)
 
 library(sandwich)
-sqrt( diag( vcovHC(mod, type="HC0") ) )
+diag( vcovHC(mod, type="HC0") )
 
 
 ##### Effect Size #2: Grams of Meat #####
@@ -129,8 +130,7 @@ mod = glm( Y ~ CTeaten,
 summary(mod)
 
 library(sandwich)
-sqrt( diag( vcovHC(mod, type="HC0") ) )
-# here the sandwich SEs are smaller than naive
+diag( vcovHC(mod, type="HC0") )
 
 # # sanity check: expect effect size to be much smaller, as in original paper, 
 # #  when ignoring within-subject correlation
@@ -149,7 +149,7 @@ mod = glm( FFeaten == 0 ~ CTeaten,
 summary(mod)
 
 library(sandwich)
-sqrt( diag( vcovHC(mod, type="HC0") ) )
+diag( vcovHC(mod, type="HC0") )
 
 ##### Effect Size #3: Grams of Meat #####
 # vs. same subject in control condition
@@ -159,16 +159,6 @@ summary(dat$change)
 # use LM to get SE of within-subject difference
 summary( lm( change ~ 1, 
              data = dat) )
-
-escalc( m2i = mean( dat$change[dat$CE == "Control"] ),
-        m1i = mean( dat$change[dat$CE == "Experimental"] ),
-        sd2i = sd( dat$change[dat$CE == "Control"] ),
-        sd1i = sd( dat$change[dat$CE == "Experimental"] ),
-        n2i = length( dat$change[dat$CE == "Control"] ),
-        n1i = length( dat$change[dat$CE == "Experimental"] ),
-        measure = "MD" )
-
-
 
 
 ################################# ANDERSON 2017 ################################# 
@@ -196,36 +186,21 @@ dat %>% group_by(cond.f) %>%
   summarise( Plow = mean(low.t2),
              n = n())
 
-# instead use high vs. low
-# robust SEs already take care of campus clustering
+##### Point Estimate for 2D Video #####
+# robust SEs below take care of campus clustering
 #  so RE is omitted
 mod.2d = glm( low.t2 ~ cond.f + diet.f1,
                 data = dat[cond.f != 2],
                 family = "poisson")
 summary(mod.2d)
-sqrt( diag( vcovHC(mod.2d, type="HC0", cluster = "campus") ) )
+diag( vcovHC(mod.2d, type="HC0", cluster = "campus") )
 
-
+##### Point Estimate for 3D Video #####
 mod.3d = glm( low.t2 ~ cond.f + diet.f1,
                 data = dat[cond.f != 1],
                 family = "poisson" )
 summary(mod.3d)
-sqrt( diag( vcovHC(mod.3d, type="HC0", cluster = "campus") ) )
-
-# uses Zhang method
-# not in use because Poisson now works
-# # convert directly to RR
-# library(sjstats)
-# # get SE from CI limit
-# library(MetaUtility)
-# scrape_meta( type = "RR",
-#              est = odds_to_rr(mod.2d)["cond.f", "RR"],
-#              hi = odds_to_rr(mod.2d)["cond.f", "upper.ci"] )
-# 
-# scrape_meta( type = "RR",
-#              est = odds_to_rr(mod.3d)["cond.f", "RR"],
-#              hi = odds_to_rr(mod.3d)["cond.f", "upper.ci"] )
-
+diag( vcovHC(mod.3d, type="HC0", cluster = "campus") )
 
 
 ################################# MACDONALD 2016 ################################# 
@@ -317,6 +292,40 @@ escalc( measure = "MD",
         m2i = rep( agg$mean[1], 2 ),
         sd2i = rep( agg$sd[1], 2 ),
         n2i =  rep( agg$n[1], 2 ) )
+
+
+
+################################# CALDWELL 2016 ################################# 
+
+# their summary spreadsheet already had needed stats, so now just getting the % male
+setwd(original.data.dir)
+setwd("Caldwell 2016")
+
+dat = read.csv("CleanWelfareReformsData.csv")
+
+mean(dat$gender[ !dat$gender %in% c("", "Prefer not to answer") ] == "Male")
+
+# missing data situation unclear given lack of codebook
+
+
+################################# CALDWELL 2017 ################################# 
+
+# their summary spreadsheet already had needed stats, so now just getting the % male
+#  and confirming number in control group
+
+setwd(original.data.dir)
+setwd("Caldwell 2017")
+
+dat = read_csv( "cleanVideoDataForAnalysis_forPublic.csv" )
+
+# percent male: 51.7
+1 - mean(dat$female, na.rm = TRUE)
+
+# sample sizes by condition
+dat %>% group_by(videoTreatment) %>% summarise(n())
+
+# total N for paper, not including lifestyle videos since they're not animal welfare
+dat %>% filter(videoTreatment != "lifestyle") %>% summarise(n())
 
 
 ################################# PALOMO-VELEZ ################################# 
@@ -494,7 +503,7 @@ for ( i in 1:length(dats) ) {
   all.conditions = unique( dats[[i]]$condition[ !dats[[i]]$condition == "control" ] )
   for (j in 1:length( all.conditions ) ) {
   
-    es = get_rr( condition = all.conditions[j],
+    es = get_rr_unadj( condition = all.conditions[j],
                  condition.var.name = "condition",
                  control.name = "control",
             dat = dats[[i]] )
@@ -546,28 +555,36 @@ table( apply( dat[,FU.cols],
               sum ) ==
        dat$Total_FollowupYN )
 
+# sanity check for calculation of Total_Current variable
 current.cols = names(dat)[grepl("Current", names(dat))][1:5]
 table( apply( dat[,current.cols],
               1,
               sum ) ==
          dat$Total_Current )
 
-# check how total_chg was calculated
-table( dat$Total_Chg == dat$Total_FollowupYN - dat$Total_Current )
-# total_chg is not always equal to the relevant difference
-# often off by a sign
-
-# fix the Total_Chg variable accordingly
-dat$Total_Chg = dat$Total_FollowupYN - dat$Total_Current
+# # sanity check for Total_Chg variable
+# table( dat$Total_Chg == dat$Total_FollowupYN - dat$Total_Current )
+# # total_chg is not always equal to the relevant difference
+# # often off by a sign
+# # fix the Total_Chg variable accordingly
+# dat$Total_Chg = dat$Total_FollowupYN - dat$Total_Current
  
-# reduce vs. stay same or increase
-dat$Y = dat$Total_Chg < 0
+# outcome: being below baseline median
+bl.med = median( dat$Total_Current, na.rm = TRUE )
+dat$Y = dat$Total_FollowupYN < bl.med
 
-agg = dat %>% group_by(condition) %>%
-  summarise( Preduce = mean(Y),
-             N.tot = n(),
-             N.reduce = sum(Y == 1) )
-print(agg)
+# # probability of reducing consumption by group
+# agg = dat %>% group_by(condition) %>%
+#   summarise( Preduce = mean(Y),
+#              N.tot = n(),
+#              N.reduce = sum(Y == 1) )
+# print(agg)
+
+# rename conditions for forest plot prettiness
+dat$condition[ dat$condition == "comb" ] = '"cut out or cut back" leaflet'
+dat$condition[ dat$condition == "lessmeat" ] = '"less meat" leaflet'
+dat$condition[ dat$condition == "veget" ] = 'vegetarian leaflet'
+dat$condition[ dat$condition == "vegan" ] = 'vegan leaflet'
 
 
 ##### Effect Size #1: Main RR #####
@@ -589,15 +606,19 @@ all.conditions = unique( dat$condition[ !dat$condition == "control" ] )
 
 for (j in 1:length( all.conditions ) ) {
   
-  es = get_rr( condition = all.conditions[j],
-               condition.var.name = "condition",
-               control.name = "control",
-               dat = dat )
+  # keep only the desired condition and control
+  dat2 = dat %>% filter( condition %in% c( all.conditions[j], "control" ) )
+  
+  es = get_rr_adj( condition = all.conditions[j],
+                   condition.var.name = "condition",
+                   control.name = "control",
+                   baseline.var.name = "Total_Current",
+                   .dat = dat2 )
   
   draw <<- add_row(draw, 
                    authoryear = "Cooney 2015",
                    substudy = all.conditions[j],
-                   desired.direction = es$yi > 0,  # ~~ assumes that for raw data, we also code Y such that positive is good
+                   desired.direction = es$yi > 0,  # log(RR) > 0 for being below baseline median is good
                    effect.measure = "log-rr",
                    interpretation = "Reduce vs. don't",
                    use.rr.analysis = 1,
@@ -608,6 +629,17 @@ for (j in 1:length( all.conditions ) ) {
   )
 }
 
+# # sanity check: reproduce one manually
+# dat2 = dat %>% filter( condition %in% c( "control", '"less meat" leaflet' ) )
+# dat2$condition = factor( dat2$condition, levels = c( "control", '"less meat" leaflet' ) ) 
+# ( mod = glm( Y ~ condition + Total_Current, 
+#            data = dat2,
+#            family = "poisson" ) )
+# library(sandwich)
+# diag( vcovHC(mod, type="HC0") )[2]
+
+
+
 ##### Effect Size #2: No Meat vs. Any Meat #####
 
 # rename outcome since below fn looks for a variable called "Y"
@@ -616,7 +648,7 @@ dat$Y = dat$Total_FollowupYN == 0
 
 for (j in 1:length( all.conditions ) ) {
   
-  es = get_rr( condition = all.conditions[j],
+  es = get_rr_unadj( condition = all.conditions[j],
                condition.var.name = "condition",
                control.name = "control",
                dat = dat )
@@ -624,7 +656,7 @@ for (j in 1:length( all.conditions ) ) {
   draw <<- add_row(draw, 
                    authoryear = "Cooney 2015",
                    substudy = all.conditions[j],
-                   desired.direction = es$yi > 0,  # ~~ assumes that for raw data, we also code Y such that positive is good
+                   desired.direction = es$yi > 0,  # Y coded such that positive is good
                    effect.measure = "log-rr",
                    interpretation = "No meat vs. any",
                    use.rr.analysis = 0,
@@ -636,6 +668,7 @@ for (j in 1:length( all.conditions ) ) {
 }
 
 write.csv(draw, "cooney_2015_prepped_effect_sizes.csv")
+
 
 ################################# COONEY 2016 ################################# 
 
@@ -669,6 +702,9 @@ escalc( measure = "RR",
         bi = tab[1,2],
         ci = tab[2,1],
         di = tab[2,2] )
+
+# sanity check for RR
+#(296/(296+362)) / (283/(338+283))
 
 
 ##### Effect Size #2: No Meat vs. Any Meat #####
@@ -727,7 +763,7 @@ dat %>% group_by(con) %>%
 cntrl.med = median( dat$eat_1[ dat$con == "no-head"] )
 dat$Y = dat$eat_1 < cntrl.med
 
-get_rr(condition = "head",
+get_rr_unadj(condition = "head",
        condition.var.name = "con",
        control.name = "no-head",
        dat = dat)
@@ -752,7 +788,7 @@ dat %>% group_by(con) %>%
 cntrl.med = median( dat$veg_1[ dat$con == "no-head"] )
 dat$Y = dat$veg_1 > cntrl.med
 
-get_rr(condition = "head",
+get_rr_unadj(condition = "head",
        condition.var.name = "con",
        control.name = "no-head",
        dat = dat)
@@ -775,7 +811,7 @@ dat %>% group_by(con) %>%
 cntrl.med = median( dat$eat_1[ dat$con == "control"] )
 dat$Y = dat$eat_1 < cntrl.med
 
-get_rr(condition = "animal shown",
+get_rr_unadj(condition = "animal shown",
        condition.var.name = "con",
        control.name = "control",
        dat = dat)
@@ -799,7 +835,7 @@ dat %>% group_by(con) %>%
 cntrl.med = median( dat$veg_1[ dat$con == "euphemisms"] )
 dat$Y = dat$veg_1 > cntrl.med
 
-get_rr(condition = "animal names",
+get_rr_unadj(condition = "animal names",
        condition.var.name = "con",
        control.name = "euphemisms",
        dat = dat)
@@ -826,9 +862,45 @@ dat %>% group_by(con) %>%
 cntrl.med = median( dat$veg_1[ dat$con == "no head"] )
 dat$Y = dat$veg_1 > cntrl.med
 
-get_rr(condition = "head",
+get_rr_unadj(condition = "head",
        condition.var.name = "con",
        control.name = "no head",
        dat = dat)
+
+
+################################# FAUNALYTICS 2019 ################################# 
+
+setwd(original.data.dir)
+setwd('3826 Faunalytics 2019/Data from author')
+
+# per the "legend" tab of the spreadsheet, the diet variables are Likert-type regarding
+#  meat portions per week (1=daily to 6=vegan)
+dat = read_xlsx("Cha22 Data.xlsx")
+
+# high scores are less meat consumption
+bl.med = median(dat$Diet_before)
+
+dat$reduced = dat$Diet_after > dat$Diet_before
+
+mean(dat$reduced)
+
+dat$lo.pre = dat$Diet_before < bl.med
+dat$lo.post = dat$Diet_after < bl.med
+
+
+# could in principle calculate a "risk ratio" using 0.5 as the baseline, but
+#  that assumes that we *know* that without the challenge, people would have maintained
+#  same consumption patterns
+# e.g.:
+.42/.5
+
+
+
+
+
+
+
+
+
 
 
