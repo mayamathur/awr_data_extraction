@@ -1036,7 +1036,7 @@ escalc_add_row( authoryear = "Spanikova 2015",
 OR.cntrl = (245/167) * 1.5
 OR.compass = 1.5  # almost exactly on a gridline = 167 px
 OR.species = (272 / 167) * 1.5
-
+ 
 # # CI half-width
 # OR.unit = 112  # px
 # hw.cntrl = (147/OR.unit)
@@ -1072,8 +1072,8 @@ n.cntrl = 372
 
 p0 = c( (11+3)/398, 11/n.compass, 3/n.species )
 
-p1 = OR_to_p1( OR = c(OR.cntrl, OR.compass, OR.species),
-               p0 = p0 )
+( p1 = OR_to_p1( OR = c(OR.cntrl, OR.compass, OR.species),
+                 p0 = p0 ) )
 
 p1/p0
 
