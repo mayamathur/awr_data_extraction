@@ -70,14 +70,11 @@ res = mediate(model.m,
 
 ##### Effect Size #2: No Meat vs. Any Meat #####
 table(dat$ysize == 0)  # no one stopped eating meat entirely
-mod = glm( dat$ysize == 0 ~ size + CE, 
-           data = dat,
-           family = "poisson" )
-summary(mod)
-
-library(sandwich)
-diag( vcovHC(mod, type="HC0") )
-
+dat$Y = dat$ysize == 0
+get_rr_adj( condition.var.name = "CE",
+            control.name = "Control",
+            baseline.var.name = "size",
+            .dat = dat )
 
 ##### Effect Size #2: Grams of Meat #####
 dat$change = dat$ysize - dat$size
@@ -218,7 +215,6 @@ table( dat$FFQtotalSumMeat_chg == dat$FFQtotalSumMeat.3 - dat$FFQtotalSumMeat.1,
        useNA = "no")
 
 # reproduce Table 12 means
-# ~~~ finish
 agg.sanity = dat %>% group_by(treatment) %>%
   summarise( mean.chg = mean(FFQtotalSumMeat_chg, na.rm = TRUE),
              sd.chg = sd(FFQtotalSumMeat_chg, na.rm = TRUE),
@@ -232,25 +228,29 @@ diff(agg.sanity$mean.chg)
 # (continuous) meat consumption at baseline
 # dichtomize at baseline med
 dat = dat[ !is.na(dat$FFQtotalSumMeat.3) & !is.na(dat$FFQtotalSumMeat.1), ]
+
+# sample size 
+nrow(dat)
+
+# % male
+1 - mean(dat$female, na.rm = TRUE)
+
 bl.med = median(dat$FFQtotalSumMeat.1)
 dat$Y = dat$FFQtotalSumMeat.3 < bl.med
 table(dat$Y, dat$treatment)
 
 ### "reduce" intervention
-mod = glm( Y ~ FFQtotalSumMeat.1 + treatment, 
-           data = dat[ dat$treatment != "veg",],
-           family = "poisson" )
-summary(mod)
-library(sandwich)
-sqrt( diag( vcovHC(mod, type="HC0") ) )
+get_rr_adj( condition.var.name = "treatment",
+            control.name = "control",
+            baseline.var.name = "FFQtotalSumMeat.1",
+            .dat = dat[ dat$treatment != "veg",] )
+
 
 ### "eliminate" intervention
-mod = glm( Y ~ FFQtotalSumMeat.1 + treatment, 
-           data = dat[ dat$treatment != "reduce",],
-           family = "poisson" )
-summary(mod)
-library(sandwich)
-sqrt( diag( vcovHC(mod, type="HC0") ) )
+get_rr_adj( condition.var.name = "treatment",
+            control.name = "control",
+            baseline.var.name = "FFQtotalSumMeat.1",
+            .dat = dat[ dat$treatment != "reduce",] )
 
 
 ##### Effect Size #2: No Meat vs. Any Meat #####
@@ -344,20 +344,22 @@ dat1 %>% group_by(CONDITION) %>%
             sd = sd(MEAT_BUYINGLIKEHOOD))
 
 
-cntrl.med = median( dat1$MEAT_BUYINGLIKEHOOD[dat1$CONDITION == "Neutral essay"] )
-dat1$lo = dat1$MEAT_BUYINGLIKEHOOD < cntrl.med
-
-# no GLM needed; there are no other covariates
+# sample size for relevant comparison for us
 dat1 = dat1[ dat1$CONDITION %in% c("Neutral essay", "Moral essay"), ]
 dat1 = droplevels(dat1)
-tab = table( dat1$CONDITION, dat1$lo )
+nrow(dat1)
 
-library(metafor)
-escalc( measure = "RR",
-        ai = tab[1,1],
-        bi = tab[1,2],
-        ci = tab[2,1],
-        di = tab[2,2] )
+# percent male
+prop.table(table(dat1$Gender))
+
+# no GLM needed; there are no other covariates
+cntrl.med = median( dat1$MEAT_BUYINGLIKEHOOD[dat1$CONDITION == "Neutral essay"] )
+dat1$Y = dat1$MEAT_BUYINGLIKEHOOD < cntrl.med
+
+get_rr_unadj(condition = "Moral essay",
+             condition.var.name = "CONDITION",
+             control.name = "Neutral essay",
+             dat = dat1)
 
 
 ##### Study 2, Effect Size #1: Main RR #####
@@ -368,6 +370,10 @@ dat2 = read.spss("Study 2 with ratings created.sav", to.data.frame=TRUE)
 # filter out vegetarians per author's email (saved)
 dat2 = dat2[ dat2$filter_. == "Selected",]
 
+# sample size 
+nrow(dat2)
+prop.table(table(dat2$SEX))
+
 # remove non-animal conditions
 dat2 = dat2[ dat2$CONDITION %in% c("CONTROL", "ANIMAL WELFARE"), ]
 dat2 = droplevels(dat2)
@@ -376,22 +382,22 @@ cntrl.med = median( dat2$MEAT_BUYINGLIKEHOOD[dat2$CONDITION == "CONTROL"] )
 dat2$Y = dat2$MEAT_BUYINGLIKEHOOD < cntrl.med
 
 # no GLM needed; there are no other covariates
-tab = table( dat2$CONDITION, dat2$Y )
-
-library(metafor)
-escalc( measure = "RR",
-        ai = tab[1,1],
-        bi = tab[1,2],
-        ci = tab[2,1],
-        di = tab[2,2] )
+get_rr_unadj(condition = "ANIMAL WELFARE",
+             condition.var.name = "CONDITION",
+             control.name = "CONTROL",
+             dat = dat2)
 
 
-##### Study 2, Effect Size #1: Main RR #####
+##### Study 3, Effect Size #1: Main RR #####
 library(foreign)
 dat3 = read.spss("Study 3. with ratings created.sav", to.data.frame=TRUE)
 
 # filter out vegetarians per author's email (saved)
 dat3 = dat3[ dat3$filter_. == "Selected",]
+
+# sample size 
+nrow(dat3)
+prop.table(table(dat3$SEX))
 
 # remove non-animal conditions
 dat3 = dat3[ dat3$CONDITION %in% c("CONTROL", "ANIMAL WELFARE"), ]
@@ -401,49 +407,11 @@ cntrl.med = median( dat3$MEAT_BUYINGLIKEHOOD[dat3$CONDITION == "CONTROL"] )
 dat3$Y = dat3$MEAT_BUYINGLIKEHOOD < cntrl.med
 
 # no GLM needed; there are no other covariates
-tab = table( dat3$CONDITION, dat3$Y )
+get_rr_unadj(condition = "ANIMAL WELFARE",
+             condition.var.name = "CONDITION",
+             control.name = "CONTROL",
+             dat = dat3)
 
-library(metafor)
-escalc( measure = "RR",
-        ai = tab[1,1],
-        bi = tab[1,2],
-        ci = tab[2,1],
-        di = tab[2,2] )
-
-# 
-# #### ~~ old
-# ##### Study 2 #####
-# library(foreign)
-# dat2 = read.spss("Study 2.sav", to.data.frame=TRUE)
-# 
-# # they didn't save the outcome variable; make it as in their code
-# dat2$MEAT_BUYINGLIKEHOOD = (dat2$BEEF_BUY + dat2$PORK_BUY + dat2$CHICKEN_BUY + dat2$RAWPORK_BUY + dat2$LAMB_BUY) / 5
-# 
-# # ~~ problem: these are factors, with some things coded as words and others as integers...
-# cntrl.med = median( dat2$MEAT_BUYINGLIKEHOOD[dat2$CONDITION == "CONTROL"] )
-# dat2$lo = dat2$MEAT_BUYINGLIKEHOOD < cntrl.med
-# 
-# # no GLM needed; there are no other covariates
-# 
-# dat2 = dat2[ dat2$CONDITION %in% c("Neutral essay", "Moral essay"), ]
-# dat1 = droplevels(dat1)
-# tab = table( dat1$CONDITION, dat1$lo )
-# 
-# library(metafor)
-# escalc( measure = "RR",
-#         ai = tab[1,1],
-#         bi = tab[1,2],
-#         ci = tab[2,1],
-#         di = tab[2,2] )
-# 
-# # ~~~ stopped here -- contact them?
-
-
-##### Study 2 #####
-library(foreign)
-dat3 = read.spss("Study 3.sav", to.data.frame=TRUE)
-
-table(dat)
 
 
 ################################# REESE 2015 ################################# 
@@ -469,6 +437,26 @@ dats[[1]] = dats[[1]] %>% filter( !condition %in% c("environment",
                                                     "health",
                                                     "news"))
 
+# rename conditions for forest plot prettiness
+dats[[1]]$condition[ dats[[1]]$condition == "activist" ] = "activist passage"
+dats[[1]]$condition[ dats[[1]]$condition == "consciousness" ] = "consciousness passage"
+dats[[1]]$condition[ dats[[1]]$condition == "dxestory" ] = "undercover passage"
+dats[[1]]$condition[ dats[[1]]$condition == "ff" ] = "factory farming passage"
+dats[[1]]$condition[ dats[[1]]$condition == "generalchicken" ] = "generic chicken passage"
+dats[[1]]$condition[ dats[[1]]$condition == "hrcongrat" ] = "congratulatory corporate passage"
+dats[[1]]$condition[ dats[[1]]$condition == "hrhope" ] = "hopeful corporate passage"
+# "mixed" can stay the same
+dats[[1]]$condition[ dats[[1]]$condition == "personalchicken" ] = "individual chicken"
+dats[[1]]$condition[ dats[[1]]$condition == "personalcow" ] = "individual cow"
+dats[[1]]$condition[ dats[[1]]$condition == "personalpig" ] = "individual pig"
+dats[[1]]$condition[ dats[[1]]$condition == "reduce" ] = "reducetarian passage"
+dats[[1]]$condition[ dats[[1]]$condition == "reduce" ] = "reducetarian passage"
+dats[[1]]$condition[ dats[[1]]$condition == "social" ] = "social norms passage"
+dats[[1]]$condition[ dats[[1]]$condition == "vegan" ] = "vegan passage"
+dats[[1]]$condition[ dats[[1]]$condition == "vegetarian" ] = "vegetarian passage"
+
+dats[[2]]$condition[ dats[[2]]$condition == "reducetarian" ] = "reducetarian passage"
+dats[[2]]$condition[ dats[[2]]$condition == "vegetarian" ] = "vegetarian passage"
 
 # effect sizes from raw data
 draw = as.data.frame( matrix( ncol = 10, nrow = 0 ) )
@@ -511,7 +499,7 @@ for ( i in 1:length(dats) ) {
     draw <<- add_row(draw, 
                    authoryear = "Reese 2015",
                    substudy = paste( "Study ", i+2, ", ", all.conditions[j], sep=""),
-                   desired.direction = es$yi > 0,  # ~~ assumes that for raw data, we also code Y such that positive is good
+                   desired.direction = es$yi > 0,  
                    effect.measure = "log-rr",
                    interpretation = "Reduce vs. don't",
                    use.rr.analysis = 1,
@@ -525,8 +513,11 @@ for ( i in 1:length(dats) ) {
 
 write.csv(draw, "reese_prepped_effect_sizes.csv")
 
-# ~~~ definitely hand-check a few of these
-
+# # sanity check: reproduce one by hand
+# temp = dats[[1]][ dats[[1]]$condition %in% c("hopeful corporate passage", "control" ), ]
+# temp %>% group_by(condition, Y) %>%
+#   summarise(n())
+# (7/67) / (5/46); exp(draw$yi[draw$substudy == "Study 3, hopeful corporate passage"])
 
 ################################# COONEY 2015 ################################# 
 
@@ -538,8 +529,6 @@ dat = read.csv("raw_data.csv")
 # group the booklets with same message type, as in JP's analysis
 dat$condition = gsub('[0-9]+', '', dat$BookletDescrp) 
 
-# check missing data %
-prop.table( table( is.na(dat$Total_Chg) ) )
 
 # remove subjects without a booklet or no F/U data
 dat = droplevels( dat[ dat$condition != "", ] )
@@ -586,6 +575,11 @@ dat$condition[ dat$condition == "lessmeat" ] = '"less meat" leaflet'
 dat$condition[ dat$condition == "veget" ] = 'vegetarian leaflet'
 dat$condition[ dat$condition == "vegan" ] = 'vegan leaflet'
 
+# percent male
+# this variable is super messy
+dat %>% filter( Gender %in% c("female", "Female", "male", "Male", "other") ) %>%
+  summarise( prop.male = mean( Gender %in% c("male", "Male") ) )
+
 
 ##### Effect Size #1: Main RR #####
 # effect sizes from raw data
@@ -609,7 +603,7 @@ for (j in 1:length( all.conditions ) ) {
   # keep only the desired condition and control
   dat2 = dat %>% filter( condition %in% c( all.conditions[j], "control" ) )
   
-  es = get_rr_adj( condition = all.conditions[j],
+  es = get_rr_adj( 
                    condition.var.name = "condition",
                    control.name = "control",
                    baseline.var.name = "Total_Current",
@@ -620,7 +614,7 @@ for (j in 1:length( all.conditions ) ) {
                    substudy = all.conditions[j],
                    desired.direction = es$yi > 0,  # log(RR) > 0 for being below baseline median is good
                    effect.measure = "log-rr",
-                   interpretation = "Reduce vs. don't",
+                   interpretation = "Low vs. high weekly consumption",
                    use.rr.analysis = 1,
                    use.grams.analysis = 0,
                    use.veg.analysis = 0,
@@ -744,10 +738,18 @@ setwd(original.data.dir)
 setwd("Kunst 2016/Data from author/kunst_hohle_2016")
 
 
-
 ##### Study 2A, Effect Size #1: Main RR #####
 library(foreign)
 dat = read.spss("study2a.sav", to.data.frame=TRUE)
+
+# missing data
+mean( is.na(dat$eat_1) )
+
+# percent male
+prop.table(table(dat$gender))
+
+# sample size: 168
+nrow(dat)
 
 # look at variable codings
 # View(attr(dat, "variable.labels"))
@@ -768,9 +770,37 @@ get_rr_unadj(condition = "head",
        control.name = "no-head",
        dat = dat)
 
+# sanity check
+dat %>% group_by(con, Y) %>% summarise(n())
+(61/(24+61)) / (41/(41+42))
+
+
+# own mediation analysis
+library(mediation)
+# control for baseline meat consumption
+model.m = lm( EMPATHY ~ con, data = dat )
+model.y = lm( Y ~ EMPATHY + con, data = dat )
+res = mediate(model.m,
+              model.y,
+              treat = "con",
+              control.value = "no-head",
+              treat.value = "head",
+              mediator = "EMPATHY",
+              covariates = "Y")
+# point estimate: 113% mediated
+
+model.m = lm( DISSOCIATION ~ con, data = dat )
+model.y = lm( Y ~ DISSOCIATION + con, data = dat )
+res = mediate(model.m,
+              model.y,
+              treat = "con",
+              control.value = "no-head",
+              treat.value = "head",
+              mediator = "DISSOCIATION",
+              covariates = "Y")
+# point estimate: 102% mediated
 
 ##### Study 2B, Effect Size #1: Main RR #####
-
 library(foreign)
 dat = read.spss("study_2b.sav", to.data.frame=TRUE)
 
@@ -778,6 +808,15 @@ dat = read.spss("study_2b.sav", to.data.frame=TRUE)
 # View(attr(dat, "variable.labels"))
 # here's the outcome we want
 attr(dat, "variable.labels")[names(dat)=="veg_1"]
+
+# missing data
+mean( is.na(dat$eat_1) )
+
+# percent male
+prop.table(table(dat$gender))
+
+# sample size: 101
+nrow(dat)
 
 # reproduce bottom of pg. 764 - looks good
 dat %>% group_by(con) %>%
@@ -802,6 +841,15 @@ dat = read.spss("study3.sav", to.data.frame=TRUE)
 # View(attr(dat, "variable.labels"))
 # here's the outcome we want
 attr(dat, "variable.labels")[names(dat)=="eat_1"]
+
+# missing data
+mean( is.na(dat$eat_1) )
+
+# percent male
+prop.table(table(dat$gender))
+
+# sample size: 187
+nrow(dat)
 
 dat %>% group_by(con) %>%
   summarise( mean = mean(eat_1, na.rm = TRUE),
@@ -831,6 +879,15 @@ dat %>% group_by(con) %>%
   summarise( mean = mean(veg_1, na.rm = TRUE),
              n = sum( !is.na(con) & !is.na(veg_1) ) )
 
+# missing data
+mean( is.na(dat$eat_1) )
+
+# percent male
+prop.table(table(dat$gender))
+
+# sample size: 190
+nrow(dat)
+
 # outcome: above vs. below control group's median willingness to choose veg alternative
 cntrl.med = median( dat$veg_1[ dat$con == "euphemisms"] )
 dat$Y = dat$veg_1 > cntrl.med
@@ -839,6 +896,7 @@ get_rr_unadj(condition = "animal names",
        condition.var.name = "con",
        control.name = "euphemisms",
        dat = dat)
+
 
 
 ################################# KUNST 2018 ################################# 
@@ -854,18 +912,53 @@ dat = read.spss("omnivores.sav", to.data.frame=TRUE)
 # here's the outcome we want
 attr(dat, "variable.labels")[names(dat)=="veg_1"]
 
-dat %>% group_by(con) %>%
-  summarise( mean = mean(veg_1, na.rm = TRUE),
-             n = sum( !is.na(con) & !is.na(veg_1) ) )
+# NAs in these variables seem to distinguish participants' countries
+table( !is.na(dat$ethnic_ecuador), !is.na(dat$ethnic_us))
+
+
+##### American sample #####
+
+dat1 = dat[ !is.na(dat$ethnic_us), ]
+
+# missing data
+mean( is.na(dat1$veg_1) )
+
+# percent male
+prop.table(table(dat1$gender))
+
+# sample size: 178
+nrow(dat1)
 
 # outcome: above vs. below control group's median willingness to choose veg alternative
-cntrl.med = median( dat$veg_1[ dat$con == "no head"] )
-dat$Y = dat$veg_1 > cntrl.med
+cntrl.med = median( dat1$veg_1[ dat1$con == "no head"] )
+dat1$Y = dat1$veg_1 > cntrl.med
 
 get_rr_unadj(condition = "head",
        condition.var.name = "con",
        control.name = "no head",
-       dat = dat)
+       dat = dat1)
+
+##### Ecuadorian sample #####
+
+dat2 = dat[ !is.na(dat$ethnic_ecuador), ]
+
+# missing data
+mean( is.na(dat2$veg_1) )
+
+# percent male
+prop.table(table(dat2$gender))
+
+# sample size: 183
+nrow(dat2)
+
+# outcome: above vs. below control group's median willingness to choose veg alternative
+cntrl.med = median( dat2$veg_1[ dat1$con == "no head"] )
+dat2$Y = dat2$veg_1 > cntrl.med
+
+get_rr_unadj(condition = "head",
+             condition.var.name = "con",
+             control.name = "no head",
+             dat = dat2)
 
 
 ################################# FAUNALYTICS 2019 ################################# 

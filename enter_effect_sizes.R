@@ -43,6 +43,10 @@
 #  - For studies with both self-reported and intended, calculate w/in study difference between 
 #    these measures and compare
 
+# Other notes for OSF documentation
+#  - When possible, calculated sample size and percent male ourselves, which is why it sometimes differed from 
+#  what's reported in paper (e.g., due to missing data or exclusion of some conditions that weren't eligible)
+
 
 library(metafor)
 library(dplyr)
@@ -459,26 +463,24 @@ expect_equal( exp( d$yi[ d$authoryear == "Cordts 2014" ] ),
 
 
 ##### **Palomo-Velez 2018, Study 1 #####
+# total sample size for paper: 151 + 383 + 270 from raw data
+
 # public data; used median split
-escalc_add_row( authoryear = "Palomo-Velez 2018",
-                substudy = "Study 1",
-                desired.direction = 1,
-                effect.measure = "log-rr",
-                interpretation = "Low vs. high meat buying likelihood",
-                use.rr.analysis = 1,
-                use.grams.analysis = 0,
-                use.veg.analysis = 0,
-                measure = "RR",
-                
-                ai = 30,  # these are from my code
-                bi = 39,
-                ci = 39,
-                di = 36 )  # N from df on pg 3
+d = dplyr::add_row(.data = d,
+                   authoryear = "Palomo-Velez 2018",
+                   substudy = "Study 1",
+                   desired.direction = 1,
+                   interpretation = "Low vs. high meat buying likelihood",
+                   use.rr.analysis = 1,
+                   use.grams.analysis = 0,
+                   use.veg.analysis = 0,
+                   effect.measure = "log-rr",
+                   yi = 0.2319,
+                   vi = 0.0230 )
 
 
 ##### **Palomo-Velez 2018, Study 2 #####
 # data from author; used median split
-
 d = dplyr::add_row(.data = d,
                    authoryear = "Palomo-Velez 2018",
                    substudy = "Study 2",
@@ -488,11 +490,11 @@ d = dplyr::add_row(.data = d,
                    use.grams.analysis = 0,
                    use.veg.analysis = 0,
                    effect.measure = "log-rr",
-                   yi = 0.1093,
-                   vi = 0.0242 )
+                   yi = 0.1133,
+                   vi = 0.0259 )
 
 
-##### **Palomo-Velez 2018, Study 2 #####
+##### **Palomo-Velez 2018, Study 3 #####
 # data from author; used median split
 d = dplyr::add_row(.data = d,
                    authoryear = "Palomo-Velez 2018",
@@ -503,8 +505,8 @@ d = dplyr::add_row(.data = d,
                    use.grams.analysis = 0,
                    use.veg.analysis = 0,
                    effect.measure = "log-rr",
-                   yi = 0.2492,
-                   vi = 0.0188 )
+                   yi = 0.2020,
+                   vi = 0.0123 )
 
 ##### **Anderson 2017 (iAnimal), 360 video and 2D video ######
 # had raw data, so used median split
@@ -678,18 +680,16 @@ d = dplyr::add_row(.data = d,
 # "why" leaflet (intervention 1)
 # "Total" = sum of number of days over past week on which subject ate various animal products
 
-# ~~~ ideally get raw data and use Meat2 (days over past week with meat consumption) to look at vegetarianism
-
 # control N: 170 (page 30)
-# "why" leafelet N: 79 (page 23)
-# "how" leafelet N: 78 (page 23)
+# "why" leaflet N: 79 (page 23)
+# "how" leaflet N: 78 (page 23)
 
-# number of days subject ate meat over past week
+# number of days subject ate meat over past week + similar for dairy + similar for eggs
 escalc_add_row( authoryear = "Hennessy 2016",
                 substudy = 'why leaflet',
                 desired.direction = -1,
                 effect.measure = "smd",
-                interpretation = "Consumption frequency SMD",
+                interpretation = "Animal product consumption frequency SMD",
                 use.rr.analysis = 1,
                 use.grams.analysis = 0,
                 use.veg.analysis = 0,
@@ -699,7 +699,7 @@ escalc_add_row( authoryear = "Hennessy 2016",
                 sd1i = 4.25, 
                 n1i = 79, 
                 
-                m2i = 11.64,
+                m2i = 11.64,  # control group
                 sd2i = 4.14,
                 n2i = 170 )
 
@@ -708,7 +708,7 @@ escalc_add_row( authoryear = "Hennessy 2016",
                 substudy = 'how leaflet',
                 desired.direction = -1,
                 effect.measure = "smd",
-                interpretation = "Consumption frequency SMD",
+                interpretation = "Animal product consumption frequency SMD",
                 use.rr.analysis = 1,
                 use.grams.analysis = 0,
                 use.veg.analysis = 0,
@@ -718,7 +718,7 @@ escalc_add_row( authoryear = "Hennessy 2016",
                 sd1i = 3.92, 
                 n1i = 78, 
                 
-                m2i = 11.64,
+                m2i = 11.64,  # control group
                 sd2i = 4.14,
                 n2i = 170 )
 
@@ -740,8 +740,8 @@ escalc_add_row( authoryear = "Hennessy 2016",
                 
                 ai = 1, # Tx who went vegetarian
                 bi = 79 - 1,  # Tx who did not go veg
-                ci = 10,  # control intending to reduce
-                di = 170 - 10  ) # control who did not go veg
+                ci = 8,  # control who went veg
+                di = 170 - 8  ) # control who did not go veg
 
 # same stats as above (not a typo)
 escalc_add_row( authoryear = "Hennessy 2016",
@@ -756,8 +756,8 @@ escalc_add_row( authoryear = "Hennessy 2016",
                 
                 ai = 1, # Tx who went vegetarian
                 bi = 79 - 1,  # Tx who did not go veg
-                ci = 10,  # control intending to reduce
-                di = 170 - 10  ) # control who did not go veg
+                ci = 8,  # control intending to reduce
+                di = 170 - 8  ) # control who did not go veg
 
 
 ##### **MacDonald 2016 #####
@@ -772,7 +772,7 @@ d = dplyr::add_row(.data = d,
                    use.grams.analysis = 0,
                    use.veg.analysis = 0,
                    yi = 0.060872,
-                   vi = 0.049757488^2 )
+                   vi = 0.002475808 )
 
 d = dplyr::add_row(.data = d,
                    authoryear = "MacDonald 2016",
@@ -784,9 +784,9 @@ d = dplyr::add_row(.data = d,
                    use.grams.analysis = 0,
                    use.veg.analysis = 0,
                    yi = 0.077449,
-                   vi = 0.048763497^2 )
+                   vi = 0.002377879 )
 
-# go vegetarian
+# going vegetarian
 d = dplyr::add_row(.data = d,
                    authoryear = "MacDonald 2016",
                    substudy = "reduce",
@@ -901,16 +901,31 @@ d = dplyr::add_row(.data = d,
 
 ##### **Kunst 2018 #####
 
+# American sample
 d = dplyr::add_row(.data = d,
                    authoryear = "Kunst 2018",
+                   substudy = "American sample",
                    desired.direction = 1,
                    effect.measure = "log-rr",
                    interpretation = "Low vs. high willingness to choose vegetarian dish",
                    use.rr.analysis = 1,
                    use.grams.analysis = 0,
                    use.veg.analysis = 0,
-                   yi = 0.3122,
-                   vi = 0.0083 )
+                   yi = 0.3909,
+                   vi = 0.0155 )
+
+# Ecuadorian sample
+d = dplyr::add_row(.data = d,
+                   authoryear = "Kunst 2018",
+                   substudy = "Ecuadorian sample",
+                   desired.direction = 1,
+                   effect.measure = "log-rr",
+                   interpretation = "Low vs. high willingness to choose vegetarian dish",
+                   use.rr.analysis = 1,
+                   use.grams.analysis = 0,
+                   use.veg.analysis = 0,
+                   yi = 0.1714,
+                   vi = 0.0189 )
 
 
 
@@ -943,7 +958,7 @@ escalc_add_row( authoryear = "Silva 2016",
                 
                 m1i = mean.hi.cute, # Table 1
                 sd1i = sd.marg, 
-                n1i = 68,  # all n's on pg 22
+                n1i = 68,  # all n's on pg 15
                 
                 m2i = mean.cntrl,
                 sd2i = sd.marg,
@@ -961,7 +976,7 @@ escalc_add_row( authoryear = "Silva 2016",
                 
                 m1i = mean.lo.cute, # Table 1
                 sd1i = sd.marg, 
-                n1i = 71,  # all n's on pg 22
+                n1i = 71,  # all n's on pg 15
                 
                 m2i = mean.cntrl,
                 sd2i = sd.marg,
@@ -1016,28 +1031,86 @@ escalc_add_row( authoryear = "Spanikova 2015",
 ##### Norris n.d. (Leafleting and Booklet Effectiveness) #####
 
 # measure the purple bars in the saved figure (post vs. pre ORs in each group)
-# start at 1, the lowest point on x-axis, and add the proportion of the 
+# start at 1, the lowest point on x-axis, and add the proportion of the
 #  x-axis occupied by the bar
 OR.cntrl = (245/167) * 1.5
 OR.compass = 1.5  # almost exactly on a gridline = 167 px
 OR.species = (272 / 167) * 1.5
 
-# CI half-width
-OR.unit = 112  # px
-hw.cntrl = (147/OR.unit)
-hw.compass = (88/OR.unit)
-hw.species = (178/OR.unit)
+# # CI half-width
+# OR.unit = 112  # px
+# hw.cntrl = (147/OR.unit)
+# hw.compass = (88/OR.unit)
+# hw.species = (178/OR.unit)
+# 
+# # sanity check: calculate lower CI limits - looks good
+# OR.cntrl - hw.cntrl
+# OR.compass - hw.compass
+# OR.species - hw.species
 
-# sanity check: calculate lower CI limits - looks good
-OR.cntrl - hw.cntrl
-OR.compass - hw.compass
-OR.species - hw.species
+# approximate baseline probability of never eating animal products
+# from "Net Changes" and "Creating a New Single-Week Vegan" sections
+( p0 = (11+3)/398 )
+# this is rare, so OR approximates RR
 
-library(MetaUtility)
-MetaUtility::scrape_meta(type = "RR",
-                         est = )
+# library(MetaUtility)
+# or.es = MetaUtility::scrape_meta(type = "RR",
+#                                  est = c(OR.cntrl, OR.compass, OR.species),
+#                                  hi = c(OR.cntrl + hw.cntrl, OR.compass + hw.compass, OR.species + hw.species))
 
-# ~~ bm
+# convert ORs of vegan vs. not vegan at F/U verus before F/U to probabilities at F/U
+# Wolfram Alpha: solve r = P/(1-P) / (p/(1-p)) for P
+OR_to_p1 = Vectorize( function(OR, p0) {
+  return( (p0 * OR) / ( p0 * (OR-1) + 1 ) )
+}, vectorize.args = c("OR", "p0") )
+
+# p1 = unlist( lapply( as.list(or.es$yi),
+#                      FUN = function(.yi) OR_to_p1(.yi, p0) ) )
+n.compass = 156+32+11
+n.species = 165+31+3
+n.cntrl = 372
+
+p0 = c( (11+3)/398, 11/n.compass, 3/n.species )
+
+p1 = OR_to_p1( OR = c(OR.cntrl, OR.compass, OR.species),
+               p0 = p0 )
+
+p1/p0
+
+# bm
+
+escalc_add_row( authoryear = "Norris n.d.",
+                substudy = ,
+                desired.direction = -1,  # ~~~ check
+                effect.measure = "log-rr",
+                interpretation = ,
+                use.rr.analysis = 1,
+                use.grams.analysis = 0,
+                use.veg.analysis = 0,
+                measure = "RR",
+                
+                ai = round(p1[2] * n.compass), # treatment avoiding animal products at F/U
+                bi = round( (1-p1[2]) * n.compass),  # treatment not avoiding animal products at F/U
+                ci = round(p1[1] * n.cntrl),  # control avoiding animal products at F/U
+                di = round( (1-p1[1]) * n.cntrl) )  # control not avoiding at F/U
+                
+                
+escalc_add_row( authoryear = "Norris n.d.",
+                substudy = ,
+                desired.direction = 1,  # ~~~ check
+                effect.measure = "log-rr",
+                interpretation = ,
+                use.rr.analysis = 1,
+                use.grams.analysis = 0,
+                use.veg.analysis = 0,
+                measure = "RR",
+                
+                ai = round(p1[3] * n.compass), # treatment avoiding animal products at F/U
+                bi = round( (1-p1[3]) * n.compass),  # treatment not avoiding animal products at F/U
+                ci = round(p1[1] * n.cntrl),  # control avoiding animal products at F/U
+                di = round( (1-p1[1]) * n.cntrl) )  # control not avoiding at F/U
+
+# now use Ns in both groups to reconstruct cell counts rather than using scraped variances
 
 # d = dplyr::add_row(.data = d,
 #                    authoryear = "Palomo-Velez 2018",
