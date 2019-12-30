@@ -1,14 +1,4 @@
 
-
-# ~~~ make sure we're using the appropriate outcome now that it is supposed to match the 
-#  intervention's scope
-
-# look for the following in each study:
-#  - our main RR outcome
-#  - raw difference in servings
-#  - vegetarian vs not
-#  give all of these the same unique ID so that we know not to include them in same analysis
-
 ##### Effect Size #1: Main RR #####
 ##### Effect Size #2: No Meat vs. Any Meat #####
 ##### Effect Size #3: Grams of Meat ######
@@ -308,7 +298,7 @@ mean(dat$gender[ !dat$gender %in% c("", "Prefer not to answer") ] == "Male")
 # missing data situation unclear given lack of codebook
 
 
-################################# CALDWELL 2017 ################################# 
+################################# CALDWELL 2017a ################################# 
 
 # their summary spreadsheet already had needed stats, so now just getting the % male
 #  and confirming number in control group
@@ -326,6 +316,72 @@ dat %>% group_by(videoTreatment) %>% summarise(n())
 
 # total N for paper, not including lifestyle videos since they're not animal welfare
 dat %>% filter(videoTreatment != "lifestyle") %>% summarise(n())
+
+
+################################# ROUK 2017 ################################# 
+
+setwd(original.data.dir)
+setwd("Rouk 2017")
+
+dat = read_csv("Fish Welfare Issues Study - Cleaned Data.csv")
+
+# bm
+
+
+# recode treatment for forest plot prettiness
+dat$X = dat$treatmentClean
+dat$X[ dat$treatmentClean == "diseaseAndWater" ] = "disease and water quality"
+dat$X[ dat$treatmentClean == "stockingDensity" ] = "crowding"
+
+# make outcome variable: reduce vs. don't
+dat$Y = dat$fishConsumpIntent90Days %in% c("Completely eliminate",
+                                                "Significantly less",
+                                                "Somewhat less")
+
+( all.conditions = unique( dat$X[ dat$X != "control" ] ) )
+
+
+# effect sizes from raw data
+draw = as.data.frame( matrix( ncol = 10, nrow = 0 ) )
+names(draw) = c( "authoryear",
+                 "substudy",
+                 "desired.direction",
+                 "effect.measure",
+                 "interpretation",
+                 "use.rr.analysis",
+                 "use.grams.analysis",
+                 "use.veg.analysis",
+                 "yi",
+                 "vi")
+
+for (j in 1:length( all.conditions ) ) {
+  
+  temp = dat %>% filter( X %in% c( all.conditions[j], "control") )
+  
+  # print percent male
+  print( paste( all.conditions[j], "percent male:",
+                round( 100* mean( temp$gender == "Male", na.rm = TRUE ), 1 ) ) )
+  
+  es = get_rr_unadj( condition = all.conditions[j],
+                     condition.var.name = "X",
+                     control.name = "control",
+                     dat = temp )
+  
+  draw <<- add_row(draw, 
+                   authoryear = "Rouk 2017",
+                   substudy = all.conditions[j],
+                   desired.direction = es$yi > 0,  
+                   effect.measure = "log-rr",
+                   interpretation = "Reduce vs. don't",
+                   use.rr.analysis = 1,
+                   use.grams.analysis = 0,
+                   use.veg.analysis = 0,
+                   yi = as.numeric(es$yi),
+                   vi = as.numeric(es$vi)
+  )
+}
+
+write.csv(draw, "rouk_prepped_effect_sizes.csv")
 
 
 ################################# PALOMO-VELEZ ################################# 
@@ -523,7 +579,7 @@ write.csv(draw, "reese_prepped_effect_sizes.csv")
 
 # outcome is number of weekly meals containing animal products 
 setwd(original.data.dir)
-setwd("Cooney 2015")
+setwd("Cooney 2015, #3799")
 dat = read.csv("raw_data.csv")
 
 # group the booklets with same message type, as in JP's analysis
@@ -959,6 +1015,81 @@ get_rr_unadj(condition = "head",
              condition.var.name = "con",
              control.name = "no head",
              dat = dat2)
+
+################################# 3838 ACE 2013a ################################# 
+
+setwd(original.data.dir)
+setwd('3838 ACE 2013a')
+setwd("Dataset and codebook")
+
+dat = read_xlsx("ACE leafleting trial with group assignment.xlsx")
+
+# total consumption frequency post-intervention
+# higher scores are better (1 = 5x/day to 7 = Never)
+dat$post.consump = dat$dairy...25 + dat$red...26 + dat$poultry...27 + dat$fish...28 + dat$eggs...29
+# and pre-intervention (as a covariate)
+dat$pre.consump = dat$dairy...5 + dat$red...6 + dat$poultry...7 + dat$fish...8 + dat$eggs...9
+
+# interventions
+# based on sample sizes given in text, "N" is control, "C" is "Compassionate Choices",
+#  and "E" is "Even If You Like Meat"
+table(dat$`GROUP ASSIGNMENT`)
+
+( bl.med = median( dat$post.consump[ dat$`GROUP ASSIGNMENT` == "N" ], na.rm = TRUE ) )
+dat$Y = dat$post.consump > bl.med  # higher scores are better
+
+##### Compassionate Choices #####
+# being above vs. below control group median, controlling for baseline consumption
+get_rr_adj( condition.var.name = "GROUP ASSIGNMENT",
+             control.name = "N",
+             baseline.var.name = "pre.consump",
+             .dat = dat[ dat$`GROUP ASSIGNMENT` != "E", ] )
+
+
+##### Even If You Like Meat #####
+# being above vs. below control group median, controlling for baseline consumption
+get_rr_adj( condition.var.name = "GROUP ASSIGNMENT",
+            control.name = "N",
+            baseline.var.name = "pre.consump",
+            .dat = dat[ dat$`GROUP ASSIGNMENT` != "C", ] )
+
+
+################################# 3837 ACE 2013b ################################# 
+
+setwd(original.data.dir)
+setwd('3837 ACE 2013b')
+setwd("Dataset and codebook")
+
+dat = read.spss("ACEhumaneeducationData.sav", to.data.frame = TRUE)
+
+# total consumption frequency post-intervention
+# higher scores are better (1 = 5x/day to 7 = Never)
+dat$post.consump = dat$CurrentAnimalproductconsumption
+# and pre-intervention (as a covariate)
+dat$pre.consump = dat$Pastanimalproductconsumption
+
+# interventions
+# based on sample sizes given in text, "N" is control, "C" is "Compassionate Choices",
+#  and "E" is "Even If You Like Meat"
+table(dat$GROUPS)
+# remove subjects who unintentionally received FF presentation
+dat = dat %>% filter( GROUPS != "Control but attended FF presentation" )
+
+
+# percent male
+mean( dat$Sex == "Male", na.rm = TRUE )
+
+# make outcome variable
+( bl.med = median( dat$post.consump[ dat$GROUPS == "Control and did not attend FF presentation" ], na.rm = TRUE ) )
+dat$Y = dat$post.consump > bl.med  # higher scores are better
+
+
+
+# being above vs. below control group median, controlling for baseline consumption
+get_rr_adj( condition.var.name = "GROUPS",
+            control.name = "Control and did not attend FF presentation",
+            baseline.var.name = "pre.consump",
+            .dat = dat )
 
 
 ################################# FAUNALYTICS 2019 ################################# 
