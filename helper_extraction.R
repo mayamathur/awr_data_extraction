@@ -89,6 +89,9 @@ get_rr_adj = function(
   # null model only has an intercept
   print( paste("N analyzed:", mod$df.null + 1) )
   
+  # percent missing
+  print( paste("Percent missing:", round( 100 * (mod$df.null + 1) / nrow(.dat), 2) ) )
+  
   return( data.frame(yi, vi) )
 }
 

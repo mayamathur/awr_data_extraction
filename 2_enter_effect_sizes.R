@@ -47,6 +47,9 @@
 #  - When possible, calculated sample size and percent male ourselves, which is why it sometimes differed from 
 #  what's reported in paper (e.g., due to missing data or exclusion of some conditions that weren't eligible)
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+#                                           PRELIMINARIES                                             #
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
 library(metafor)
 library(dplyr)
@@ -55,24 +58,9 @@ library(testthat)
 data.dir = "~/Dropbox/Personal computer/Independent studies/2019/AWR (animal welfare review meat consumption)/Data extraction"
 code.dir = "~/Dropbox/Personal computer/Independent studies/2019/AWR (animal welfare review meat consumption)/Data extraction/awr_data_extraction_git"
 # location of original datasets and code for reproducible studies
-original.data.dir = "~/Dropbox/Personal computer/Independent studies/2019/AWR (animal welfare review meat consumption)/Literature search/Full texts for review"
-setwd(code.dir); source("helper.R")
+original.data.dir = "~/Dropbox/Personal computer/Independent studies/2019/AWR (animal welfare review meat consumption)/Literature search/Full texts for review/*INCLUDED STUDIES"
+setwd(code.dir); source("helper_extraction.R")
 
-# Idea2:
-#  - Use the public datasets to compare vegetarianism as outcome vs. servings
-#  - For studies with both self-reported and intended, calculate w/in study difference between 
-#    these measures and compare
-
-
-library(metafor)
-library(dplyr)
-library(testthat)
-
-data.dir = "~/Dropbox/Personal computer/Independent studies/2019/AWR (animal welfare review meat consumption)/Data extraction"
-code.dir = "~/Dropbox/Personal computer/Independent studies/2019/AWR (animal welfare review meat consumption)/Data extraction/awr_data_extraction_git"
-# location of original datasets and code for reproducible studies
-original.data.dir = "~/Dropbox/Personal computer/Independent studies/2019/AWR (animal welfare review meat consumption)/Literature search/Full texts for review"
-setwd(code.dir); source("helper.R")
 
 d = as.data.frame( matrix( ncol = 10, nrow = 0 ) )
 names(d) = c( "authoryear",
@@ -86,7 +74,9 @@ names(d) = c( "authoryear",
               "yi",
               "vi")
 
-############################### ENTER DATA FOR EACH STUDY ############################### 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+#                                  STEP 1: MAIN-ANALYSIS STUDIES                                      #
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ # 
 
 # asterisks denote studies with raw data
 
@@ -626,9 +616,8 @@ escalc_add_row( authoryear = "Bertolaso 2015",
 
 ##### **Cooney 2015 #####
 # this one had a ton of effect sizes, so was prepped more automatically
-original.data.dir = "~/Dropbox/Personal computer/Independent studies/2019/AWR (animal welfare review meat consumption)/Literature search/Full texts for review"
 setwd(original.data.dir)
-setwd("Cooney 2015")
+setwd("Cooney 2015, #3799")
 
 d = rbind( d, read.csv("cooney_2015_prepped_effect_sizes.csv")[,-1] )
 
@@ -841,9 +830,8 @@ d = dplyr::add_row(.data = d,
 
 # reduce vs. not
 # this one had a ton of effect sizes, so was prepped more automatically
-original.data.dir = "~/Dropbox/Personal computer/Independent studies/2019/AWR (animal welfare review meat consumption)/Literature search/Full texts for review"
 setwd(original.data.dir)
-setwd("Reese 2015")
+setwd("Reese 2015, #3787")
 
 d = rbind( d, read.csv("reese_prepped_effect_sizes.csv")[,-1] )
 
@@ -1158,30 +1146,6 @@ escalc_add_row( authoryear = "Byrd-Bredbenner 2010",
                 m2i = 1.66,
                 sd2i = 0.09 * sqrt(37),
                 n2i = 37 )
-
-
-# ##### Moleman 2018 #####
-# 
-# # pre-intervention: 4% vegans
-# # post-intervention: 20% vegans
-# # hence the absurdly large point estimate
-# 
-# # because this is self-description as vegan (not based on consumption), not using in 
-# #  the vegetarian secondary analysis
-# escalc_add_row( authoryear = "Moleman 2018",
-#                 substudy = NA,
-#                 desired.direction = 1,
-#                 effect.measure = "log-rr",
-#                 interpretation = "Self-describing as vegan after vs. before challenge",
-#                 use.rr.analysis = 1,
-#                 use.grams.analysis = 0,
-#                 use.veg.analysis = 0,
-#                 measure = "RR",
-#                 
-#                 ai = 697, # pre-intervention vegans
-#                 bi = 4727+7502+2573,  # pre-intervention non-vegans
-#                 ci = 799+1155+530+697,  # post- vegans
-#                 di = 1239+2473+4689+217+1658+2043 ) # post-non-vegans
 
 
 ##### Novotna 2019 #####
@@ -1548,36 +1512,13 @@ d = dplyr::add_row(.data = d,
                    vi = 0.0068 )
 
 
-##### Faunalytics 2019 #####
-
-# RR of being below vs. above baseline median meat consumption
-# escalc_add_row( authoryear = "Faunalytics 2019",
-#                 substudy = NA,
-#                 desired.direction = 1,
-#                 effect.measure = "log-rr",
-#                 interpretation = "Being below vs. above baseline median meat consumption",
-#                 use.rr.analysis = 1,
-#                 use.grams.analysis = 0,
-#                 use.veg.analysis = 0,
-#                 measure = "RR",
-#                 
-#                 ai = 43, # pre-intervention vegans
-#                 bi = 190+76,  # pre-intervention non-vegans
-#                 ci = 77,  # post- vegans
-#                 di = 140+92+77 ) # post-non-vegans
-# 
-
-
 ##### Rouk 2017 #####
 # reduce vs. not
 # this one had a ton of effect sizes, so was prepped more automatically
-original.data.dir = "~/Dropbox/Personal computer/Independent studies/2019/AWR (animal welfare review meat consumption)/Literature search/Full texts for review"
 setwd(original.data.dir)
-setwd("Rouk 2017")
+setwd("Rouk 2017, #3832")
 
 d = rbind( d, read.csv("rouk_prepped_effect_sizes.csv")[,-1] )
-
-
 
 
 
@@ -1626,15 +1567,206 @@ d = dplyr::add_row(.data = d,
 
 # save intermediate dataset
 setwd(data.dir)
-write.csv(d, "data_prepped_stage1.csv", row.names = FALSE)
+write.csv(d, "data_prepped_step1.csv", row.names = FALSE)
 
 
 
-############################### MERGE IN QUALITATIVE DATA ############################### 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+#                                     STEP 2: EXCLUDED CHALLENGES                                      #
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ # 
+
 
 # read it back in
 setwd(data.dir)
-d = read.csv("data_prepped_stage1.csv")
+d = read.csv("data_prepped_step1.csv")
+
+
+##### Summer Vegan Pledge (Animal Aid) 2018 #####
+
+# 53% said they would remain vegan
+
+
+##### Summer Vegan Pledge (Animal Aid) 2019 #####
+
+# 57% said they would remain vegan
+
+###### **Challenge 22+ (Animals Now) #####
+
+# 42% reduced consumption (see raw data)
+
+# could also get risk ratio of being vegan after vs. before challenge
+
+##### 30-day VeggieChallenge 2016 (ProVeg) #####
+
+# Mensink Table 2a
+escalc_add_row( authoryear = "30-Day VeggieChallenge (ProVeg) 2016",
+                substudy = NA,
+                desired.direction = 1,
+                effect.measure = "log-rr",
+                interpretation = "Being vegan after vs. before intervention",
+                use.rr.analysis = 1,
+                use.grams.analysis = 0,
+                use.veg.analysis = 0,
+                measure = "RR",
+                
+                ai = 14, # pre-intervention vegans
+                bi = 60+20+102+32+60+15+17,  # pre-intervention non-vegans
+                ci = 36,  # post- vegans
+                di = 17+16+72+54+57+48+21 ) # post-non-vegans
+14/(14+60+20+102+32+60+15+17)
+36/(17+16+72+54+57+48+21)
+
+
+##### 30-day VeggieChallenge 2015 (ProVeg) #####
+
+# ~~~ doesn't have a folder or row in spreadsheet 
+
+# Mensink Table 2b
+escalc_add_row( authoryear = "30-Day VeggieChallenge (ProVeg) 2015",
+                substudy = NA,
+                desired.direction = 1,
+                effect.measure = "log-rr",
+                interpretation = "Being vegan after vs. before intervention",
+                use.rr.analysis = 1,
+                use.grams.analysis = 0,
+                use.veg.analysis = 0,
+                measure = "RR",
+                
+                ai = 15, # pre-intervention vegans
+                bi = 21+40+27+48,  # pre-intervention non-vegans
+                ci = 17,  # post- vegans
+                di = 4+29+32+35 ) # post-non-vegans
+15/(15+21+40+27+48)
+17/(17+4+29+32+35)
+
+
+##### 30-day VeggieChallenge 2017 (ProVeg) #####
+
+# Moleman 2018
+
+# pre-intervention: 4% vegans
+# post-intervention: 20% vegans
+# hence the absurdly large point estimate
+
+# because this is self-description as vegan (not based on consumption), not using in
+#  the vegetarian secondary analysis
+escalc_add_row( authoryear = "30-Day VeggieChallenge (ProVeg) 2017",
+                substudy = NA,
+                desired.direction = 1,
+                effect.measure = "log-rr",
+                interpretation = "Self-describing as vegan after vs. before challenge",
+                use.rr.analysis = 1,
+                use.grams.analysis = 0,
+                use.veg.analysis = 0,
+                measure = "RR",
+
+                ai = 697, # pre-intervention vegans
+                bi = 4727+7502+2573,  # pre-intervention non-vegans
+                ci = 799+1155+530+697,  # post- vegans
+                di = 1239+2473+4689+217+1658+2043 ) # post-non-vegans
+
+
+
+##### 10 Weeks to Vegan (Vegan Outreach) #####
+
+escalc_add_row( authoryear = "10 Weeks to Vegan (Vegan Outreach) 2018",
+                substudy = NA,
+                desired.direction = 1,
+                effect.measure = "log-rr",
+                interpretation = "Being vegan after vs. before intervention",
+                use.rr.analysis = 1,
+                use.grams.analysis = 0,
+                use.veg.analysis = 0,
+                measure = "RR",
+                
+                ai = 43, # pre-intervention vegans
+                bi = 190+76,  # pre-intervention non-vegans
+                ci = 77,  # post- vegans
+                di = 140+92 ) # post-non-vegans
+43/(190+76+43)
+77/(140+92+77)
+
+##### Veganuary (Veganuary) 2014 #####
+
+# % staying vegan, % reducing consumption of each category
+# both broken down by baseline diet
+
+##### Veganuary (Veganuary) 2015 #####
+
+# 49% stayed vegan after six months
+
+##### Veganuary (Veganuary) 2016 #####
+
+# can do RR of being vegan after vs. before challenge
+# this is a Fauna report, so more info available
+
+escalc_add_row( authoryear = "Veganuary (Veganuary) 2016",
+                substudy = NA,
+                desired.direction = 1,
+                effect.measure = "log-rr",
+                interpretation = "Being vegan after vs. before intervention",
+                use.rr.analysis = 1,
+                use.grams.analysis = 0,
+                use.veg.analysis = 0,
+                measure = "RR",
+                
+                ai = .19 * 20597, # pre-intervention vegans
+                bi = (1-.19) * 20597,  # pre-intervention non-vegans
+                ci = .54 * 3369,  # post- vegans
+                di = (1-.54) * 3369 ) # post-non-vegans
+
+
+##### Veganuary (Veganuary) 2017 #####
+
+# 67% intending to stay vegan
+
+##### Veganuary (Veganuary) 2018 #####
+
+# 62% intend to stay vegan
+
+##### Veganuary (Veganuary) 2019 #####
+
+# 47% intending to stay vegan
+
+###### Great Vegan Challenge (Animal Aid) #####
+# from Grassian
+# measure bar heights
+
+total.px = 850  # total vertical height representing 100%
+bl.vegans.px = 31  # height of vegan part of the "0 months" bar
+fu.vegans.px = 240  # height of the vegan part of the "6 months" bar
+N = 470 # pg 6
+
+bl.prop.vegan = bl.vegans.px/total.px
+fu.prop.vegan = fu.vegans.px/total.px
+
+escalc_add_row( authoryear = "The Great Vegan Challenge (Animal Aid)",
+                substudy = NA,
+                desired.direction = 1,
+                effect.measure = "log-rr",
+                interpretation = "Being vegan after vs. before intervention",
+                use.rr.analysis = 1,
+                use.grams.analysis = 0,
+                use.veg.analysis = 0,
+                measure = "RR",
+
+                ai = bl.prop.vegan * N, # pre-intervention vegans
+                bi = (1-bl.prop.vegan) * N,  # pre-intervention non-vegans
+                ci = fu.prop.vegan * N,  # post- vegans
+                di = (1-fu.prop.vegan) * N ) # post-non-vegans
+
+# save intermediate dataset
+setwd(data.dir)
+write.csv(d, "data_prepped_step2.csv", row.names = FALSE)
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+#                                     MERGE IN QUALITATIVE DATA                                      #
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+
+# read it back in
+setwd(data.dir)
+d = read.csv("data_prepped_step2.csv")
 
 # how many unique studies?
 length(unique(d$authoryear))

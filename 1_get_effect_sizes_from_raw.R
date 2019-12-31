@@ -1,15 +1,37 @@
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+#                                           PRELIMINARIES                                             #
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ # 
+
+original.data.dir = "~/Dropbox/Personal computer/Independent studies/2019/AWR (animal welfare review meat consumption)/Literature search/Full texts for review/*INCLUDED STUDIES"
+code.dir = "~/Dropbox/Personal computer/Independent studies/2019/AWR (animal welfare review meat consumption)/Data extraction/awr_data_extraction_git"
+
+# helper code
+setwd(code.dir)
+source("helper_extraction.R")
+
+library(dplyr)
+library(mediation)
+library(foreign)
+library(sandwich)
+library(metafor)
+library(data.table)
+library(readxl)
+
 ##### Effect Size #1: Main RR #####
 ##### Effect Size #2: No Meat vs. Any Meat #####
 ##### Effect Size #3: Grams of Meat ######
 
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+#                                   MAIN-ANALYSIS STUDIES                                             #
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+
 ################################# AMIOT 2018 ################################# 
 
-original.data.dir = "~/Dropbox/Personal computer/Independent studies/2019/AWR (animal welfare review meat consumption)/Literature search/Full texts for review"
 setwd(original.data.dir)
-setwd("Amiot 2018")  
+setwd("Amiot 2018, #243")  
 
-library(foreign)
 dat = read.spss("data.sav", to.data.frame=TRUE)
 
 # confirm which variables are total meat consumption at each time point
@@ -21,7 +43,6 @@ attr(dat, "variable.labels")[names(dat)=="ysize"]
 
 # sanity check vs. Table 2 stats
 # agrees! :)
-library(dplyr)
 dat %>% group_by(CE) %>%
   summarise(size.mean = mean(size),
             size.sd = sd(size),
@@ -47,7 +68,6 @@ get_rr_adj( condition.var.name = "CE",
 
 ##### Mediation by Positive Emotions #####
 
-library(mediation)
 # control for baseline meat consumption
 model.m = lm( emopos ~ CE + size, data = dat )
 model.y = lm( ysize ~ emopos + CE + size, data = dat )
@@ -70,7 +90,6 @@ get_rr_adj( condition.var.name = "CE",
 dat$change = dat$ysize - dat$size
 summary(dat$change)
 
-library(metafor)
 escalc( m2i = mean( dat$change[dat$CE == "Control"] ),
               m1i = mean( dat$change[dat$CE == "Experimental"] ),
               sd2i = sd( dat$change[dat$CE == "Control"] ),
@@ -81,13 +100,10 @@ escalc( m2i = mean( dat$change[dat$CE == "Control"] ),
 
 ################################# ANDERSON 2016 (PLOS) ################################# 
 
-original.data.dir = "~/Dropbox/Personal computer/Independent studies/2019/AWR (animal welfare review meat consumption)/Literature search/Full texts for review"
 setwd(original.data.dir)
-setwd("Anderson 2016")
-
+setwd("Anderson 2016, #3742")
 
 # only Study 3 is eligible
-library(foreign)
 dat = read.spss("Study3_data.sav", to.data.frame=TRUE)
 
 # remove subjects who didn't follow instructions, as in article
@@ -135,7 +151,6 @@ mod = glm( FFeaten == 0 ~ CTeaten,
            family = "poisson" )
 summary(mod)
 
-library(sandwich)
 diag( vcovHC(mod, type="HC0") )
 
 ##### Effect Size #3: Grams of Meat #####
@@ -152,12 +167,9 @@ summary( lm( change ~ 1,
 
 
 # they fit a cumulative logit mixed model
-
-original.data.dir = "~/Dropbox/Personal computer/Independent studies/2019/AWR (animal welfare review meat consumption)/Literature search/Full texts for review"
 setwd(original.data.dir)
-setwd("Anderson 2017 (iAnimal)")
+setwd("Anderson 2017 (iAnimal), #3797")
 
-library(data.table)
 dat = data.table( read.csv("dtfu_prepped_data.csv") ) # I made this by running the initial data-prep section of their code (cast as data table after reading in to avoid errors)
 
 # verbatim from their code (cumulative logit mixed-model)
@@ -194,7 +206,7 @@ diag( vcovHC(mod.3d, type="HC0", cluster = "campus") )
 
 # note this also has outcome at a shorter time lag; using the longer time lag only
 setwd(original.data.dir)
-setwd("MacDonald 2016")
+setwd("MacDonald 2016, #3800")
 
 dat = read.csv("all_waves_cleaned.csv")
 
@@ -250,7 +262,6 @@ mod = glm( (FFQtotalSumMeat.3 == 0) ~ FFQtotalSumMeat.1 + treatment,
            data = dat[ dat$treatment != "veg",],
            family = "poisson" )
 summary(mod)
-library(sandwich)
 sqrt( diag( vcovHC(mod, type="HC0") ) )
 
 ### "eliminate" intervention
@@ -258,7 +269,6 @@ mod = glm( (FFQtotalSumMeat.3 == 0) ~ FFQtotalSumMeat.1 + treatment,
            data = dat[ dat$treatment != "reduce",],
            family = "poisson" )
 summary(mod)
-library(sandwich)
 sqrt( diag( vcovHC(mod, type="HC0") ) )
 
 
@@ -289,7 +299,7 @@ escalc( measure = "MD",
 
 # their summary spreadsheet already had needed stats, so now just getting the % male
 setwd(original.data.dir)
-setwd("Caldwell 2016")
+setwd("Caldwell 2016, #3794")
 
 dat = read.csv("CleanWelfareReformsData.csv")
 
@@ -304,7 +314,7 @@ mean(dat$gender[ !dat$gender %in% c("", "Prefer not to answer") ] == "Male")
 #  and confirming number in control group
 
 setwd(original.data.dir)
-setwd("Caldwell 2017")
+setwd("Caldwell 2017a, #3795")
 
 dat = read_csv( "cleanVideoDataForAnalysis_forPublic.csv" )
 
@@ -321,12 +331,9 @@ dat %>% filter(videoTreatment != "lifestyle") %>% summarise(n())
 ################################# ROUK 2017 ################################# 
 
 setwd(original.data.dir)
-setwd("Rouk 2017")
+setwd("Rouk 2017, #3832")
 
 dat = read_csv("Fish Welfare Issues Study - Cleaned Data.csv")
-
-# bm
-
 
 # recode treatment for forest plot prettiness
 dat$X = dat$treatmentClean
@@ -389,7 +396,7 @@ write.csv(draw, "rouk_prepped_effect_sizes.csv")
 
 ##### Study 1, Effect Size #1: Main RR #####
 setwd(original.data.dir)
-setwd("Palomo-Velez")
+setwd("Palomo-Velez, #107")
 library(foreign)
 dat1 = read.spss("Study1.sav", to.data.frame=TRUE)
 
@@ -420,7 +427,6 @@ get_rr_unadj(condition = "Moral essay",
 
 ##### Study 2, Effect Size #1: Main RR #####
 setwd("From author")
-library(foreign)
 dat2 = read.spss("Study 2 with ratings created.sav", to.data.frame=TRUE)
 
 # filter out vegetarians per author's email (saved)
@@ -445,7 +451,6 @@ get_rr_unadj(condition = "ANIMAL WELFARE",
 
 
 ##### Study 3, Effect Size #1: Main RR #####
-library(foreign)
 dat3 = read.spss("Study 3. with ratings created.sav", to.data.frame=TRUE)
 
 # filter out vegetarians per author's email (saved)
@@ -475,10 +480,7 @@ get_rr_unadj(condition = "ANIMAL WELFARE",
 # this one has a ton of effect sizes, so will make its dataset automatically
 
 setwd(original.data.dir)
-setwd("Reese 2015")
-
-library(readxl)
-
+setwd("Reese 2015, #3787")
 
 # read in Studies 3 and 4 data
 dats = list( read_xlsx("Animal_Advocacy_Messaging_Data.xlsx", sheet = 3),
@@ -575,6 +577,93 @@ write.csv(draw, "reese_prepped_effect_sizes.csv")
 #   summarise(n())
 # (7/67) / (5/46); exp(draw$yi[draw$substudy == "Study 3, hopeful corporate passage"])
 
+
+################################# COONEY 2014 ################################# 
+
+setwd(original.data.dir)
+setwd("Cooney 2014, #3856")
+
+dat = read_xlsx("data.xlsx", sheet = 2)
+
+# clean up coding
+dat$condition = tolower(dat$`4- Booklet Version`)
+dat$sex = tolower(dat$Gender)
+
+# each food variable is the number of weekly weels containing that food
+# lower totals are better
+dat$pre.total = dat$`3-Red Meat` + dat$`3-Poultry` + dat$`3-Fish` + dat$`3-Eggs`
+dat$post.total = dat$`8 - Red Meat` + dat$`8 -Poultry` + dat$`8 - Fish` + dat$`8 - Eggs`
+
+# make outcome
+bl.med = median( dat$pre.total, na.rm = TRUE )
+dat$Y = dat$post.total < bl.med
+
+# rename conditions
+dat$condition[ dat$condition == "g" ] = '"why", all animals, cruelty'
+dat$condition[ dat$condition == "h" ] = '"why", chickens, cruelty'
+dat$condition[ dat$condition == "i" ] = '"how", all animals, cruelty'
+dat$condition[ dat$condition == "j" ] = '"how", chickens, cruelty'
+dat$condition[ dat$condition == "k" ] = '"why", all animals, mixed'
+dat$condition[ dat$condition == "l" ] = '"why", chickens, mixed'
+dat$condition[ dat$condition == "m" ] = '"how", all animals, mixed'
+dat$condition[ dat$condition == "n" ] = '"how", chickens, mixed'
+
+# total N for paper
+nrow( dat %>% filter( !is.na(post.total) & !is.na(condition) & !is.na(pre.total) ) )
+
+##### Effect Size #1: Main RR #####
+# effect sizes from raw data
+draw = as.data.frame( matrix( ncol = 10, nrow = 0 ) )
+names(draw) = c( "authoryear",
+                 "substudy",
+                 "desired.direction",
+                 "effect.measure",
+                 "interpretation",
+                 "use.rr.analysis",
+                 "use.grams.analysis",
+                 "use.veg.analysis",
+                 "yi",
+                 "vi")
+
+# get ES for each condition
+all.conditions = unique( dat$condition[ !dat$condition == "control" ] )
+
+for (j in 1:length( all.conditions ) ) {
+  
+  # keep only the desired condition and control
+  dat2 = dat %>% filter( condition %in% c( all.conditions[j], "control" ) )
+  
+  es = get_rr_adj( condition.var.name = "condition",
+                   control.name = "control",
+                   baseline.var.name = "pre.total",
+                   .dat = dat2 )
+  
+  # print percent male
+  prop.male = mean( dat2$sex[ !is.na(dat2$post.total) ] == "male" )
+  print( paste( all.conditions[j], "percent male:",
+                round( 100* prop.male, 2 ) ) )
+  cat("\n\n")
+  
+  
+  draw <<- add_row(draw, 
+                   authoryear = "Cooney 2014",
+                   substudy = all.conditions[j],
+                   desired.direction = es$yi > 0,  # log(RR) > 0 for being below baseline median is good
+                   effect.measure = "log-rr",
+                   interpretation = "Low vs. high weekly consumption",
+                   use.rr.analysis = 1,
+                   use.grams.analysis = 0,
+                   use.veg.analysis = 0,
+                   yi = as.numeric(es$yi),
+                   vi = as.numeric(es$vi)
+  )
+}
+
+write.csv(draw, "cooney_2014_prepped_effect_sizes.csv")
+
+
+
+
 ################################# COONEY 2015 ################################# 
 
 # outcome is number of weekly meals containing animal products 
@@ -589,7 +678,6 @@ dat$condition = gsub('[0-9]+', '', dat$BookletDescrp)
 # remove subjects without a booklet or no F/U data
 dat = droplevels( dat[ dat$condition != "", ] )
 dat = dat[ !is.na(dat$Total_Chg), ]
-
 
 
 # confirm that total FU and current variables
@@ -723,14 +811,13 @@ write.csv(draw, "cooney_2015_prepped_effect_sizes.csv")
 ################################# COONEY 2016 ################################# 
 
 setwd(original.data.dir)
-setwd("Cooney 2016")
+setwd("Cooney 2016, #3796")
 
 # don't worry about warnings
 library(readxl)
 dat = read_xlsx("cleanImpactStudyData.ForAnalysis.xlsx")
 
 #sanity checks
-library(dplyr)
 ( agg = dat %>% group_by(group) %>%
   summarise( total.mean = mean(totalAnimalProductConsumption),
              total.sd = sd(totalAnimalProductConsumption),
@@ -746,7 +833,6 @@ dat$lo = dat$totalAnimalProductConsumption < cntrl.med
 # no GLM needed; there are no other covariates
 tab = table( dat$group, dat$lo )
 prop.table(tab, margin = 1)
-library(metafor)
 escalc( measure = "RR",
         ai = tab[1,1],
         bi = tab[1,2],
@@ -761,7 +847,6 @@ escalc( measure = "RR",
 # no GLM needed; there are no other covariates
 tab = table( dat$group, dat$zeroServingsOfMeat )
 prop.table(tab, margin = 1)  # matches what they reported :) 
-library(metafor)
 escalc( measure = "RR",
         ai = tab[1,1],
         bi = tab[1,2],
@@ -791,11 +876,10 @@ servings[2] * grams.per.serving^2
 ################################# KUNST 2016 ################################# 
 
 setwd(original.data.dir)
-setwd("Kunst 2016/Data from author/kunst_hohle_2016")
+setwd("Kunst 2016, #1453/Data from author/kunst_hohle_2016")
 
 
 ##### Study 2A, Effect Size #1: Main RR #####
-library(foreign)
 dat = read.spss("study2a.sav", to.data.frame=TRUE)
 
 # missing data
@@ -832,7 +916,6 @@ dat %>% group_by(con, Y) %>% summarise(n())
 
 
 # own mediation analysis
-library(mediation)
 # control for baseline meat consumption
 model.m = lm( EMPATHY ~ con, data = dat )
 model.y = lm( Y ~ EMPATHY + con, data = dat )
@@ -857,7 +940,6 @@ res = mediate(model.m,
 # point estimate: 102% mediated
 
 ##### Study 2B, Effect Size #1: Main RR #####
-library(foreign)
 dat = read.spss("study_2b.sav", to.data.frame=TRUE)
 
 # look at variable codings
@@ -890,7 +972,6 @@ get_rr_unadj(condition = "head",
 
 
 ##### Study 3, Effect Size #1: Main RR #####
-library(foreign)
 dat = read.spss("study3.sav", to.data.frame=TRUE)
 
 # look at variable codings
@@ -923,7 +1004,6 @@ get_rr_unadj(condition = "animal shown",
 
 ##### Study 5, Effect Size #1: Main RR #####
 
-library(foreign)
 dat = read.spss("study5.sav", to.data.frame=TRUE)
 
 # look at variable codings
@@ -960,7 +1040,6 @@ get_rr_unadj(condition = "animal names",
 setwd(original.data.dir)
 setwd("Kunst 2016/Data from author/kunst_haugestad_2018")
 
-library(foreign)
 dat = read.spss("omnivores.sav", to.data.frame=TRUE)
 
 # look at variable codings
@@ -973,7 +1052,6 @@ table( !is.na(dat$ethnic_ecuador), !is.na(dat$ethnic_us))
 
 
 ##### American sample #####
-
 dat1 = dat[ !is.na(dat$ethnic_us), ]
 
 # missing data
@@ -995,7 +1073,6 @@ get_rr_unadj(condition = "head",
        dat = dat1)
 
 ##### Ecuadorian sample #####
-
 dat2 = dat[ !is.na(dat$ethnic_ecuador), ]
 
 # missing data
@@ -1019,7 +1096,7 @@ get_rr_unadj(condition = "head",
 ################################# 3838 ACE 2013a ################################# 
 
 setwd(original.data.dir)
-setwd('3838 ACE 2013a')
+setwd('Animal Charity Evaluators 2013a, #3838')
 setwd("Dataset and codebook")
 
 dat = read_xlsx("ACE leafleting trial with group assignment.xlsx")
@@ -1057,7 +1134,7 @@ get_rr_adj( condition.var.name = "GROUP ASSIGNMENT",
 ################################# 3837 ACE 2013b ################################# 
 
 setwd(original.data.dir)
-setwd('3837 ACE 2013b')
+setwd('Animal Charity Evaluators 2013b, #3837')
 setwd("Dataset and codebook")
 
 dat = read.spss("ACEhumaneeducationData.sav", to.data.frame = TRUE)
@@ -1092,10 +1169,14 @@ get_rr_adj( condition.var.name = "GROUPS",
             .dat = dat )
 
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+#                                     EXCLUDED CHALLENGES                                             #
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+
+
 ################################# FAUNALYTICS 2019 ################################# 
 
-setwd(original.data.dir)
-setwd('3826 Faunalytics 2019/Data from author')
+setwd("~/Dropbox/Personal computer/Independent studies/2019/AWR (animal welfare review meat consumption)/Literature search/Full texts for review/*INCLUDED STUDIES/*Challenges/Challenge 22+ (Animals Now) 2018/Faunalytics 2019, #3826/Data from author")
 
 # per the "legend" tab of the spreadsheet, the diet variables are Likert-type regarding
 #  meat portions per week (1=daily to 6=vegan)
