@@ -1767,6 +1767,34 @@ setwd(data.dir)
 write.csv(d, "data_prepped_step2.csv", row.names = FALSE)
 
 
+###### **Norris 2015 #####
+
+# "Your Choice"
+d = dplyr::add_row(.data = d,
+                   authoryear = "Norris 2015",
+                   desired.direction = 0,
+                   effect.measure = "log-rr",
+                   interpretation = "Low vs. high animal product consumption",
+                   use.rr.analysis = 1,
+                   use.grams.analysis = 0,
+                   use.veg.analysis = 0,
+                   yi = -0.108307,
+                   vi = 0.01944182 )
+
+d = dplyr::add_row(.data = d,
+                   authoryear = "Norris 2015",
+                   desired.direction = 0,
+                   effect.measure = "log-rr",
+                   interpretation = "Low vs. high animal product consumption",
+                   use.rr.analysis = 1,
+                   use.grams.analysis = 0,
+                   use.veg.analysis = 0,
+                   yi = -0.05842669,
+                   vi = 0.02098244 )
+
+# bm
+
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 #                                     MERGE IN QUALITATIVE DATA                                      #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #

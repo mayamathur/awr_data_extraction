@@ -1179,6 +1179,197 @@ get_rr_adj( condition.var.name = "GROUPS",
             baseline.var.name = "pre.consump",
             .dat = dat )
 
+################################# 3831 NORRIS N.D. ################################# 
+
+# ~~~ dataset seems to be from something else
+#  the survey refers to "listening to a presentation" and dataset doesn't have a variable for which leaflet was received
+
+# setwd(original.data.dir)
+# setwd('Norris nd, #3831')
+# setwd("Data from author/Leafleting Effectiveness 2018")
+# 
+# # pre- and post-data are in different files
+# dat.pre = read.csv("LES Pre-test Results.csv"); nrow(dat.pre)
+# dat.post = read.csv("LES Post-Test Results.csv"); nrow(dat.post)
+# 
+# # merge them 
+# dat = merge( dat.pre, dat.post, by = "code" )
+# 
+# dat = merge( dat.pre, dat.post, by = "id" )
+
+
+################################# 3829 NORRIS 2014 ################################# 
+
+# bm
+setwd(original.data.dir)
+setwd('Norris 2014, #3830')
+setwd("Data from author/Pay Per Read Fall 2014")
+
+dat.pre = read_xlsx("PPR 2014 Results pre-test.xlsx", sheet=3); nrow(dat.pre)
+dat.post = read_xlsx("Post data MM cleaned.xlsx", sheet=1); nrow(dat.post)
+
+# recode food-specific variables as numeric
+dat.pre$`Think back to the meals and snacks you have had in the last 7 days. / How many different times did...-Red meat (beef, pork, etc.)-Not last week, but I sometimes eat`
+# ughhhh
+# they're in different variables
+
+##### Recode Outcomes in Pre-Data #####
+( varsA = names(dat.pre)[ grepl( "7 or more times last week", names(dat.pre) ) ] )
+( varsB = names(dat.pre)[ grepl( "4-6 times last week", names(dat.pre) ) ] )
+( varsC = names(dat.pre)[ grepl( "1-3 times last week", names(dat.pre) ) ] )
+( varsD = names(dat.pre)[ grepl( "Not last week", names(dat.pre) ) ] )
+
+dat.pre[ ,varsA ] = dat.pre[ ,varsA ] + 4  # so that the 1s are coded as 5s and the NAs stay NA
+dat.pre[ ,varsB ] = dat.pre[ ,varsB ] + 3  # so that the 1s are coded as 5s and the NAs stay NA
+dat.pre[ ,varsC ] = dat.pre[ ,varsC ] + 2  # so that the 1s are coded as 5s and the NAs stay NA
+dat.pre[ ,varsD ] = dat.pre[ ,varsD ] + 1  # so that the 1s are coded as 5s and the NAs stay NA
+# leave the "Never" category alone
+
+# sanity check
+View(head(dat.pre))
+
+library(rccmisc)
+# sum all of these variables
+names(dat.pre[21:45])
+dat.pre$pre.consump = psum( dat.pre[,21:45], na.rm=TRUE )
+
+
+##### Recode Outcomes in Post-Data #####
+( varsA = names(dat.post)[ grepl( "7 or more times last week", names(dat.post) ) ] )
+( varsB = names(dat.post)[ grepl( "4-6 times last week", names(dat.post) ) ] )
+( varsC = names(dat.post)[ grepl( "1-3 times last week", names(dat.post) ) ] )
+( varsD = names(dat.post)[ grepl( "Not last week", names(dat.post) ) ] )
+( varsE = names(dat.post)[ grepl( "Never", names(dat.post) ) ] )
+
+# this one has "0" instead of NA
+dat.post[, c(varsA, varsB, varsC, varsD, varsE) ][ dat.post[, c(varsA, varsB, varsC, varsD, varsE) ] == 0 ] = NA
+
+dat.post[ ,varsA ] = dat.post[ ,varsA ] + 4  # so that the 1s are coded as 5s and the NAs stay NA
+dat.post[ ,varsB ] = dat.post[ ,varsB ] + 3  # so that the 1s are coded as 5s and the NAs stay NA
+dat.post[ ,varsC ] = dat.post[ ,varsC ] + 2  # so that the 1s are coded as 5s and the NAs stay NA
+dat.post[ ,varsD ] = dat.post[ ,varsD ] + 1  # so that the 1s are coded as 5s and the NAs stay NA
+# leave the "Never" category alone
+
+# sanity check
+View(head(dat.post))
+
+library(rccmisc)
+# sum all of these variables
+names(dat.post[16:40])
+dat.post$post.consump = psum( dat.post[,16:40], na.rm=TRUE )
+
+# binary outcome
+bl.med = median( dat$post.consump[ dat$condition == "control" ] )
+dat.post$Y = dat.post$post.consump < bl.med
+
+##### Merge Datasets #####
+dat = inner_join( dat.pre,
+                  dat.post, by = "What is your MTurk Worker ID?  We need this in order to / approve the HIT.  If you're not sure what...")
+nrow(dat)
+
+
+##### Make Intervention Variable #####
+# need to merge the 3 "please read" columns
+library(tidyr)
+
+dat = dat %>% mutate( your.choice = recode(`Please read the pamphlet below before continuing to the rest of /  the survey: /  /  Your Choice /  - PDF`,
+                                           `1` = '"Your Choice"' ),
+                      even.if = recode( `Please read the pamphlet below before continuing to the rest of the / survey /  Even if /  you like Mea...`,
+                                        `1` = '"Even If You Like Meat"'),
+                      control = recode( `Please read the pamphlet below before continuing to the rest of the / survey: /  Immigrant Detention...`,
+                                        `1` = "control") )
+
+dat$condition = coalesce( dat$your.choice, dat$even.if, dat$control )
+
+# sanity check
+# our N's are a bit larger than theirs
+# reported: 134 EIYLM, 167 YC, 158 control
+# could this be because they used different outcome?
+table(dat$condition)
+
+##### Sex #####
+mean( dat$`What is your gender?` == 1, na.rm = TRUE )
+
+##### Missing Data #####
+
+# control: 219 to 164
+# Even If: 197 to 141
+# Your Choice: 238 to 176
+
+# percent remaining at F/U in each group
+164/219
+141/197
+176/238
+# appears non-differential
+
+1 - ( nrow(dat.post) / nrow(dat.pre) )
+
+##### Finally Get the RRs #####
+# "Your Choice"
+get_rr_adj( condition.var.name = "condition",
+            control.name = "control",
+            baseline.var.name = "pre.consump",
+            .dat = dat[ dat$condition != '"Even If You Like Meat"', ] )
+
+# "Even If You Like Meat"
+get_rr_adj( condition.var.name = "condition",
+            control.name = "control",
+            baseline.var.name = "pre.consump",
+            .dat = dat[ dat$condition != '"Your Choice"', ] )
+
+# # sanity check: why are the RRs in unexpected direction even though proportions
+# #  below baseline median are slightly better for interventions vs. control? (per below)
+# dat %>% group_by(condition) %>%
+#   summarise( prop.below = mean(Y),
+#              pre.consump = mean(pre.consump) )
+# #  because the effect direction reverses upon controlling for pre-consumption
+# temp = dat %>% filter( condition != '"Even If You Like Meat"')
+# mod = glm( Y ~ condition, 
+#            data = temp,
+#            family = "poisson" )
+# summary(mod)
+
+################################# 3829 NORRIS 2016 ################################# 
+
+# ~~~ data also seem to be wrong 
+setwd(original.data.dir)
+setwd('Norris 2016, #3829')
+setwd("Data from author/Pay Per Read Fall 2015")
+
+dat.pre = read_xlsx("PPR 2015 Fall-12 pre-test data.xlsx")
+dat.post = read_xlsx("PPR 2015 Fall 2016-05-03 post-test full cleaned.xlsx")
+
+# some IDs are duplicated...not sure why
+table(duplicated(dat.pre$`What is your MTurk Worker ID?`))
+table(duplicated(dat.post$`What is your MTurk Worker ID?`))
+# remove these
+bad.ids = c( dat.pre$`What is your MTurk Worker ID?`[ duplicated(dat.pre$`What is your MTurk Worker ID?`) ],
+             dat.post$`What is your MTurk Worker ID?`[ duplicated(dat.pre$`What is your MTurk Worker ID?`) ] )
+dat.pre = dat.pre[ !dat.pre$`What is your MTurk Worker ID?` %in% bad.ids, ]
+dat.post = dat.post[ !dat.post$`What is your MTurk Worker ID?` %in% bad.ids, ]
+
+
+# recode food-specific variables as numeric
+( pre.food.vars = c(names(dat.pre)[35:39], names(dat.pre)[41:42]) )
+names(dat.post)
+
+# so this was carried forward from pre-data
+table(dat$`Beef (hamburger, steak, roast beef, etc.):In the past 3 months, how often did you eat the following?   ` == dat$`Beef (hamburger, steak, roast beef, etc.):In the past 3 months, how often did you eat the following?Â  Â `)
+
+
+# merge the datasets
+dat = inner_join( dat.pre,
+                 dat.post, by = "What is your MTurk Worker ID?")
+nrow(dat)
+
+# sanity check: expected number of rows
+length( intersect( unique(dat.post$`What is your MTurk Worker ID?`),
+                   unique(dat.pre$`What is your MTurk Worker ID?`) ) )
+
+
+
+
+dat$pre.consump = dat$`Beef (hamburger, steak, roast beef, etc.):In the past 3 months, how often did you eat the following?   `
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 #                                     EXCLUDED CHALLENGES                                             #

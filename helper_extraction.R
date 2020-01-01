@@ -90,7 +90,8 @@ get_rr_adj = function(
   print( paste("N analyzed:", mod$df.null + 1) )
   
   # percent missing
-  print( paste("Percent missing:", round( 100 * (mod$df.null + 1) / nrow(.dat), 2) ) )
+  prop.missing = 1 - ( (mod$df.null + 1) / nrow(.dat) )
+  print( paste("Percent missing:", round( 100 * prop.missing, 2) ) )
   
   return( data.frame(yi, vi) )
 }
