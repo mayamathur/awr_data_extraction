@@ -613,6 +613,13 @@ escalc_add_row( authoryear = "Bertolaso 2015",
                 n2i = 98 ) 
 
 
+##### **Cooney 2014 #####
+# this one had a ton of effect sizes, so was prepped more automatically
+setwd(original.data.dir)
+setwd("Cooney 2014, #3856")
+
+d = rbind( d, read.csv("cooney_2014_prepped_effect_sizes.csv")[,-1] )
+
 
 ##### **Cooney 2015 #####
 # this one had a ton of effect sizes, so was prepped more automatically
@@ -1740,7 +1747,7 @@ N = 470 # pg 6
 bl.prop.vegan = bl.vegans.px/total.px
 fu.prop.vegan = fu.vegans.px/total.px
 
-escalc_add_row( authoryear = "The Great Vegan Challenge (Animal Aid)",
+escalc_add_row( authoryear = "The Great Vegan Challenge (Animal Aid) n.d.",
                 substudy = NA,
                 desired.direction = 1,
                 effect.measure = "log-rr",
@@ -1778,9 +1785,11 @@ nrow(d)
 # qualitative data entered into Excel
 setwd(data.dir)
 library(readxl)
-d2 = read_xlsx("Extracted qualitative data.xlsx")
+# NOTE: this step breaks if cell values are hyphenated! 
+d2 = read_xlsx("Extracted qualitative data.xlsx", na = "NR")
 # remove missing rows
 d2 = d2 %>% filter(!is.na(`First author last name`))
+
 
 # for some reason, reads in years in an absurd format (e.g., "2018.0" as a string)
 library(tidyverse)
@@ -1805,7 +1814,8 @@ d2$unique[ !is.na(d2$`Substudy #`) ] = paste( d2$`First author last name`[ !is.n
                                               sep = " ")
 d2$unique
 
-# look for IDs from effect sizes that aren't in the qualitative data spreadsheet (should be none)
+# look for IDs from effect sizes that aren't in the qualitative data spreadsheet
+#  (should be none)
 d$unique[ !d$unique %in% d2$unique ]
 
 # studies in qualitative data that aren't in entered effect sizes
@@ -1914,8 +1924,10 @@ d = d[ , has.caps == FALSE | names(d) %in% c("logRR", "varlogRR", "RR.lo", "RR.h
 
 ############################### RECODE SOME VARS ############################### 
 
-# for hyphenated ranges, take the mean
-d$y.lag.days = unname(hyphen_mean(d$y.lag.days))
+# # for hyphenated ranges, take the mean
+# d$y.lag.days = unname(hyphen_mean(d$y.lag.days))
+# d$qual.missing = unname(hyphen_mean(d$yqual.missing))
+
 
 make.numeric = c("perc.male",
                  "x.min.exposed",

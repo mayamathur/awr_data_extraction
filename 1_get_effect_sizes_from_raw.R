@@ -580,6 +580,8 @@ write.csv(draw, "reese_prepped_effect_sizes.csv")
 
 ################################# COONEY 2014 ################################# 
 
+# ~~~ not double-checked
+
 setwd(original.data.dir)
 setwd("Cooney 2014, #3856")
 
@@ -658,6 +660,15 @@ for (j in 1:length( all.conditions ) ) {
                    vi = as.numeric(es$vi)
   )
 }
+
+# # sanity check: reproduce one manually
+# dat2 = dat %>% filter( condition %in% c( "control", '"how", all animals, cruelty' ) )
+# dat2$condition = factor( dat2$condition, levels = c( "control", '"less meat" leaflet' ) )
+# ( mod = glm( Y ~ (condition == '"how", all animals, cruelty') + pre.total,
+#            data = dat2,
+#            family = "poisson" ) )
+# library(sandwich)
+# diag( vcovHC(mod, type="HC0") )[2]
 
 write.csv(draw, "cooney_2014_prepped_effect_sizes.csv")
 
