@@ -303,9 +303,33 @@ setwd("Caldwell 2016, #3794")
 
 dat = read.csv("CleanWelfareReformsData.csv")
 
+# sex
+dat %>% filter( experimentGroup %in% c("porkLegislation", 
+                                       "controlPorkLegislation",
+                                       "porkPolicy",
+                                       "controlPorkPolicy" ) ) %>%
+  summarise( prop.male = mean( gender[ !gender %in% c("", "Prefer not to answer") ] == "Male" ) )
+
 mean(dat$gender[ !dat$gender %in% c("", "Prefer not to answer") ] == "Male")
 
 # missing data situation unclear given lack of codebook
+
+##### Get RRs #####
+# outcome variable
+dat$Y = dat$pork.decrease
+
+# pork legislation article
+get_rr_unadj(condition = "porkLegislation",
+             condition.var.name = "experimentGroup",
+             control.name = "controlPorkLegislation",
+             dat)
+
+# pork policy article
+get_rr_unadj(condition = "porkPolicy",
+             condition.var.name = "experimentGroup",
+             control.name = "controlPorkPolicy",
+             dat)
+
 
 
 ################################# CALDWELL 2017a ################################# 
@@ -1300,7 +1324,7 @@ mean( dat$`What is your gender?` == 1, na.rm = TRUE )
 164/219
 141/197
 176/238
-# appears non-differential
+# appears nondifferential by group
 
 1 - ( nrow(dat.post) / nrow(dat.pre) )
 

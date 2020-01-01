@@ -296,76 +296,33 @@ d = rbind(d, new.rows)
 
 
 ##### Caldwell 2016 #####
-# reduce vs. keep consumption the same 
-# see their xlsx file
-# no servings variable
-
-# egg policy article
-escalc_add_row( authoryear = "Caldwell 2016",
-                substudy = "egg policy article",
-                desired.direction = 1,
-                effect.measure = "log-rr",
-                interpretation = "Reduce vs. don't",
-                use.rr.analysis = 1,
-                use.grams.analysis = 0,
-                use.veg.analysis = 0,
-                measure = "RR",
-                
-                ai = round(0.07291667 * 193), # Tx intending to reduce meat
-                bi = round( (1-0.07291667) * 193),  # Tx not intending
-                ci = round(0.045 * 200),  # control intending to reduce
-                di = round( (1-0.045) * 200) )  # control not intending
-
-
-# egg legislation article
-escalc_add_row( authoryear = "Caldwell 2016",
-                substudy = "egg legislation article",
-                desired.direction = 1,
-                effect.measure = "log-rr",
-                interpretation = "Reduce vs. don't",
-                use.rr.analysis = 1,
-                use.grams.analysis = 0,
-                use.veg.analysis = 0,
-                measure = "RR",
-                
-                ai = round(0.08717949 * 195), # Tx intending to reduce meat
-                bi = round( (1-0.08717949) * 195),  # Tx not intending
-                ci = round(0.004901961 * 205),  # control intending to reduce
-                di = round( (1-0.004901961) * 205) )  # control not intending
-
+# reduce vs. keep consumption the same or increase
 
 # pork policy article
-escalc_add_row( authoryear = "Caldwell 2016",
-                substudy = "pork policy article",
-                desired.direction = 1,
-                effect.measure = "log-rr",
-                interpretation = "Reduce vs. don't",
-                use.rr.analysis = 1,
-                use.grams.analysis = 0,
-                use.veg.analysis = 0,
-                measure = "RR",
-                
-                ai = round(0.1428571 * 197), # Tx intending to reduce meat
-                bi = round( (1-0.1428571) * 197),  # Tx not intending
-                ci = round(0.08629442 * 200),  # control intending to reduce
-                di = round( (1-0.08629442) * 200) )  # control not intending
+d = dplyr::add_row(.data = d,
+                   authoryear = "Caldwell 2016",
+                   substudy = "pork policy article",
+                   desired.direction = 1,
+                   interpretation = "Reduce pork vs. don't",
+                   use.rr.analysis = 1,
+                   use.grams.analysis = 0,
+                   use.veg.analysis = 0,
+                   effect.measure = "log-rr",
+                   yi = 0.5041,
+                   vi = 0.0844 )
 
-
-# pork legislation article
-escalc_add_row( authoryear = "Caldwell 2016",
-                substudy = "pork legislation article",
-                desired.direction = 1,
-                effect.measure = "log-rr",
-                interpretation = "Reduce vs. don't",
-                use.rr.analysis = 1,
-                use.grams.analysis = 0,
-                use.veg.analysis = 0,
-                measure = "RR",
-                
-                ai = round(0.1932367 * 207), # Tx intending to reduce meat
-                bi = round( (1-0.1932367) * 207),  # Tx not intending
-                ci = round(0.09405941 * 202),  # control intending to reduce
-                di = round( (1-0.09405941) * 202) )  # control not intending
+# pork legislation
+d = dplyr::add_row(.data = d,
+                   authoryear = "Caldwell 2016",
+                   substudy = "pork legislation article",
+                   desired.direction = 1,
+                   interpretation = "Reduce pork vs. don't",
+                   use.rr.analysis = 1,
+                   use.grams.analysis = 0,
+                   use.veg.analysis = 0,
+                   effect.measure = "log-rr",
+                   yi = 0.7200,
+                   vi = 0.0679 )
 
 
 ##### Caldwell 2017a #####
@@ -1792,7 +1749,7 @@ d = dplyr::add_row(.data = d,
                    yi = -0.05842669,
                    vi = 0.02098244 )
 
-# bm
+
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #

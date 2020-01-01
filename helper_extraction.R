@@ -42,6 +42,9 @@ get_rr_unadj = function(condition,
   
   tab = table( temp[[condition.var.name]], temp$Y )
   
+  # state sample size
+  print( paste( "Analyzed N:", nrow(temp) ) )
+  
   library(metafor)
   es = escalc( measure = "RR",
                ai = tab[condition, 2], # X=1, Y=1
