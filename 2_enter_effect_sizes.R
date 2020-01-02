@@ -1878,6 +1878,7 @@ d = d %>%
     exclude.main = `Excluded challenge`,
     borderline = `Borderline inclusion`,
     mm.fave = `Among MM's favorites methodologically, exclusive of small sample size`,
+    stats.source = `Stats source (public data, data from author, paper, hopeless)`,
     perc.male = `Percent male`,
     design = Design,
     n.paper = `N (total analyzed sample size in paper, combining all substudies included here)`, 
@@ -1948,6 +1949,44 @@ d$y.long.lag = d$y.lag.days >= 7
 d$rct = grepl("RCT", d$design)
 d$reproducible = (d$qual.prereg == "Yes") & (d$qual.public.data == "Yes")
 d$x.long = d$x.min.exposed >= 5
+
+# other variables
+# ~~ move this?
+# recode percent male as a 10-percentage point increase
+d$perc.male.10 = d$perc.male/10
+library(car)
+d$x.pushy = recode_factor( d$x.pushy,
+                           "No request" = "a.No request",
+                           "Reduce" = "b.Reduce",
+                           "Go vegetarian" = "c.Go vegetarian",
+                           "Go vegan" = "d.Go vegan",
+                           "Mixed" = "e.Mixed")
+
+# collapse categories
+d$qual.y.prox2 = recode_factor( d$qual.y.prox,
+                                "Actual" = "b.Actual or self-reported",
+                                "Self-reported" = "b.Actual or self-reported",
+                                "Intended" = "a.Intended")
+
+# collapse categories
+# any request vs. no request
+d$x.makes.request = dplyr::recode( d$x.pushy,
+                                   "a.No request" = 0,
+                                   "b.Reduce" = 1,
+                                   "c.Go vegetarian" = 1,
+                                   "d.Go vegan" = 1,
+                                   "e.Mixed" = 1)
+
+d$design = recode_factor( d$design,
+                           "RCT" = "a.Between-subjects RCT",
+                           "Within-subject RCT" = "b.Within-subject RCT",
+                          "Cluster RCT" = "c.Cluster RCT",
+                           "Nonrandomized controlled study" = "d.Nonrandomized controlled study",
+                          "Pre-post within-subject" = "e.Nonrandomized, pre-post, within-subject study")
+
+# was study randomized?
+d$randomized = grepl("RCT", d$design)
+
 
 # recode missing data
 d[ d == "NR" ] = NA
