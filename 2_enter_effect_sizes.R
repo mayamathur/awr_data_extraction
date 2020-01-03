@@ -1170,7 +1170,7 @@ escalc_add_row( authoryear = "Novotna 2019",
                 n2i = n.cntrl)
 
 
-# ##### Vegan Outreach 2019 (#3828; "10 Weeks to Vegan") #####
+# ##### **Vegan Outreach 2019 (#3828; "10 Weeks to Vegan") #####
 # 
 # escalc_add_row( authoryear = "Vegan Outreach 2019",
 #                 substudy = NA,

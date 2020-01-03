@@ -1208,18 +1208,30 @@ get_rr_adj( condition.var.name = "GROUPS",
 # ~~~ dataset seems to be from something else
 #  the survey refers to "listening to a presentation" and dataset doesn't have a variable for which leaflet was received
 
-# setwd(original.data.dir)
-# setwd('Norris nd, #3831')
-# setwd("Data from author/Leafleting Effectiveness 2018")
-# 
-# # pre- and post-data are in different files
-# dat.pre = read.csv("LES Pre-test Results.csv"); nrow(dat.pre)
-# dat.post = read.csv("LES Post-Test Results.csv"); nrow(dat.post)
-# 
-# # merge them 
-# dat = merge( dat.pre, dat.post, by = "code" )
-# 
-# dat = merge( dat.pre, dat.post, by = "id" )
+setwd(original.data.dir)
+setwd('Norris nd, #3831')
+setwd("Data from author/Leafleting Effectiveness 2018")
+
+# pre- and post-data are in different files
+dat.pre = read.csv("LES Pre-test Results.csv"); nrow(dat.pre)
+dat.post = read.csv("LES Post-Test Results.csv"); nrow(dat.post)
+
+# per the "Schools and Dates" spreadhseet (see the bottom part called "Code Ranges"), 
+#  the first letter of the "code" variable tells us which leaflet was received
+# X = control; C = "Compassionate Choices"; "P" = "Speciesism"
+
+dat.pre$code2 = substr( tolower(dat.pre$code), start = 1, stop = 1 )
+table(dat.pre$code2)
+
+5838 * .118  # expected count for X
+14000*.027  # expected count for C
+14000*.025  # expected count for P
+
+
+# merge them
+dat = merge( dat.pre, dat.post, by = "code" )
+
+dat = merge( dat.pre, dat.post, by = "id" )
 
 
 ################################# 3829 NORRIS 2014 ################################# 
