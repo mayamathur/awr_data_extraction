@@ -1823,13 +1823,16 @@ d = merge( d,
 setwd(data.dir)
 setwd("Dual review of quality")
 
-d3 = read_xlsx("subjective_data_reconciled.xlsx")
+d3 = read.csv("subjective_data_full_prepped.csv")
 
+# check for name mismatches
+d$authoryear[ !d$authoryear %in% d3$authoryear ]
 
-fake = strsplit( d3$`Exchangeability (DR/JN/MM/reconciled)`, "/" )
-do.call( rbind, fake )
-
-d3 %>% separate( `Exchangeability (DR/JN/MM/reconciled)`, c("exch.DR", "exch.JN", "exch.MM", "qual.exch"), sep = "/")
+# merge with main dataset
+d = merge( d,
+              d3[ , c("authoryear", "qual.exch", "qual.sdb", "qual.gen") ],
+              all.x = TRUE,
+              by = "authoryear" )
 
 ############################### CONVERT EFFECT SIZES - to RRs ###############################
 
@@ -1907,12 +1910,8 @@ d = d %>%
     x.min.exposed = `Total time exposed to intervention (minutes)`,
     y.cat = `Outcome category (purchase or consumption)`,
     y.lag.days = `Outcome time lag from intervention (days)`,
-    #qual.exch = `Exchangeability (good, medium, bad)`,
     qual.y.prox = `Outcome proximity (intended, self-reported, actual)`,
     qual.missing = `Missing data (%)`,
-    #qual.sdb = `Differemtial SDB and demand characteristics (good, medium, bad)`,
-    #qual.self.select = `Avoidance of self-selection (e.g., by subjects already interested in animal welfare)`,
-    #qual.stats = `Statistics quality as relevant for our extracted data (good, medium, bad)`,
     qual.prereg = Preregistered,
     qual.public.data = `Public data`,
     qual.public.code = `Public code`
