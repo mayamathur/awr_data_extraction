@@ -1753,8 +1753,11 @@ d = dplyr::add_row(.data = d,
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
-#                                     MERGE IN QUALITATIVE DATA                                      #
+#                                     MERGE IN QUALITATIVE DATA AND PREP ANALYSIS VARIABLES                                      #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+
+
+############################### MERGE IN QUALITATIVE DATA ###############################
 
 # read it back in
 setwd(data.dir)
@@ -1814,20 +1817,32 @@ d = merge( d,
            by.x = "unique",
            by.y = "unique" )
 
+
+############################### MERGE IN SUBJECTIVELY-RATED QUALITY DATA ###############################
+
+setwd(data.dir)
+setwd("Dual review of quality")
+
+d3 = read_xlsx("subjective_data_reconciled.xlsx")
+
+
+fake = strsplit( d3$`Exchangeability (DR/JN/MM/reconciled)`, "/" )
+do.call( rbind, fake )
+
+d3 %>% separate( `Exchangeability (DR/JN/MM/reconciled)`, c("exch.DR", "exch.JN", "exch.MM", "qual.exch"), sep = "/")
+
+############################### CONVERT EFFECT SIZES - to RRs ###############################
+
 # minimal sanity check for absurd values
 round( sort(d$yi), 2 )
 sort(sqrt(d$vi))
 round( sort(d$yi/sqrt(d$vi)), 2 )  # z-scores
 
+table( d$effect.measure )
+
 # synchronize directions so that positive is always good
 d$yi[ d$desired.direction == 1 ] = abs(d$yi[ d$desired.direction == 1 ])
 d$yi[ d$desired.direction == 0 ] = -abs(d$yi[ d$desired.direction == 0 ])
-
-
-
-############################### CONVERT EFFECT SIZES - to RRs ###############################
-
-table( d$effect.measure )
 
 # analysis scale
 d$logRR = NA
