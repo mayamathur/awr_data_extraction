@@ -54,6 +54,8 @@
 library(metafor)
 library(dplyr)
 library(testthat)
+library(readxl)
+library(stringr)
 
 data.dir = "~/Dropbox/Personal computer/Independent studies/2019/AWR (animal welfare review meat consumption)/Data extraction"
 code.dir = "~/Dropbox/Personal computer/Independent studies/2019/AWR (animal welfare review meat consumption)/Data extraction/awr_data_extraction_git"
@@ -1374,7 +1376,6 @@ escalc_add_row( authoryear = "Schwitzgebel 2019",
 
 # sanity check: close to their error bar widths? yes.
 # sqrt( (.45*.55) / (5981/4) ) * 1.96
-# bm
 
 
 ##### FIAPO (2017) #####
@@ -1772,7 +1773,6 @@ nrow(d)
 
 # qualitative data entered into Excel
 setwd(data.dir)
-library(readxl)
 # NOTE: this step breaks if cell values are hyphenated! 
 d2 = read_xlsx("Extracted qualitative data.xlsx", na = "NR")
 # remove missing rows
@@ -1782,6 +1782,10 @@ d2 = d2 %>% filter(!is.na(`First author last name`))
 # for some reason, reads in years in an absurd format (e.g., "2018.0" as a string)
 library(tidyverse)
 d2$Year = str_remove(d2$Year, "[.]0")
+
+# clean up carriage returns
+d2$`Subject country` = str_replace_all(d2$`Subject country`, "[\n]" , "")
+
 
 ##### unique merger variable
 d$unique = NA
@@ -1898,6 +1902,7 @@ d = d %>%
     mm.fave = `Among MM's favorites methodologically, exclusive of small sample size`,
     stats.source = `Stats source (public data, data from author, paper, hopeless)`,
     perc.male = `Percent male`,
+    country = `Subject country`,
     design = Design,
     n.paper = `N (total analyzed sample size in paper, combining all substudies included here)`, 
     x.has.text = `Intervention has text`,
@@ -1936,25 +1941,25 @@ make.numeric = c("perc.male",
 d = d %>% 
   mutate_at( make.numeric, as.numeric )
 
-# temp: look for coding issues
-analysis.vars = c("effect.measure",
-                  "perc.male",
-                  "design",
-                  "published",
-                  "x.has.text",
-                  "x.has.visuals",
-                  "x.pure.animals",
-                  "x.suffer",
-                  "x.tailored",
-                  "x.min.exposed",
-                  "y.cat",
-                  "y.lag.days" )
-
-quality.vars = grepl("qual", names(d))
-
-library(tableone)
-CreateTableOne(data=d[,analysis.vars])
-CreateTableOne(data=d[,quality.vars])
+# # temp: look for coding issues
+# analysis.vars = c("effect.measure",
+#                   "perc.male",
+#                   "design",
+#                   "published",
+#                   "x.has.text",
+#                   "x.has.visuals",
+#                   "x.pure.animals",
+#                   "x.suffer",
+#                   "x.tailored",
+#                   "x.min.exposed",
+#                   "y.cat",
+#                   "y.lag.days" )
+# 
+# quality.vars = grepl("qual", names(d))
+# 
+# library(tableone)
+# CreateTableOne(data=d[,analysis.vars])
+# CreateTableOne(data=d[,quality.vars])
 
 
 # variables for moderator analysis
@@ -1968,6 +1973,7 @@ d$x.long = d$x.min.exposed >= 5
 # ~~ move this?
 # recode percent male as a 10-percentage point increase
 d$perc.male.10 = d$perc.male/10
+
 library(car)
 d$x.pushy = recode_factor( d$x.pushy,
                            "No request" = "a.No request",
@@ -1997,6 +2003,32 @@ d$design = recode_factor( d$design,
                           "Cluster RCT" = "c.Cluster RCT",
                            "Nonrandomized controlled study" = "d.Nonrandomized controlled study",
                           "Pre-post within-subject" = "e.Nonrandomized, pre-post, within-subject study")
+
+# binary country variable
+d$north.america = 0
+d$north.america[ d$country == "NR" ] = NA
+d$north.america[ d$country %in% c("USA", "USA, Canada") ] = 1
+table(d$north.america, d$country, useNA = "ifany")
+
+
+# force factor levels
+# rename in a risk-of-bias way
+d$qual.sdb = dplyr::recode( d$qual.sdb,
+                                   "strong" = "a.Low",
+                                   "medium" = "b.Medium",
+                                   "weak" = "c.High",
+                                   "unclear" = "d.Unclear" )
+d$qual.exch = dplyr::recode( d$qual.exch,
+                             "strong" = "a.Low",
+                             "medium" = "b.Medium",
+                             "weak" = "c.High",
+                             "unclear" = "d.Unclear" )
+d$qual.gen = dplyr::recode( d$qual.gen,
+                            "strong" = "a.Low",
+                            "medium" = "b.Medium",
+                            "weak" = "c.High",
+                            "unclear" = "d.Unclear" )
+
 
 # was study randomized?
 d$randomized = grepl("RCT", d$design)
