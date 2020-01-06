@@ -77,7 +77,7 @@ names(d) = c( "authoryear",
               "vi")
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
-#                                  STEP 1: MAIN-ANALYSIS STUDIES                                      #
+#                                  STEP 1 - MAIN-ANALYSIS STUDIES                                      #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ # 
 
 # asterisks denote studies with raw data
@@ -1537,7 +1537,7 @@ write.csv(d, "data_prepped_step1.csv", row.names = FALSE)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
-#                                     STEP 2: EXCLUDED CHALLENGES                                      #
+#                                     STEP 2 - EXCLUDED CHALLENGES                                      #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ # 
 
 
@@ -1720,9 +1720,6 @@ escalc_add_row( authoryear = "The Great Vegan Challenge (Animal Aid) n.d.",
                 ci = fu.prop.vegan * N,  # post- vegans
                 di = (1-fu.prop.vegan) * N ) # post-non-vegans
 
-# save intermediate dataset
-setwd(data.dir)
-write.csv(d, "data_prepped_step2.csv", row.names = FALSE)
 
 
 ###### **Norris 2015 #####
@@ -1750,15 +1747,15 @@ d = dplyr::add_row(.data = d,
                    yi = -0.05842669,
                    vi = 0.02098244 )
 
+# save intermediate dataset
+setwd(data.dir)
+write.csv(d, "data_prepped_step2.csv", row.names = FALSE)
 
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
-#                                     MERGE IN QUALITATIVE DATA AND PREP ANALYSIS VARIABLES                                      #
+#                                     STEP 3 - MERGE IN QUALITATIVE DATA AND PREP ANALYSIS VARIABLES                                      #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
-
-
-############################### MERGE IN QUALITATIVE DATA ###############################
 
 # read it back in
 setwd(data.dir)
@@ -1838,6 +1835,23 @@ d = merge( d,
               all.x = TRUE,
               by = "authoryear" )
 
+
+# save intermediate dataset
+setwd(data.dir)
+write.csv(d, "data_prepped_step3.csv", row.names = FALSE)
+
+
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+#                          STEP 4 - CONVERT EFFECT SIZES TO RR SCALE                                      #
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+
+# read it back in
+# check.names = FALSE retains spaces in variable names
+setwd(data.dir)
+d = read.csv("data_prepped_step3.csv", check.names = FALSE)
+
 ############################### CONVERT EFFECT SIZES - to RRs ###############################
 
 # minimal sanity check for absurd values
@@ -1886,6 +1900,20 @@ d$varlogRR[ d$use.rr.analysis == 0 ] = NA
 d$RR.lo[ d$use.rr.analysis == 0 ] = NA
 d$RR.hi[ d$use.rr.analysis == 0 ] = NA
 
+
+# save intermediate dataset
+setwd(data.dir)
+write.csv(d, "data_prepped_step4.csv", row.names = FALSE)
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+#                                  STEP 5 - RECODE VARIABLES                                     #
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+
+# read it back in
+# check.names = FALSE retains spaces in variable names
+setwd(data.dir)
+d = read.csv("data_prepped_step4.csv", check.names = FALSE)
 
 ############################### MAKE NEW VARIABLES AND RENAME THE EXISTING ONES ############################### 
 
