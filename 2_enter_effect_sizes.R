@@ -4,7 +4,7 @@
 # 
 #  ** = had raw data
 # 
-#  - Analyzing on RR scale, not SMD, because that for many studies, the Chinn assumption of an underlying
+#  - Analyzing on RR scale, not SMD, because for many studies, the Chinn assumption of an underlying
 #   normal RV seems not reasonable. For others, the common-outcome assumption seems questionable.
 #   With this modification, we assume the SMDs are computed on normal data, which seems more reasonable. 
 #   Used square-root transformation when outcome was rare or if we couldn't tell.  
@@ -1380,15 +1380,10 @@ escalc_add_row( authoryear = "Schwitzgebel 2019",
 
 ##### FIAPO (2017) #####
 
-# total N for paper
-# don't include initial vegans in counts for Study 1
 (91-2) + # Study 1, baseline non-vegans in control group (excluded the baseline vegans)
-  (188-21) +  # Study 1, baseline non-vegans in intervention group (excluded the baseline vegans)
-  142 + 167 +  # Study 2, baseline vegetarians in control and experimental groups in 2D intervention group
-  343 + 362 +  # Study 2, baseline non-vegetarians in control and experimental groups in 2D intervention group
-  220 + 98 + # Study 2, baseline vegetarians in control and experimental groups in 3D intervention group
-  224 + 440 # Study 2, baseline non-vegetarians in control and experimental groups in 3D intervention group
-
+525 + 515 +
+  553 + 447 
+  
 # Study 1: leafleting
 # combine data in Table A and Table 1 to get RR of *becoming* vegan
 #  among initial non-vegans
@@ -1408,73 +1403,122 @@ escalc_add_row( authoryear = "FIAPO 2017",
                 ci = 0,  # control who went vegan
                 di = 91 ) # control who did not go vegan
 
-# Study 2: 2D video, baseline vegetarians
-# from Table B 
-# no SDs given, so use reported "p<0.05" to conservatively get SD assuming p=0.05 exactly
-# then use Wilson's online calculator (~~~CITE IT IN PAPER!): http://www.campbellcollaboration.org/escalc/html/EffectSizeCalculator-SMD2.php
-# change score among baseline vegetarians: calculate t-value at p=0.05
-# data entered in calculator: N's = 167, 142
-# t = 1.967721 per below
-qt( p = 0.975,
-    df = 167 + 142 - 2 )
-d = dplyr::add_row(.data = d,
-                   authoryear = "FIAPO 2017",
-                   substudy = "2D video, baseline vegetarians",
-                   desired.direction = 1,
-                   effect.measure = "smd",
-                   interpretation = "Willingness to reduce animal products SMD",
-                   use.rr.analysis = 1,
-                   use.grams.analysis = 0,
-                   use.veg.analysis = 0,
-                   yi = 0.2246,
-                   vi = 0.0131 )
+# Study 2: 2D video, everyone
+escalc_add_row( authoryear = "FIAPO 2017",
+                substudy = "2D video",
+                desired.direction = 1,
+                effect.measure = "smd",
+                interpretation = "Willingness to reduce meat SMD",
+                use.rr.analysis = 1,
+                use.grams.analysis = 0,
+                use.veg.analysis = 0,
+                measure = "SMD",
+                
+                m1i = 4.847619, 
+                sd1i = 1.89707,
+                n1i = 525, 
+                
+                m2i = 3.95534,
+                sd2i = 2.048048,
+                n2i = 515 )
 
-# Study 2: 2D video, baseline non-vegetarians
-# data entered in calculator: N's = 343, 362
-qt( p = 0.975,
-    df = 343 + 362 - 2 )
-d = dplyr::add_row(.data = d,
-                   authoryear = "FIAPO 2017",
-                   substudy = "2D video, baseline non-vegetarians",
-                   desired.direction = 1,
-                   effect.measure = "smd",
-                   interpretation = "Willingness to reduce animal products SMD",
-                   use.rr.analysis = 1,
-                   use.grams.analysis = 0,
-                   use.veg.analysis = 0,
-                   yi = 0.1478,
-                   vi = 0.0057 )
+# Study 3: 2D video, everyone
+escalc_add_row( authoryear = "FIAPO 2017",
+                substudy = "virtual reality",
+                desired.direction = 1,
+                effect.measure = "smd",
+                interpretation = "Willingness to reduce meat SMD",
+                use.rr.analysis = 1,
+                use.grams.analysis = 0,
+                use.veg.analysis = 0,
+                measure = "SMD",
+                
+                m1i = 3.707052, 
+                sd1i = 2.594777,
+                n1i = 553, 
+                
+                m2i = 6.550336,
+                sd2i = 2.983744,
+                n2i = 447 )
 
-# Study 3: VR video, baseline vegetarians
-# data entered in calculator: N's = 220, 98
-qt( p = 0.975,
-    df = 220 + 98 - 2 )
-d = dplyr::add_row(.data = d,
-                   authoryear = "FIAPO 2017",
-                   substudy = "virtual reality, baseline vegetarians",
-                   desired.direction = 1,
-                   effect.measure = "smd",
-                   interpretation = "Willingness to reduce animal products SMD",
-                   use.rr.analysis = 1,
-                   use.grams.analysis = 0,
-                   use.veg.analysis = 0,
-                   yi = 0.2389,
-                   vi = 0.0148 )
 
-# Study 3: VR video, baseline non-vegetarians
-qt( p = 0.975,
-    df = 224 + 440 - 2 )
-d = dplyr::add_row(.data = d,
-                   authoryear = "FIAPO 2017",
-                   substudy = "virtual reality, baseline non-vegetarians",
-                   desired.direction = 1,
-                   effect.measure = "smd",
-                   interpretation = "Willingness to reduce animal products SMD",
-                   use.rr.analysis = 1,
-                   use.grams.analysis = 0,
-                   use.veg.analysis = 0,
-                   yi = 0.1612,
-                   vi = 0.0068 )
+# # total N for paper
+# # don't include initial vegans in counts for Study 1
+# (91-2) + # Study 1, baseline non-vegans in control group (excluded the baseline vegans)
+#   (188-21) +  # Study 1, baseline non-vegans in intervention group (excluded the baseline vegans)
+#   142 + 167 +  # Study 2, baseline vegetarians in control and experimental groups in 2D intervention group
+#   343 + 362 +  # Study 2, baseline non-vegetarians in control and experimental groups in 2D intervention group
+#   220 + 98 + # Study 2, baseline vegetarians in control and experimental groups in 3D intervention group
+#   224 + 440 # Study 2, baseline non-vegetarians in control and experimental groups in 3D intervention group
+
+
+# # Study 2: 2D video, baseline vegetarians
+# # from Table B 
+# # no SDs given, so use reported "p<0.05" to conservatively get SD assuming p=0.05 exactly
+# # then use Wilson's online calculator (~~~CITE IT IN PAPER!): http://www.campbellcollaboration.org/escalc/html/EffectSizeCalculator-SMD2.php
+# # change score among baseline vegetarians: calculate t-value at p=0.05
+# # data entered in calculator: N's = 167, 142
+# # t = 1.967721 per below
+# qt( p = 0.975,
+#     df = 167 + 142 - 2 )
+# d = dplyr::add_row(.data = d,
+#                    authoryear = "FIAPO 2017",
+#                    substudy = "2D video, baseline vegetarians",
+#                    desired.direction = 1,
+#                    effect.measure = "smd",
+#                    interpretation = "Willingness to reduce animal products SMD",
+#                    use.rr.analysis = 1,
+#                    use.grams.analysis = 0,
+#                    use.veg.analysis = 0,
+#                    yi = 0.2246,
+#                    vi = 0.0131 )
+# 
+# # Study 2: 2D video, baseline non-vegetarians
+# # data entered in calculator: N's = 343, 362
+# qt( p = 0.975,
+#     df = 343 + 362 - 2 )
+# d = dplyr::add_row(.data = d,
+#                    authoryear = "FIAPO 2017",
+#                    substudy = "2D video, baseline non-vegetarians",
+#                    desired.direction = 1,
+#                    effect.measure = "smd",
+#                    interpretation = "Willingness to reduce animal products SMD",
+#                    use.rr.analysis = 1,
+#                    use.grams.analysis = 0,
+#                    use.veg.analysis = 0,
+#                    yi = 0.1478,
+#                    vi = 0.0057 )
+# 
+# # Study 3: VR video, baseline vegetarians
+# # data entered in calculator: N's = 220, 98
+# qt( p = 0.975,
+#     df = 220 + 98 - 2 )
+# d = dplyr::add_row(.data = d,
+#                    authoryear = "FIAPO 2017",
+#                    substudy = "virtual reality, baseline vegetarians",
+#                    desired.direction = 1,
+#                    effect.measure = "smd",
+#                    interpretation = "Willingness to reduce animal products SMD",
+#                    use.rr.analysis = 1,
+#                    use.grams.analysis = 0,
+#                    use.veg.analysis = 0,
+#                    yi = 0.2389,
+#                    vi = 0.0148 )
+# 
+# # Study 3: VR video, baseline non-vegetarians
+# qt( p = 0.975,
+#     df = 224 + 440 - 2 )
+# d = dplyr::add_row(.data = d,
+#                    authoryear = "FIAPO 2017",
+#                    substudy = "virtual reality, baseline non-vegetarians",
+#                    desired.direction = 1,
+#                    effect.measure = "smd",
+#                    interpretation = "Willingness to reduce animal products SMD",
+#                    use.rr.analysis = 1,
+#                    use.grams.analysis = 0,
+#                    use.veg.analysis = 0,
+#                    yi = 0.1612,
+#                    vi = 0.0068 )
 
 
 ##### Rouk 2017 #####
@@ -1537,7 +1581,7 @@ write.csv(d, "data_prepped_step1.csv", row.names = FALSE)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
-#                                     STEP 2 - EXCLUDED CHALLENGES                                      #
+#                                     STEP 2 - HIGH-BIAS CHALLENGES                                      #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ # 
 
 
@@ -1546,22 +1590,7 @@ setwd(data.dir)
 d = read.csv("data_prepped_step1.csv")
 
 
-##### Summer Vegan Pledge (Animal Aid) 2018 #####
-
-# 53% said they would remain vegan
-
-
-##### Summer Vegan Pledge (Animal Aid) 2019 #####
-
-# 57% said they would remain vegan
-
-###### **Challenge 22+ (Animals Now) #####
-
-# 42% reduced consumption (see raw data)
-
-# could also get risk ratio of being vegan after vs. before challenge
-
-##### 30-day VeggieChallenge 2016 (ProVeg) #####
+##### #3865 30-day VeggieChallenge 2016 (ProVeg) #####
 
 # Mensink Table 2a
 escalc_add_row( authoryear = "30-Day VeggieChallenge (ProVeg) 2016",
@@ -1582,7 +1611,7 @@ escalc_add_row( authoryear = "30-Day VeggieChallenge (ProVeg) 2016",
 36/(17+16+72+54+57+48+21)
 
 
-##### 30-day VeggieChallenge 2015 (ProVeg) #####
+##### #3865 30-day VeggieChallenge 2015 (ProVeg) #####
 
 # ~~~ doesn't have a folder or row in spreadsheet 
 
@@ -1605,16 +1634,15 @@ escalc_add_row( authoryear = "30-Day VeggieChallenge (ProVeg) 2015",
 17/(17+4+29+32+35)
 
 
-##### 30-day VeggieChallenge 2017 (ProVeg) #####
+##### #3827 30-day VeggieChallenge 2017 (ProVeg) #####
 
 # Moleman 2018
 
+# Table 6:
 # pre-intervention: 4% vegans
 # post-intervention: 20% vegans
 # hence the absurdly large point estimate
 
-# because this is self-description as vegan (not based on consumption), not using in
-#  the vegetarian secondary analysis
 escalc_add_row( authoryear = "30-Day VeggieChallenge (ProVeg) 2017",
                 substudy = NA,
                 desired.direction = 1,
@@ -1630,9 +1658,11 @@ escalc_add_row( authoryear = "30-Day VeggieChallenge (ProVeg) 2017",
                 ci = 799+1155+530+697,  # post- vegans
                 di = 1239+2473+4689+217+1658+2043 ) # post-non-vegans
 
+# sanity check
+( (799+1155+530+697) / (799+1155+530+697+1239+2473+4689+217+1658+2043) ) / ( 697 / (697+4727+7502+2573) )
 
 
-##### 10 Weeks to Vegan (Vegan Outreach) #####
+##### #3828 10 Weeks to Vegan (Vegan Outreach) #####
 
 escalc_add_row( authoryear = "10 Weeks to Vegan (Vegan Outreach) 2018",
                 substudy = NA,
@@ -1651,20 +1681,66 @@ escalc_add_row( authoryear = "10 Weeks to Vegan (Vegan Outreach) 2018",
 43/(190+76+43)
 77/(140+92+77)
 
-##### Veganuary (Veganuary) 2014 #####
+
+###### #3839 - Great Vegan Challenge (Animal Aid) #####
+# from Grassian
+# measure bar heights
+
+total.px = 850  # total vertical height representing 100%
+bl.vegans.px = 31  # height of vegan part of the "0 months" bar
+fu.vegans.px = 240  # height of the vegan part of the "6 months" bar
+N = 470 # pg 6
+
+( bl.prop.vegan = bl.vegans.px/total.px )
+( fu.prop.vegan = fu.vegans.px/total.px )
+
+escalc_add_row( authoryear = "The Great Vegan Challenge (Animal Aid) n.d.",
+                substudy = NA,
+                desired.direction = 1,
+                effect.measure = "log-rr",
+                interpretation = "Being vegan after vs. before intervention",
+                use.rr.analysis = 1,
+                use.grams.analysis = 0,
+                use.veg.analysis = 0,
+                measure = "RR",
+                
+                ai = bl.prop.vegan * N, # pre-intervention vegans
+                bi = (1-bl.prop.vegan) * N,  # pre-intervention non-vegans
+                ci = fu.prop.vegan * N,  # post- vegans
+                di = (1-fu.prop.vegan) * N ) # post-non-vegans
+
+
+##### #3840 Veganuary (Veganuary) 2014 #####
 
 # % staying vegan, % reducing consumption of each category
 # both broken down by baseline diet
 
-##### Veganuary (Veganuary) 2015 #####
+# not perfect comparison due to reporting limitations, 
+#  but am comparing the proportion who said they were vegan before challenge
+#  to proportion saying they ate only vegan food during the challenge
 
-# 49% stayed vegan after six months
 
-##### Veganuary (Veganuary) 2016 #####
+escalc_add_row( authoryear = "Veganuary (Veganuary) 2014",
+                substudy = NA,
+                desired.direction = 1,
+                effect.measure = "log-rr",
+                interpretation = "Being vegan after vs. during intervention",
+                use.rr.analysis = 1,
+                use.grams.analysis = 0,
+                use.veg.analysis = 0,
+                measure = "RR",
+                
+                ai = .149 * 3325, # pre-intervention vegans
+                bi = (1-.149) * 3325,  # pre-intervention non-vegans
+                ci = .4641 * 711,  # post- vegans
+                di = (1-.4641) * 711 ) # post-non-vegans
+
+
+##### #3847, #3849 - Veganuary (Veganuary) 2016 #####
 
 # can do RR of being vegan after vs. before challenge
 # this is a Fauna report, so more info available
-
+# Table on page 6
 escalc_add_row( authoryear = "Veganuary (Veganuary) 2016",
                 substudy = NA,
                 desired.direction = 1,
@@ -1680,32 +1756,10 @@ escalc_add_row( authoryear = "Veganuary (Veganuary) 2016",
                 ci = .54 * 3369,  # post- vegans
                 di = (1-.54) * 3369 ) # post-non-vegans
 
+###### **#3826 Challenge 22+ (Animals Now) #####
 
-##### Veganuary (Veganuary) 2017 #####
-
-# 67% intending to stay vegan
-
-##### Veganuary (Veganuary) 2018 #####
-
-# 62% intend to stay vegan
-
-##### Veganuary (Veganuary) 2019 #####
-
-# 47% intending to stay vegan
-
-###### Great Vegan Challenge (Animal Aid) #####
-# from Grassian
-# measure bar heights
-
-total.px = 850  # total vertical height representing 100%
-bl.vegans.px = 31  # height of vegan part of the "0 months" bar
-fu.vegans.px = 240  # height of the vegan part of the "6 months" bar
-N = 470 # pg 6
-
-bl.prop.vegan = bl.vegans.px/total.px
-fu.prop.vegan = fu.vegans.px/total.px
-
-escalc_add_row( authoryear = "The Great Vegan Challenge (Animal Aid) n.d.",
+# counts from get_effect_sizes_from_raw.R
+escalc_add_row( authoryear = "Challenge 22+ (Animals Now) 2018",
                 substudy = NA,
                 desired.direction = 1,
                 effect.measure = "log-rr",
@@ -1714,38 +1768,73 @@ escalc_add_row( authoryear = "The Great Vegan Challenge (Animal Aid) n.d.",
                 use.grams.analysis = 0,
                 use.veg.analysis = 0,
                 measure = "RR",
+                
+                ai = 88, # pre-intervention vegans
+                bi = 632,  # pre-intervention non-vegans
+                ci = 133,  # post- vegans
+                di = 587 ) # post-non-vegans
+# sanity check
+( 133 / (133+587) ) / ( 88 / (88+632) )
 
-                ai = bl.prop.vegan * N, # pre-intervention vegans
-                bi = (1-bl.prop.vegan) * N,  # pre-intervention non-vegans
-                ci = fu.prop.vegan * N,  # post- vegans
-                di = (1-fu.prop.vegan) * N ) # post-non-vegans
+##### #3853, #3854 - Veganuary (Veganuary) 2015 #####
+
+# 49% stayed vegan after six months
+
+##### #3846 - Veganuary (Veganuary) 2017 #####
+
+# 67% intending to stay vegan
+
+##### #3845 - Veganuary (Veganuary) 2018 #####
+
+# 62% intend to stay vegan
+
+##### #3841 - Veganuary (Veganuary) 2019 #####
+
+# 47% intending to stay vegan
+
+##### #3833, #3835 - Summer Vegan Pledge (Animal Aid) 2018 #####
+
+# 53% said they have remained vegan
+
+
+##### #3834 Summer Vegan Pledge (Animal Aid) 2019 #####
+
+# 57% said they would remain vegan
+
+
+# bm
 
 
 
-###### **Norris 2015 #####
 
-# "Your Choice"
-d = dplyr::add_row(.data = d,
-                   authoryear = "Norris 2015",
-                   desired.direction = 0,
-                   effect.measure = "log-rr",
-                   interpretation = "Low vs. high animal product consumption",
-                   use.rr.analysis = 1,
-                   use.grams.analysis = 0,
-                   use.veg.analysis = 0,
-                   yi = -0.108307,
-                   vi = 0.01944182 )
 
-d = dplyr::add_row(.data = d,
-                   authoryear = "Norris 2015",
-                   desired.direction = 0,
-                   effect.measure = "log-rr",
-                   interpretation = "Low vs. high animal product consumption",
-                   use.rr.analysis = 1,
-                   use.grams.analysis = 0,
-                   use.veg.analysis = 0,
-                   yi = -0.05842669,
-                   vi = 0.02098244 )
+
+
+# ###### **Norris 2015 #####
+# # ~~ this is not a study??
+# 
+# # "Your Choice"
+# d = dplyr::add_row(.data = d,
+#                    authoryear = "Norris 2015",
+#                    desired.direction = 0,
+#                    effect.measure = "log-rr",
+#                    interpretation = "Low vs. high animal product consumption",
+#                    use.rr.analysis = 1,
+#                    use.grams.analysis = 0,
+#                    use.veg.analysis = 0,
+#                    yi = -0.108307,
+#                    vi = 0.01944182 )
+# 
+# d = dplyr::add_row(.data = d,
+#                    authoryear = "Norris 2015",
+#                    desired.direction = 0,
+#                    effect.measure = "log-rr",
+#                    interpretation = "Low vs. high animal product consumption",
+#                    use.rr.analysis = 1,
+#                    use.grams.analysis = 0,
+#                    use.veg.analysis = 0,
+#                    yi = -0.05842669,
+#                    vi = 0.02098244 )
 
 # save intermediate dataset
 setwd(data.dir)
@@ -2056,6 +2145,10 @@ d$qual.gen = dplyr::recode( d$qual.gen,
                             "medium" = "b.Medium",
                             "weak" = "c.High",
                             "unclear" = "d.Unclear" )
+d$qual.y.prox = dplyr::recode( d$qual.y.prox,
+                            "Actual" = "a.Actual",
+                            "Self-reported" = "b.Self-reported",
+                            "Intended" = "c.Intended" )
 
 
 # was study randomized?
@@ -2069,3 +2162,8 @@ d[ d == "NR" ] = NA
 
 setwd(data.dir)
 write.csv(d, "prepped_data.csv", row.names = FALSE)
+
+
+
+
+

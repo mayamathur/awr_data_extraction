@@ -1203,6 +1203,50 @@ get_rr_adj( condition.var.name = "GROUPS",
             baseline.var.name = "pre.consump",
             .dat = dat )
 
+
+################################# 3862 FIAPO 2019 ################################# 
+
+##### Study 2: 2D video #####
+dc = read.spss("VO (control) data.sav", to.data.frame=TRUE)
+dt = read.spss("VO (experimental) data.sav", to.data.frame=TRUE)
+
+
+( res.c = dc %>% summarise( nv.mn = mean(Food_Non_Veg, na.rm = TRUE),
+                            nv.sd = sd(Food_Non_Veg, na.rm = TRUE),
+                            n = sum(!is.na(Food_Non_Veg))) )
+
+
+( res.t = dt %>% summarise( nv.mn = mean(Non_Veg_Total_Score, na.rm = TRUE),
+                            nv.sd = sd(Non_Veg_Total_Score, na.rm = TRUE),
+                            n = sum(!is.na(Non_Veg_Total_Score))) )
+
+# reported: 0.92
+# close but slightly different
+res.t$nv.mn - res.c$nv.mn
+
+
+
+##### Study 3: 3D video #####
+
+dc = read.spss("VR (control) data.sav", to.data.frame=TRUE)
+dt = read.spss("VR (experimental) data.sav", to.data.frame=TRUE)
+
+
+( res.c = dc %>% summarise( nv.mn = mean(Non_Veg_TotalScore_Control, na.rm = TRUE),
+                            nv.sd = sd(Non_Veg_TotalScore_Control, na.rm = TRUE),
+                            n = sum(!is.na(Non_Veg_TotalScore_Control))) )
+
+
+( res.t = dt %>% summarise( nv.mn = mean(Non_Veg_TotalScore_Exp, na.rm = TRUE),
+                            nv.sd = sd(Non_Veg_TotalScore_Exp, na.rm = TRUE),
+                            n = sum(!is.na(Non_Veg_TotalScore_Exp))) )
+
+# reported: 2.84 :)
+res.t$nv.mn - res.c$nv.mn
+
+
+
+
 ################################# 3831 NORRIS N.D. ################################# 
 
 # ~~~ dataset seems to be from something else
@@ -1236,7 +1280,6 @@ dat = merge( dat.pre, dat.post, by = "id" )
 
 ################################# 3829 NORRIS 2014 ################################# 
 
-# bm
 setwd(original.data.dir)
 setwd('Norris 2014, #3830')
 setwd("Data from author/Pay Per Read Fall 2014")
@@ -1407,12 +1450,18 @@ length( intersect( unique(dat.post$`What is your MTurk Worker ID?`),
 
 dat$pre.consump = dat$`Beef (hamburger, steak, roast beef, etc.):In the past 3 months, how often did you eat the following?   `
 
+
+
+
+
+
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 #                                     EXCLUDED CHALLENGES                                             #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
 
-################################# FAUNALYTICS 2019 ################################# 
+################################# **#3826 CHALLENGE 22+ (ANIMALS NOW) ################################# 
 
 setwd("~/Dropbox/Personal computer/Independent studies/2019/AWR (animal welfare review meat consumption)/Literature search/Full texts for review/*INCLUDED STUDIES/*Challenges/Challenge 22+ (Animals Now) 2018/Faunalytics 2019, #3826/Data from author")
 
@@ -1421,27 +1470,25 @@ setwd("~/Dropbox/Personal computer/Independent studies/2019/AWR (animal welfare 
 dat = read_xlsx("Cha22 Data.xlsx")
 
 # high scores are less meat consumption
+# per paper, coding scheme is as follows:
+# 1 or 2 = consume meat >= 5X weekly
+# 3 = consume 2-4X/week
+# 4 = consume <=1X/week
+# 5 = no meat
+# ~~~ is option #6 vegan??
 bl.med = median(dat$Diet_before)
 
-dat$reduced = dat$Diet_after > dat$Diet_before
+# RR of being vegetarian after vs. before challenge 
+# (since they don't have a category for no animal product consumption)
+# their "38.2% veg*ns" corresponds to survey options 5 and 6 combined
+dat %>% summarise( mean(Diet_before >= 5), 
+                   mean(Diet_after >= 5) )
 
-mean(dat$reduced)
-
-dat$lo.pre = dat$Diet_before < bl.med
-dat$lo.post = dat$Diet_after < bl.med
-
-
-# could in principle calculate a "risk ratio" using 0.5 as the baseline, but
-#  that assumes that we *know* that without the challenge, people would have maintained
-#  same consumption patterns
-# e.g.:
-.42/.5
-
-
-
-
-
-
+# ~~~ assume that option 6 is vegan
+dat %>% summarise( pre.vegans = sum(Diet_before == 6), 
+                   pre.nonvegans = sum(Diet_before < 6), 
+                   post.vegans = sum(Diet_after == 6),
+                   post.nonvegans = sum(Diet_after < 6) )
 
 
 
