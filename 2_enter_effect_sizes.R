@@ -580,12 +580,12 @@ setwd("Cooney 2014, #3856")
 d = rbind( d, read.csv("cooney_2014_prepped_effect_sizes.csv")[,-1] )
 
 
-##### **Cooney 2015 #####
+##### **Doebel 2015 #####
 # this one had a ton of effect sizes, so was prepped more automatically
 setwd(original.data.dir)
-setwd("Cooney 2015, #3799")
+setwd("Doebel 2015, #3799")
 
-d = rbind( d, read.csv("cooney_2015_prepped_effect_sizes.csv")[,-1] )
+d = rbind( d, read.csv("doebel_2015_prepped_effect_sizes.csv")[,-1] )
 
 
 ##### **Cooney 2016 #####
@@ -982,7 +982,7 @@ escalc_add_row( authoryear = "Spanikova 2015",
                 di = round( (1-p.cntrl) * n.group) )  # control not choosing veg
 
 
-##### Norris n.d. (Leafleting and Booklet Effectiveness) #####
+##### Norris 2019 (Leafleting and Booklet Effectiveness) #####
 
 # measure the purple bars in the saved figure (post vs. pre ORs in each group)
 # start at 1, the lowest point on x-axis, and add the proportion of the
@@ -1571,6 +1571,19 @@ d = dplyr::add_row(.data = d,
                    use.veg.analysis = 0,
                    yi = 0.1085201,
                    vi = 0.02071258 )
+
+
+##### Lackner 2019, #3858 #####
+d = dplyr::add_row(.data = d,
+                   authoryear = "Lackner 2019",
+                   desired.direction = 1,
+                   effect.measure = "log-rr",
+                   interpretation = "Low vs. high meat consumption",
+                   use.rr.analysis = 1,
+                   use.grams.analysis = 0,
+                   use.veg.analysis = 0,
+                   yi = -0.3542,
+                   vi = 0.0817 )
 
 
 

@@ -314,7 +314,7 @@ mean(dat$gender[ !dat$gender %in% c("", "Prefer not to answer") ] == "Male")
 
 # missing data situation unclear given lack of codebook
 
-##### Get RRs #####
+##### Get RRs ######
 # outcome variable
 dat$Y = dat$pork.decrease
 
@@ -699,11 +699,11 @@ write.csv(draw, "cooney_2014_prepped_effect_sizes.csv")
 
 
 
-################################# COONEY 2015 ################################# 
+################################# DOEBEL 2015 ################################# 
 
 # outcome is number of weekly meals containing animal products 
 setwd(original.data.dir)
-setwd("Cooney 2015, #3799")
+setwd("Doebel 2015, #3799")
 dat = read.csv("raw_data.csv")
 
 # group the booklets with same message type, as in JP's analysis
@@ -789,7 +789,7 @@ for (j in 1:length( all.conditions ) ) {
                    .dat = dat2 )
   
   draw <<- add_row(draw, 
-                   authoryear = "Cooney 2015",
+                   authoryear = "Doebel 2015",
                    substudy = all.conditions[j],
                    desired.direction = es$yi > 0,  # log(RR) > 0 for being below baseline median is good
                    effect.measure = "log-rr",
@@ -827,7 +827,7 @@ for (j in 1:length( all.conditions ) ) {
                dat = dat )
   
   draw <<- add_row(draw, 
-                   authoryear = "Cooney 2015",
+                   authoryear = "Doebel 2015",
                    substudy = all.conditions[j],
                    desired.direction = es$yi > 0,  # Y coded such that positive is good
                    effect.measure = "log-rr",
@@ -840,7 +840,7 @@ for (j in 1:length( all.conditions ) ) {
   )
 }
 
-write.csv(draw, "cooney_2015_prepped_effect_sizes.csv")
+write.csv(draw, "doebel_2015_prepped_effect_sizes.csv")
 
 
 ################################# COONEY 2016 ################################# 
@@ -1245,9 +1245,42 @@ dt = read.spss("VR (experimental) data.sav", to.data.frame=TRUE)
 res.t$nv.mn - res.c$nv.mn
 
 
+################################# 3858 LACKNER 2019 ################################# 
+
+setwd(original.data.dir)
+setwd('Lackner 2019, #3858/Data from author')
+
+dat = read_xlsx("ZL_Data_meta-analysis.xlsx")
+
+# between-subjects manipulation of food processing stage (low vs. high)
+#  with repeated measures for each subject
+#  but each subject only rated their intentions once at the end
+#  so keep only 1 row per subject
+dat = dat[ !duplicated(dat$Subject_ID), ]
+
+# analyzed N
+nrow(dat)
+
+# per paper, intention variable is coded such that lower scores are good
+cntrl.med = median( dat$Intentions[dat$Processed_Stage == "high"] )
+dat$Y = dat$Intentions < cntrl.med
+
+# raw probabilites by group
+dat %>% group_by(Processed_Stage) %>%
+  summarise( Plow = mean(Y),
+             n = n())
 
 
-################################# 3831 NORRIS N.D. ################################# 
+get_rr_unadj( condition = "low",
+              condition.var.name = "Processed_Stage",
+              control.name = "high",
+              dat = dat )
+
+
+
+
+
+################################# 3831 NORRIS 2019 ################################# 
 
 # ~~~ dataset seems to be from something else
 #  the survey refers to "listening to a presentation" and dataset doesn't have a variable for which leaflet was received
