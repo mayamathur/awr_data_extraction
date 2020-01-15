@@ -18,10 +18,6 @@ library(metafor)
 library(data.table)
 library(readxl)
 
-##### Effect Size #1: Main RR #####
-##### Effect Size #2: No Meat vs. Any Meat #####
-##### Effect Size #3: Grams of Meat ######
-
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 #                                   MAIN-ANALYSIS STUDIES                                             #
@@ -52,7 +48,7 @@ dat %>% group_by(CE) %>%
             size.sd = sd(size),
             n = n())
 
-##### Effect Size #1: Main RR #####
+##### Calculate Main RR #####
 # whether they were above or below (baseline) median 
 #  for total meat consumption at time 3, controlling for 
 # (continuous) meat consumption at baseline
@@ -78,25 +74,6 @@ res = mediate(model.m,
               covariates = "size")
 # 13% mediated
 
-##### Effect Size #2: No Meat vs. Any Meat #####
-table(dat$ysize == 0)  # no one stopped eating meat entirely
-dat$Y = dat$ysize == 0
-get_rr_adj( condition.var.name = "CE",
-            control.name = "Control",
-            baseline.var.name = "size",
-            .dat = dat )
-
-##### Effect Size #2: Grams of Meat #####
-dat$change = dat$ysize - dat$size
-summary(dat$change)
-
-escalc( m2i = mean( dat$change[dat$CE == "Control"] ),
-              m1i = mean( dat$change[dat$CE == "Experimental"] ),
-              sd2i = sd( dat$change[dat$CE == "Control"] ),
-              sd1i = sd( dat$change[dat$CE == "Experimental"] ),
-              n2i = length( dat$change[dat$CE == "Control"] ),
-              n1i = length( dat$change[dat$CE == "Experimental"] ),
-              measure = "MD" )
 
 ################################# ANDERSON 2016 (PLOS) ################################# 
 
@@ -125,7 +102,7 @@ cntrl.med = median( dat$CTeaten )
 dat$Y = dat$FFeaten < cntrl.med
 
 
-##### Effect Size #1: Main RR #####
+##### Calculate Main RR #####
 # controlling for subject's own consumption in control condition
 mod = glm( Y ~ CTeaten, 
            data = dat,
@@ -143,24 +120,6 @@ diag( vcovHC(mod, type="HC0") )
 #         bi = 52,
 #         ci = 55,
 #         di = 58 )
-
-##### Effect Size #2: No Meat vs. Any Meat #####
-table(dat$FFeaten == 0)  # no one refused to eat the sample entirely
-mod = glm( FFeaten == 0 ~ CTeaten, 
-           data = dat,
-           family = "poisson" )
-summary(mod)
-
-diag( vcovHC(mod, type="HC0") )
-
-##### Effect Size #3: Grams of Meat #####
-# vs. same subject in control condition
-dat$change = dat$FFeaten - dat$CTeaten
-summary(dat$change)
-
-# use LM to get SE of within-subject difference
-summary( lm( change ~ 1, 
-             data = dat) )
 
 
 ################################# ANDERSON 2017 ################################# 
@@ -224,7 +183,7 @@ agg.sanity = dat %>% group_by(treatment) %>%
 diff(agg.sanity$mean.chg)
 
 
-##### Effect Size #1: Main RR #####
+##### Calculate Main RR #####
 # whether they were above or below (baseline) median 
 #  for total meat consumption (servings consumed over past week) at time 3, controlling for 
 # (continuous) meat consumption at baseline
@@ -253,46 +212,6 @@ get_rr_adj( condition.var.name = "treatment",
             control.name = "control",
             baseline.var.name = "FFQtotalSumMeat.1",
             .dat = dat[ dat$treatment != "reduce",] )
-
-
-##### Effect Size #2: No Meat vs. Any Meat #####
-
-### "reduce" intervention
-mod = glm( (FFQtotalSumMeat.3 == 0) ~ FFQtotalSumMeat.1 + treatment, 
-           data = dat[ dat$treatment != "veg",],
-           family = "poisson" )
-summary(mod)
-sqrt( diag( vcovHC(mod, type="HC0") ) )
-
-### "eliminate" intervention
-mod = glm( (FFQtotalSumMeat.3 == 0) ~ FFQtotalSumMeat.1 + treatment, 
-           data = dat[ dat$treatment != "reduce",],
-           family = "poisson" )
-summary(mod)
-sqrt( diag( vcovHC(mod, type="HC0") ) )
-
-
-##### Effect Size #3: Grams of Meat #####
-grams.per.serving = 85.0486
-dat$grams.chg = ( dat$FFQtotalSumMeat.3 - dat$FFQtotalSumMeat.1 ) * grams.per.serving
-
-agg = dat %>% group_by(treatment) %>%
-  summarise( mean = mean(grams.chg),
-             sd = sd(grams.chg),
-             n = n() )
-
-
-### both interventions
-escalc( measure = "MD",
-
-        m1i = agg$mean[2:3], # vector for the two outcomes: reduce, eliminate
-        sd1i = agg$sd[2:3],
-        n1i = agg$n[2:3],
-
-        m2i = rep( agg$mean[1], 2 ),
-        sd2i = rep( agg$sd[1], 2 ),
-        n2i =  rep( agg$n[1], 2 ) )
-
 
 
 ################################# CALDWELL 2016 ################################# 
@@ -418,7 +337,7 @@ write.csv(draw, "rouk_prepped_effect_sizes.csv")
 ################################# PALOMO-VELEZ ################################# 
 
 
-##### Study 1, Effect Size #1: Main RR #####
+##### Study 1, Calculate Main RR #####
 setwd(original.data.dir)
 setwd("Palomo-Velez, #107")
 library(foreign)
@@ -449,7 +368,7 @@ get_rr_unadj(condition = "Moral essay",
              dat = dat1)
 
 
-##### Study 2, Effect Size #1: Main RR #####
+##### Study 2, Calculate Main RR #####
 setwd("From author")
 dat2 = read.spss("Study 2 with ratings created.sav", to.data.frame=TRUE)
 
@@ -474,7 +393,7 @@ get_rr_unadj(condition = "ANIMAL WELFARE",
              dat = dat2)
 
 
-##### Study 3, Effect Size #1: Main RR #####
+##### Study 3, Calculate Main RR #####
 dat3 = read.spss("Study 3. with ratings created.sav", to.data.frame=TRUE)
 
 # filter out vegetarians per author's email (saved)
@@ -637,7 +556,7 @@ dat$condition[ dat$condition == "n" ] = '"how", chickens, mixed'
 # total N for paper
 nrow( dat %>% filter( !is.na(post.total) & !is.na(condition) & !is.na(pre.total) ) )
 
-##### Effect Size #1: Main RR #####
+##### Calculate Main RR #####
 # effect sizes from raw data
 draw = as.data.frame( matrix( ncol = 10, nrow = 0 ) )
 names(draw) = c( "authoryear",
@@ -760,7 +679,7 @@ dat %>% filter( Gender %in% c("female", "Female", "male", "Male", "other") ) %>%
   summarise( prop.male = mean( Gender %in% c("male", "Male") ) )
 
 
-##### Effect Size #1: Main RR #####
+##### Calculate Main RR #####
 # effect sizes from raw data
 draw = as.data.frame( matrix( ncol = 10, nrow = 0 ) )
 names(draw) = c( "authoryear",
@@ -812,34 +731,6 @@ for (j in 1:length( all.conditions ) ) {
 # diag( vcovHC(mod, type="HC0") )[2]
 
 
-
-##### Effect Size #2: No Meat vs. Any Meat #####
-
-# rename outcome since below fn looks for a variable called "Y"
-dat$Y = dat$Total_FollowupYN == 0
-# only 5 subjects ate no meat
-
-for (j in 1:length( all.conditions ) ) {
-  
-  es = get_rr_unadj( condition = all.conditions[j],
-               condition.var.name = "condition",
-               control.name = "control",
-               dat = dat )
-  
-  draw <<- add_row(draw, 
-                   authoryear = "Doebel 2015",
-                   substudy = all.conditions[j],
-                   desired.direction = es$yi > 0,  # Y coded such that positive is good
-                   effect.measure = "log-rr",
-                   interpretation = "No meat vs. any",
-                   use.rr.analysis = 0,
-                   use.grams.analysis = 0,
-                   use.veg.analysis = 1,
-                   yi = as.numeric(es$yi),
-                   vi = as.numeric(es$vi)
-  )
-}
-
 write.csv(draw, "doebel_2015_prepped_effect_sizes.csv")
 
 
@@ -860,7 +751,7 @@ dat = read_xlsx("cleanImpactStudyData.ForAnalysis.xlsx")
 
 
 
-##### Effect Size #1: Main RR #####
+##### Calculate Main RR #####
 # use animal product consumption per our hierarchy of outcomes
 cntrl.med = median( dat$totalAnimalProductConsumption[ dat$group == "Control"] )
 dat$lo = dat$totalAnimalProductConsumption < cntrl.med
@@ -878,43 +769,13 @@ escalc( measure = "RR",
 #(296/(296+362)) / (283/(338+283))
 
 
-##### Effect Size #2: No Meat vs. Any Meat #####
-# no GLM needed; there are no other covariates
-tab = table( dat$group, dat$zeroServingsOfMeat )
-prop.table(tab, margin = 1)  # matches what they reported :) 
-escalc( measure = "RR",
-        ai = tab[1,1],
-        bi = tab[1,2],
-        ci = tab[2,1],
-        di = tab[2,2] )
-
-
-##### Effect Size #3: Grams of Meat ######
-servings = escalc( measure = "MD",
-        
-        m1i = agg$total.mean[ agg$group == "Control" ], # vector for the two outcomes: Meat2, MeatYesterday
-        sd1i = agg$total.sd[ agg$group == "Control" ],
-        n1i = sum( dat$group == "Control" ),
-        
-        m2i = agg$total.mean[ agg$group == "Treatment" ],
-        sd2i = agg$total.sd[ agg$group == "Treatment" ],
-        n2i = sum( dat$group == "Treatment" ) )
-
-# no info on how they defined servings to subjects, so use the standard conversion
-#  from Arndt
-grams.per.serving = 85.0486
-servings[1] * grams.per.serving
-servings[2] * grams.per.serving^2
-
-
-
 ################################# KUNST 2016 ################################# 
 
 setwd(original.data.dir)
 setwd("Kunst 2016, #1453/Data from author/kunst_hohle_2016")
 
 
-##### Study 2A, Effect Size #1: Main RR #####
+##### Study 2A, Calculate Main RR #####
 dat = read.spss("study2a.sav", to.data.frame=TRUE)
 
 # missing data
@@ -974,7 +835,7 @@ res = mediate(model.m,
               covariates = "Y")
 # point estimate: 102% mediated
 
-##### Study 2B, Effect Size #1: Main RR #####
+##### Study 2B, Calculate Main RR #####
 dat = read.spss("study_2b.sav", to.data.frame=TRUE)
 
 # look at variable codings
@@ -1006,7 +867,7 @@ get_rr_unadj(condition = "head",
        dat = dat)
 
 
-##### Study 3, Effect Size #1: Main RR #####
+##### Study 3, Calculate Main RR #####
 dat = read.spss("study3.sav", to.data.frame=TRUE)
 
 # look at variable codings
@@ -1037,7 +898,7 @@ get_rr_unadj(condition = "animal shown",
        dat = dat)
 
 
-##### Study 5, Effect Size #1: Main RR #####
+##### Study 5, Calculate Main RR #####
 
 dat = read.spss("study5.sav", to.data.frame=TRUE)
 
