@@ -84,7 +84,6 @@ names(d) = c( "authoryear",
 
 ##### **Amiot 2018 (PLOS) #####
 
-# same study, 3 effect sizes for different analyses
 d = dplyr::add_row(.data = d,
                    authoryear = "Amiot 2018",
                    substudy = NA,
@@ -97,30 +96,6 @@ d = dplyr::add_row(.data = d,
                    yi = 0.395127,
                    vi = 5.670225e-02 )
 
-d = dplyr::add_row(.data = d,
-                   authoryear = "Amiot 2018",
-                   substudy = NA,
-                   desired.direction = 1,
-                   effect.measure = "log-rr",
-                   interpretation = "No meat vs. any",
-                   use.rr.analysis = 0,
-                   use.grams.analysis = 0,
-                   use.veg.analysis = 1,
-                   yi = 1.018e-14,
-                   vi = 1.263483e-01 )
-
-
-d = dplyr::add_row(.data = d,
-                   authoryear = "Amiot 2018",
-                   substudy = NA,
-                   desired.direction = 1,
-                   effect.measure = "rmd",
-                   interpretation = "Grams of meat",
-                   use.rr.analysis = 0,
-                   use.grams.analysis = 1,
-                   use.veg.analysis = 0,
-                   yi = -64.0625,
-                   vi = 19538.9216 )
 
 ##### **Anderson 2016 (PLOS), Study 3 ######
 # same study, 3 effect sizes for different analyses
@@ -135,32 +110,6 @@ d = dplyr::add_row(.data = d,
                    use.veg.analysis = 0,
                    yi = -0.5397,
                    vi = 0.00613555 )
-
-d = dplyr::add_row(.data = d,
-                   authoryear = "Anderson 2016",
-                   substudy = NA,
-                   desired.direction = 1,
-                   effect.measure = "log-rr",
-                   interpretation = "No meat vs. any",
-                   use.rr.analysis = 0,
-                   use.grams.analysis = 0,
-                   use.veg.analysis = 1,
-                   yi = -1.038e-14,
-                   vi = 0.003756172 )
-
-d = dplyr::add_row(.data = d,
-                   authoryear = "Anderson 2016",
-                   substudy = NA,
-                   desired.direction = 1,
-                   effect.measure = "rmd",
-                   interpretation = "Grams of meat",
-                   use.rr.analysis = 0,
-                   use.grams.analysis = 1,
-                   use.veg.analysis = 0,
-                   yi = -0.1084,
-                   vi = 0.0901^2 )
-
-
 
 ##### Arndt (2016)
 # total sample size in paper: 105 (per pg 52; Table 13) + 296 (per pg 95; Table 46)
@@ -281,19 +230,6 @@ escalc_add_row( authoryear = "Arndt 2016",
                 m2i = 2.75,
                 sd2i = 2,
                 n2i = round(296/9) )
-
-# for grams of meat conversion, using 3 oz/serving (see page 42)
-grams.per.serving = 85.0486
-
-new.rows = d %>% filter( authoryear == "Arndt 2016" ) %>%
-  mutate( yi = yi * grams.per.serving,
-          vi = vi * grams.per.serving^2,
-          effect.measure = "rmd",
-          interpretation = "Grams of meat",
-          use.rr.analysis = 0,
-          use.grams.analysis = 1,
-          use.veg.analysis = 0)
-d = rbind(d, new.rows)
 
 
 
@@ -604,30 +540,6 @@ d = dplyr::add_row(.data = d,
                    yi = -0.0107,
                    vi = 0.0026 )
 
-d = dplyr::add_row(.data = d,
-                   authoryear = "Cooney 2016",
-                   substudy = NA,
-                   desired.direction = 0,
-                   effect.measure = "log-rr",
-                   interpretation = "No meat vs. any",
-                   use.rr.analysis = 0,
-                   use.grams.analysis = 0,
-                   use.veg.analysis = 1,
-                     yi = 0.0272,
-                   vi = 0.0003 )
-
-d = dplyr::add_row(.data = d,
-                   authoryear = "Cooney 2016",
-                   substudy = NA,
-                   desired.direction = 1,
-                   effect.measure = "log-rr",
-                   interpretation = "Grams of meat",
-                   use.rr.analysis = 0,
-                   use.grams.analysis = 1,
-                   use.veg.analysis = 0,
-                   yi = -17.38612,
-                   vi = 485.8731 )
-
 
 
 ##### Hennessy 2016, "why" leaflet #####
@@ -678,43 +590,6 @@ escalc_add_row( authoryear = "Hennessy 2016",
                 n2i = 170 )
 
 
-
-# page 29 reports on becoming vegetarian (based on 1-week meat consumption)
-# 10 subjects in control group went veg and 1 in each treatment arm
-# alternatively, we could have used "MeatYesterday" (did subject eat meat yesterday?),
-#  but we chose the longer 1-week follow-up per our decision hierarchy
-escalc_add_row( authoryear = "Hennessy 2016",
-                substudy = 'why leaflet',
-                desired.direction = 0,
-                effect.measure = "log-rr",
-                interpretation = "No meat vs. any",
-                use.rr.analysis = 0,
-                use.grams.analysis = 0,
-                use.veg.analysis = 1,
-                measure = "RR",
-
-                ai = 1, # Tx who went vegetarian
-                bi = 79 - 1,  # Tx who did not go veg
-                ci = 8,  # control who went veg
-                di = 170 - 8  ) # control who did not go veg
-
-# same stats as above (not a typo)
-escalc_add_row( authoryear = "Hennessy 2016",
-                substudy = 'how leaflet',
-                desired.direction = 0,
-                effect.measure = "log-rr",
-                interpretation = "No meat vs. any",
-                use.rr.analysis = 0,
-                use.grams.analysis = 0,
-                use.veg.analysis = 1,
-                measure = "RR",
-
-                ai = 1, # Tx who went vegetarian
-                bi = 79 - 1,  # Tx who did not go veg
-                ci = 8,  # control intending to reduce
-                di = 170 - 8  ) # control who did not go veg
-
-
 ##### **MacDonald 2016 #####
 # low vs. high (using baseline median)
 d = dplyr::add_row(.data = d,
@@ -741,55 +616,6 @@ d = dplyr::add_row(.data = d,
                    yi = 0.077449,
                    vi = 0.002377879 )
 
-# going vegetarian
-d = dplyr::add_row(.data = d,
-                   authoryear = "MacDonald 2016",
-                   substudy = "reduce",
-                   desired.direction = 1,
-                   effect.measure = "log-rr",
-                   interpretation = "No meat vs. any",
-                   use.rr.analysis = 0,
-                   use.grams.analysis = 0,
-                   use.veg.analysis = 1,
-                   yi = 0.07387,
-                   vi = 0.1680007^2 )
-
-d = dplyr::add_row(.data = d,
-                   authoryear = "MacDonald 2016",
-                   substudy = "eliminate",
-                   desired.direction = 1,
-                   effect.measure = "log-rr",
-                   interpretation = "No meat vs. any",
-                   use.rr.analysis = 0,
-                   use.grams.analysis = 0,
-                   use.veg.analysis = 1,
-                   yi = 0.05470,
-                   vi = 0.1389741^2 )
-
-# grams of meat
-d = dplyr::add_row(.data = d,
-                   authoryear = "MacDonald 2016",
-                   substudy = "reduce",
-                   desired.direction = 1,
-                   effect.measure = "rmd",
-                   interpretation = "Grams of meat (1 week)",
-                   use.rr.analysis = 0,
-                   use.grams.analysis = 1,
-                   use.veg.analysis = 0,
-                   yi = -68.7170,
-                   vi = 1789.3185 )
-
-d = dplyr::add_row(.data = d,
-                   authoryear = "MacDonald 2016",
-                   substudy = "eliminate",
-                   desired.direction = 1,
-                   effect.measure = "rmd",
-                   interpretation = "Grams of meat (1 week)",
-                   use.rr.analysis = 0,
-                   use.grams.analysis = 1,
-                   use.veg.analysis = 0,
-                   yi = -84.8222,
-                   vi = 1783.7241 )
 
 
 ##### **Reese 2015 #####
@@ -1707,7 +1533,7 @@ N = 470 # pg 6
 ( bl.prop.vegan = bl.vegans.px/total.px )
 ( fu.prop.vegan = fu.vegans.px/total.px )
 
-escalc_add_row( authoryear = "The Great Vegan Challenge (Animal Aid) n.d.",
+escalc_add_row( authoryear = "The Great Vegan Challenge (Animal Aid) 2016",
                 substudy = NA,
                 desired.direction = 1,
                 effect.measure = "log-rr",
@@ -1870,6 +1696,7 @@ table(d$authoryear)
 # how many point estimates?
 nrow(d)
 
+
 # qualitative data entered into Excel
 setwd(data.dir)
 # NOTE: this step breaks if cell values are hyphenated!
@@ -1928,7 +1755,7 @@ setwd("Dual review of quality")
 
 d3 = read.csv("subjective_data_full_prepped.csv")
 
-# check for name mismatches
+# check for studies lacking entries in subjective data
 d$authoryear[ !d$authoryear %in% d3$authoryear ]
 
 # merge with main dataset
@@ -2170,6 +1997,7 @@ d$randomized = grepl("RCT", d$design)
 
 # recode missing data
 d[ d == "NR" ] = NA
+d[ d == "na" ] = NA
 
 ############################### WRITE PREPPED DATA ###############################
 
