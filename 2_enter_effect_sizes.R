@@ -917,6 +917,35 @@ for (i in 1:4) {
   #                 di = round( (1-p0) * n0[i]) )  # baseline not intending
 }
 
+##### Norris 2019 #####
+
+# Compassionate Choices
+d = dplyr::add_row(.data = d,
+                   authoryear = "Norris 2019",
+                   substudy = '"Compassionate Choices"',
+                   desired.direction = 1,
+                   effect.measure = "log-rr",
+                   interpretation = "Low vs. high animal product consumption",
+                   use.rr.analysis = 1,
+                   use.grams.analysis = 0,
+                   use.veg.analysis = 0,
+                   yi = 0.05990,
+                   vi = 0.0048810802 )
+
+# Speciesism
+d = dplyr::add_row(.data = d,
+                   authoryear = "Norris 2019",
+                   substudy = '"Speciesism"',
+                   desired.direction = 1,
+                   effect.measure = "log-rr",
+                   interpretation = "Low vs. high animal product consumption",
+                   use.rr.analysis = 1,
+                   use.grams.analysis = 0,
+                   use.veg.analysis = 0,
+                   yi = 0.16431,
+                   vi = 4.704840e-03 )
+
+
 ##### Byrd-Bredbenner 2010 #####
 
 # they measured pre-post changes, but change scores aren't reported, so

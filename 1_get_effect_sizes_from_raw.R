@@ -1168,11 +1168,12 @@ get_rr_unadj( condition = "low",
 
 ##### Data loading #####
 setwd(code.dir)
-data_schools = read_csv('data/Norris-2018/schools-adminstrators-codes.csv')
-
 setwd(original.data.dir)
-setwd('Norris nd, #3831')
+setwd('Norris 2019, #3831')
 setwd("Data from author/Leafleting Effectiveness 2018")
+
+# cluster codes
+data_schools = read_csv('schools-adminstrators-codes.csv')
 
 # pre- and post-data are in different files
 data_pre = read.csv("LES Pre-test Results.csv"); nrow(dat.pre)
@@ -1319,6 +1320,70 @@ or_control = (15 / 358) / (7 / 366)
 or_cc = (19 / 181) / (13 / 187)
 or_sp = (14 / 187) / (6 / 195)
 # Matches figure
+
+
+##### Create Outcome Variable #####
+# sum of consumption frequences of each animal product
+# per codebook PDF, higher scores are more consumption
+data$pre.consump = data$oftenBeef_pre +
+  data$oftenChicken_pre +
+  data$oftenDairy_pre +
+  data$oftenEggs_pre +
+  data$oftenFish_pre +
+  data$oftenPork_pre + 
+  data$oftenTurkey_pre
+
+data$post.consump = data$oftenBeef_post +
+  data$oftenChicken_post +
+  data$oftenDairy_post +
+  data$oftenEggs_post +
+  data$oftenFish_post +
+  data$oftenPork_post + 
+  data$oftenTurkey_post
+
+
+cntrl.med = median( data$post.consump[ data$group == "Control" ], na.rm = TRUE )
+data$Y = data$post.consump < cntrl.med
+
+data %>% group_by(group) %>%
+  summarise( Y = mean(Y, na.rm = TRUE) )  # per codebook, 2 is male
+
+
+##### Compassionate Choices: Calculate Main RR #####
+# controlling for subject's own consumption at baseline
+mod = glm( Y ~ ( group == "Compassionate Choices" ) + pre.consump,
+           data = data[ data$group != "What is Speciesism", ],
+           family = "poisson" )
+summary(mod)
+vcovHC(mod, type="HC0", cluster = "school_code")
+
+# percent male and analyzed N
+( agg.cc = data %>% filter(group != "What Is Speciesism") %>%
+    summarise( N = sum( !is.na(post.consump) & !is.na(pre.consump) ),
+               male = mean(gender == 2) ) ) # per codebook, 2 is male
+
+
+
+##### Speciesism: Calculate Main RR #####
+# controlling for subject's own consumption at baseline
+mod = glm( Y ~ ( group == "What is Speciesism" ) + pre.consump,
+           data = data[ data$group != "Compassionate Choices", ],
+           family = "poisson" )
+summary(mod)
+vcovHC(mod, type="HC0", cluster = "school_code")
+
+# percent male and analyzed N
+( agg.s = data %>% filter(group != "Compassionate Choices") %>%
+    summarise( N = sum( !is.na(post.consump) & !is.na(pre.consump) ),
+               male = mean(gender == 2) ) ) # per codebook, 2 is male
+
+
+##### Overall Analyzed N and Missing Data #####
+sum( !is.na(data$post.consump) & !is.na(data$pre.consump) )
+
+# missing data: based on number of booklets distributed in each condition in PDF
+1 - (agg.cc$N / (14000 + 5838))
+1 - (agg.s$N / (14000 + 5838))
 
 
 ################################# 3829 NORRIS 2014 #################################
@@ -1492,8 +1557,6 @@ length( intersect( unique(dat.post$`What is your MTurk Worker ID?`),
 
 
 dat$pre.consump = dat$`Beef (hamburger, steak, roast beef, etc.):In the past 3 months, how often did you eat the following?   `
-
-
 
 
 
