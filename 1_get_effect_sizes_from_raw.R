@@ -1,7 +1,7 @@
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 #                                           PRELIMINARIES                                             #
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ # 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
 original.data.dir = "~/Dropbox/Personal computer/Independent studies/2019/AWR (animal welfare review meat consumption)/Literature search/Full texts for review/*INCLUDED STUDIES"
 code.dir = "~/Dropbox/Personal computer/Independent studies/2019/AWR (animal welfare review meat consumption)/Data extraction/awr_data_extraction_git"
@@ -17,6 +17,7 @@ library(sandwich)
 library(metafor)
 library(data.table)
 library(readxl)
+library(tidyverse)
 
 ##### Effect Size #1: Main RR #####
 ##### Effect Size #2: No Meat vs. Any Meat #####
@@ -27,10 +28,10 @@ library(readxl)
 #                                   MAIN-ANALYSIS STUDIES                                             #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
-################################# AMIOT 2018 ################################# 
+################################# AMIOT 2018 #################################
 
 setwd(original.data.dir)
-setwd("Amiot 2018, #243")  
+setwd("Amiot 2018, #243")
 
 dat = read.spss("data.sav", to.data.frame=TRUE)
 
@@ -53,8 +54,8 @@ dat %>% group_by(CE) %>%
             n = n())
 
 ##### Effect Size #1: Main RR #####
-# whether they were above or below (baseline) median 
-#  for total meat consumption at time 3, controlling for 
+# whether they were above or below (baseline) median
+#  for total meat consumption at time 3, controlling for
 # (continuous) meat consumption at baseline
 # dichtomize at baseline med
 bl.med = median(dat$size)
@@ -98,7 +99,7 @@ escalc( m2i = mean( dat$change[dat$CE == "Control"] ),
               n1i = length( dat$change[dat$CE == "Experimental"] ),
               measure = "MD" )
 
-################################# ANDERSON 2016 (PLOS) ################################# 
+################################# ANDERSON 2016 (PLOS) #################################
 
 setwd(original.data.dir)
 setwd("Anderson 2016, #3742")
@@ -127,7 +128,7 @@ dat$Y = dat$FFeaten < cntrl.med
 
 ##### Effect Size #1: Main RR #####
 # controlling for subject's own consumption in control condition
-mod = glm( Y ~ CTeaten, 
+mod = glm( Y ~ CTeaten,
            data = dat,
            family = "poisson" )
 summary(mod)
@@ -135,10 +136,10 @@ summary(mod)
 library(sandwich)
 diag( vcovHC(mod, type="HC0") )
 
-# # sanity check: expect effect size to be much smaller, as in original paper, 
+# # sanity check: expect effect size to be much smaller, as in original paper,
 # #  when ignoring within-subject correlation
 # escalc( measure = "RR",
-#         
+#
 #         ai = 61,  # these are from my code
 #         bi = 52,
 #         ci = 55,
@@ -146,7 +147,7 @@ diag( vcovHC(mod, type="HC0") )
 
 ##### Effect Size #2: No Meat vs. Any Meat #####
 table(dat$FFeaten == 0)  # no one refused to eat the sample entirely
-mod = glm( FFeaten == 0 ~ CTeaten, 
+mod = glm( FFeaten == 0 ~ CTeaten,
            data = dat,
            family = "poisson" )
 summary(mod)
@@ -159,11 +160,11 @@ dat$change = dat$FFeaten - dat$CTeaten
 summary(dat$change)
 
 # use LM to get SE of within-subject difference
-summary( lm( change ~ 1, 
+summary( lm( change ~ 1,
              data = dat) )
 
 
-################################# ANDERSON 2017 ################################# 
+################################# ANDERSON 2017 #################################
 
 
 # they fit a cumulative logit mixed model
@@ -202,7 +203,7 @@ summary(mod.3d)
 diag( vcovHC(mod.3d, type="HC0", cluster = "campus") )
 
 
-################################# MACDONALD 2016 ################################# 
+################################# MACDONALD 2016 #################################
 
 # note this also has outcome at a shorter time lag; using the longer time lag only
 setwd(original.data.dir)
@@ -225,13 +226,13 @@ diff(agg.sanity$mean.chg)
 
 
 ##### Effect Size #1: Main RR #####
-# whether they were above or below (baseline) median 
-#  for total meat consumption (servings consumed over past week) at time 3, controlling for 
+# whether they were above or below (baseline) median
+#  for total meat consumption (servings consumed over past week) at time 3, controlling for
 # (continuous) meat consumption at baseline
 # dichtomize at baseline med
 dat = dat[ !is.na(dat$FFQtotalSumMeat.3) & !is.na(dat$FFQtotalSumMeat.1), ]
 
-# sample size 
+# sample size
 nrow(dat)
 
 # % male
@@ -258,14 +259,14 @@ get_rr_adj( condition.var.name = "treatment",
 ##### Effect Size #2: No Meat vs. Any Meat #####
 
 ### "reduce" intervention
-mod = glm( (FFQtotalSumMeat.3 == 0) ~ FFQtotalSumMeat.1 + treatment, 
+mod = glm( (FFQtotalSumMeat.3 == 0) ~ FFQtotalSumMeat.1 + treatment,
            data = dat[ dat$treatment != "veg",],
            family = "poisson" )
 summary(mod)
 sqrt( diag( vcovHC(mod, type="HC0") ) )
 
 ### "eliminate" intervention
-mod = glm( (FFQtotalSumMeat.3 == 0) ~ FFQtotalSumMeat.1 + treatment, 
+mod = glm( (FFQtotalSumMeat.3 == 0) ~ FFQtotalSumMeat.1 + treatment,
            data = dat[ dat$treatment != "reduce",],
            family = "poisson" )
 summary(mod)
@@ -295,7 +296,7 @@ escalc( measure = "MD",
 
 
 
-################################# CALDWELL 2016 ################################# 
+################################# CALDWELL 2016 #################################
 
 # their summary spreadsheet already had needed stats, so now just getting the % male
 setwd(original.data.dir)
@@ -304,7 +305,7 @@ setwd("Caldwell 2016, #3794")
 dat = read.csv("CleanWelfareReformsData.csv")
 
 # sex
-dat %>% filter( experimentGroup %in% c("porkLegislation", 
+dat %>% filter( experimentGroup %in% c("porkLegislation",
                                        "controlPorkLegislation",
                                        "porkPolicy",
                                        "controlPorkPolicy" ) ) %>%
@@ -332,7 +333,7 @@ get_rr_unadj(condition = "porkPolicy",
 
 
 
-################################# CALDWELL 2017a ################################# 
+################################# CALDWELL 2017a #################################
 
 # their summary spreadsheet already had needed stats, so now just getting the % male
 #  and confirming number in control group
@@ -352,7 +353,7 @@ dat %>% group_by(videoTreatment) %>% summarise(n())
 dat %>% filter(videoTreatment != "lifestyle") %>% summarise(n())
 
 
-################################# ROUK 2017 ################################# 
+################################# ROUK 2017 #################################
 
 setwd(original.data.dir)
 setwd("Rouk 2017, #3832")
@@ -386,22 +387,22 @@ names(draw) = c( "authoryear",
                  "vi")
 
 for (j in 1:length( all.conditions ) ) {
-  
+
   temp = dat %>% filter( X %in% c( all.conditions[j], "control") )
-  
+
   # print percent male
   print( paste( all.conditions[j], "percent male:",
                 round( 100* mean( temp$gender == "Male", na.rm = TRUE ), 1 ) ) )
-  
+
   es = get_rr_unadj( condition = all.conditions[j],
                      condition.var.name = "X",
                      control.name = "control",
                      dat = temp )
-  
-  draw <<- add_row(draw, 
+
+  draw <<- add_row(draw,
                    authoryear = "Rouk 2017",
                    substudy = all.conditions[j],
-                   desired.direction = es$yi > 0,  
+                   desired.direction = es$yi > 0,
                    effect.measure = "log-rr",
                    interpretation = "Reduce vs. don't",
                    use.rr.analysis = 1,
@@ -415,7 +416,7 @@ for (j in 1:length( all.conditions ) ) {
 write.csv(draw, "rouk_prepped_effect_sizes.csv")
 
 
-################################# PALOMO-VELEZ ################################# 
+################################# PALOMO-VELEZ #################################
 
 
 ##### Study 1, Effect Size #1: Main RR #####
@@ -456,7 +457,7 @@ dat2 = read.spss("Study 2 with ratings created.sav", to.data.frame=TRUE)
 # filter out vegetarians per author's email (saved)
 dat2 = dat2[ dat2$filter_. == "Selected",]
 
-# sample size 
+# sample size
 nrow(dat2)
 prop.table(table(dat2$SEX))
 
@@ -480,7 +481,7 @@ dat3 = read.spss("Study 3. with ratings created.sav", to.data.frame=TRUE)
 # filter out vegetarians per author's email (saved)
 dat3 = dat3[ dat3$filter_. == "Selected",]
 
-# sample size 
+# sample size
 nrow(dat3)
 prop.table(table(dat3$SEX))
 
@@ -499,7 +500,7 @@ get_rr_unadj(condition = "ANIMAL WELFARE",
 
 
 
-################################# REESE 2015 ################################# 
+################################# REESE 2015 #################################
 
 # this one has a ton of effect sizes, so will make its dataset automatically
 
@@ -515,7 +516,7 @@ table(dats[[1]]$condition)
 table(dats[[2]]$condition)
 
 # remove non-animal-welfare conditions
-dats[[1]] = dats[[1]] %>% filter( !condition %in% c("environment", 
+dats[[1]] = dats[[1]] %>% filter( !condition %in% c("environment",
                                                     "health",
                                                     "news"))
 
@@ -557,31 +558,31 @@ names(draw) = c( "authoryear",
 for ( i in 1:length(dats) ) {
   dats[[i]] = mutate( dats[[i]],
                       Y = consumption <= 3 )
-  
+
   # calculate proportion male
   # coding scheme from author email
   print( paste("Prop. male = ", mean( dats[[i]]$gender == 1, na.rm = TRUE ) ) )
-  
+
   agg = dats[[i]] %>% group_by(condition) %>%
     summarise( Preduce = mean(Y),
                N.tot = n(),
                N.reduce = sum(Y == 1) )
 
   print(agg)
-  
+
   # get ES for each condition
   all.conditions = unique( dats[[i]]$condition[ !dats[[i]]$condition == "control" ] )
   for (j in 1:length( all.conditions ) ) {
-  
+
     es = get_rr_unadj( condition = all.conditions[j],
                  condition.var.name = "condition",
                  control.name = "control",
             dat = dats[[i]] )
-    
-    draw <<- add_row(draw, 
+
+    draw <<- add_row(draw,
                    authoryear = "Reese 2015",
                    substudy = paste( "Study ", i+2, ", ", all.conditions[j], sep=""),
-                   desired.direction = es$yi > 0,  
+                   desired.direction = es$yi > 0,
                    effect.measure = "log-rr",
                    interpretation = "Reduce vs. don't",
                    use.rr.analysis = 1,
@@ -602,7 +603,7 @@ write.csv(draw, "reese_prepped_effect_sizes.csv")
 # (7/67) / (5/46); exp(draw$yi[draw$substudy == "Study 3, hopeful corporate passage"])
 
 
-################################# COONEY 2014 ################################# 
+################################# COONEY 2014 #################################
 
 # ~~~ not double-checked
 
@@ -655,23 +656,23 @@ names(draw) = c( "authoryear",
 all.conditions = unique( dat$condition[ !dat$condition == "control" ] )
 
 for (j in 1:length( all.conditions ) ) {
-  
+
   # keep only the desired condition and control
   dat2 = dat %>% filter( condition %in% c( all.conditions[j], "control" ) )
-  
+
   es = get_rr_adj( condition.var.name = "condition",
                    control.name = "control",
                    baseline.var.name = "pre.total",
                    .dat = dat2 )
-  
+
   # print percent male
   prop.male = mean( dat2$sex[ !is.na(dat2$post.total) ] == "male" )
   print( paste( all.conditions[j], "percent male:",
                 round( 100* prop.male, 2 ) ) )
   cat("\n\n")
-  
-  
-  draw <<- add_row(draw, 
+
+
+  draw <<- add_row(draw,
                    authoryear = "Cooney 2014",
                    substudy = all.conditions[j],
                    desired.direction = es$yi > 0,  # log(RR) > 0 for being below baseline median is good
@@ -699,15 +700,15 @@ write.csv(draw, "cooney_2014_prepped_effect_sizes.csv")
 
 
 
-################################# DOEBEL 2015 ################################# 
+################################# DOEBEL 2015 #################################
 
-# outcome is number of weekly meals containing animal products 
+# outcome is number of weekly meals containing animal products
 setwd(original.data.dir)
 setwd("Doebel 2015, #3799")
 dat = read.csv("raw_data.csv")
 
 # group the booklets with same message type, as in JP's analysis
-dat$condition = gsub('[0-9]+', '', dat$BookletDescrp) 
+dat$condition = gsub('[0-9]+', '', dat$BookletDescrp)
 
 
 # remove subjects without a booklet or no F/U data
@@ -716,7 +717,7 @@ dat = dat[ !is.na(dat$Total_Chg), ]
 
 
 # confirm that total FU and current variables
-#  are equal to sum of individual components - yes :) 
+#  are equal to sum of individual components - yes :)
 FU.cols = names(dat)[grepl("Followup", names(dat))][1:5]
 table( apply( dat[,FU.cols],
               1,
@@ -736,7 +737,7 @@ table( apply( dat[,current.cols],
 # # often off by a sign
 # # fix the Total_Chg variable accordingly
 # dat$Total_Chg = dat$Total_FollowupYN - dat$Total_Current
- 
+
 # outcome: being below baseline median
 bl.med = median( dat$Total_Current, na.rm = TRUE )
 dat$Y = dat$Total_FollowupYN < bl.med
@@ -778,17 +779,17 @@ names(draw) = c( "authoryear",
 all.conditions = unique( dat$condition[ !dat$condition == "control" ] )
 
 for (j in 1:length( all.conditions ) ) {
-  
+
   # keep only the desired condition and control
   dat2 = dat %>% filter( condition %in% c( all.conditions[j], "control" ) )
-  
-  es = get_rr_adj( 
+
+  es = get_rr_adj(
                    condition.var.name = "condition",
                    control.name = "control",
                    baseline.var.name = "Total_Current",
                    .dat = dat2 )
-  
-  draw <<- add_row(draw, 
+
+  draw <<- add_row(draw,
                    authoryear = "Doebel 2015",
                    substudy = all.conditions[j],
                    desired.direction = es$yi > 0,  # log(RR) > 0 for being below baseline median is good
@@ -804,8 +805,8 @@ for (j in 1:length( all.conditions ) ) {
 
 # # sanity check: reproduce one manually
 # dat2 = dat %>% filter( condition %in% c( "control", '"less meat" leaflet' ) )
-# dat2$condition = factor( dat2$condition, levels = c( "control", '"less meat" leaflet' ) ) 
-# ( mod = glm( Y ~ condition + Total_Current, 
+# dat2$condition = factor( dat2$condition, levels = c( "control", '"less meat" leaflet' ) )
+# ( mod = glm( Y ~ condition + Total_Current,
 #            data = dat2,
 #            family = "poisson" ) )
 # library(sandwich)
@@ -820,13 +821,13 @@ dat$Y = dat$Total_FollowupYN == 0
 # only 5 subjects ate no meat
 
 for (j in 1:length( all.conditions ) ) {
-  
+
   es = get_rr_unadj( condition = all.conditions[j],
                condition.var.name = "condition",
                control.name = "control",
                dat = dat )
-  
-  draw <<- add_row(draw, 
+
+  draw <<- add_row(draw,
                    authoryear = "Doebel 2015",
                    substudy = all.conditions[j],
                    desired.direction = es$yi > 0,  # Y coded such that positive is good
@@ -843,7 +844,7 @@ for (j in 1:length( all.conditions ) ) {
 write.csv(draw, "doebel_2015_prepped_effect_sizes.csv")
 
 
-################################# COONEY 2016 ################################# 
+################################# COONEY 2016 #################################
 
 setwd(original.data.dir)
 setwd("Cooney 2016, #3796")
@@ -881,7 +882,7 @@ escalc( measure = "RR",
 ##### Effect Size #2: No Meat vs. Any Meat #####
 # no GLM needed; there are no other covariates
 tab = table( dat$group, dat$zeroServingsOfMeat )
-prop.table(tab, margin = 1)  # matches what they reported :) 
+prop.table(tab, margin = 1)  # matches what they reported :)
 escalc( measure = "RR",
         ai = tab[1,1],
         bi = tab[1,2],
@@ -891,11 +892,11 @@ escalc( measure = "RR",
 
 ##### Effect Size #3: Grams of Meat ######
 servings = escalc( measure = "MD",
-        
+
         m1i = agg$total.mean[ agg$group == "Control" ], # vector for the two outcomes: Meat2, MeatYesterday
         sd1i = agg$total.sd[ agg$group == "Control" ],
         n1i = sum( dat$group == "Control" ),
-        
+
         m2i = agg$total.mean[ agg$group == "Treatment" ],
         sd2i = agg$total.sd[ agg$group == "Treatment" ],
         n2i = sum( dat$group == "Treatment" ) )
@@ -908,7 +909,7 @@ servings[2] * grams.per.serving^2
 
 
 
-################################# KUNST 2016 ################################# 
+################################# KUNST 2016 #################################
 
 setwd(original.data.dir)
 setwd("Kunst 2016, #1453/Data from author/kunst_hohle_2016")
@@ -1070,7 +1071,7 @@ get_rr_unadj(condition = "animal names",
 
 
 
-################################# KUNST 2018 ################################# 
+################################# KUNST 2018 #################################
 
 setwd(original.data.dir)
 setwd("Kunst 2016/Data from author/kunst_haugestad_2018")
@@ -1128,7 +1129,7 @@ get_rr_unadj(condition = "head",
              control.name = "no head",
              dat = dat2)
 
-################################# 3838 ACE 2013a ################################# 
+################################# 3838 ACE 2013a #################################
 
 setwd(original.data.dir)
 setwd('Animal Charity Evaluators 2013a, #3838')
@@ -1166,7 +1167,7 @@ get_rr_adj( condition.var.name = "GROUP ASSIGNMENT",
             .dat = dat[ dat$`GROUP ASSIGNMENT` != "C", ] )
 
 
-################################# 3837 ACE 2013b ################################# 
+################################# 3837 ACE 2013b #################################
 
 setwd(original.data.dir)
 setwd('Animal Charity Evaluators 2013b, #3837')
@@ -1204,7 +1205,7 @@ get_rr_adj( condition.var.name = "GROUPS",
             .dat = dat )
 
 
-################################# 3862 FIAPO 2019 ################################# 
+################################# 3862 FIAPO 2019 #################################
 
 ##### Study 2: 2D video #####
 dc = read.spss("VO (control) data.sav", to.data.frame=TRUE)
@@ -1245,7 +1246,7 @@ dt = read.spss("VR (experimental) data.sav", to.data.frame=TRUE)
 res.t$nv.mn - res.c$nv.mn
 
 
-################################# 3858 LACKNER 2019 ################################# 
+################################# 3858 LACKNER 2019 #################################
 
 setwd(original.data.dir)
 setwd('Lackner 2019, #3858/Data from author')
@@ -1280,38 +1281,184 @@ get_rr_unadj( condition = "low",
 
 
 
-################################# 3831 NORRIS 2019 ################################# 
+################################# 3831 NORRIS 2018 #############################
 
-# ~~~ dataset seems to be from something else
-#  the survey refers to "listening to a presentation" and dataset doesn't have a variable for which leaflet was received
+###### Notes #####
+# * Couldn't separate participants at Mesa Community College and at Arizona State
+#   University - Tempe Campus, so we'll have to treat them as a single cluster.
+#   (See the schools-adminstrators-codes.csv for details.)
+# * There are some unclear codings: "identify_pre" and "identify_post" contains 0
+#   and "progressCode_post" contains 2 but the code does not clearly align with
+#   the definition in the code book.
+# * Possibly related, the numbers of vegans, vegetarians and meat-eaters don't
+#   quite align.
+# * Based on the survey questions, both the pre and post tests were conducted
+#   *after* receiving the intervention leaflet.
+#
+# animal_products_pre = c("oftenBeef_pre", "oftenChicken_pre", "oftenDairy_pre",
+#   "oftenEggs_pre", "oftenFish_pre", "oftenPork_pre", "oftenTurkey_pre")
+#
+# animal_products_post = c("oftenBeef_post", "oftenChicken_post",
+#   "oftenDairy_post", "oftenEggs_post", "oftenFish_post", "oftenPork_post",
+#   "oftenTurkey_post")
+
+
+##### Data loading #####
+setwd(code.dir)
+data_schools = read_csv('data/Norris-2018/schools-adminstrators-codes.csv')
 
 setwd(original.data.dir)
 setwd('Norris nd, #3831')
 setwd("Data from author/Leafleting Effectiveness 2018")
 
 # pre- and post-data are in different files
-dat.pre = read.csv("LES Pre-test Results.csv"); nrow(dat.pre)
-dat.post = read.csv("LES Post-Test Results.csv"); nrow(dat.post)
+data_pre = read.csv("LES Pre-test Results.csv"); nrow(dat.pre)
+data_post = read.csv("LES Post-Test Results.csv"); nrow(dat.post)
 
-# per the "Schools and Dates" spreadhseet (see the bottom part called "Code Ranges"), 
-#  the first letter of the "code" variable tells us which leaflet was received
-# X = control; C = "Compassionate Choices"; "P" = "Speciesism"
-
-dat.pre$code2 = substr( tolower(dat.pre$code), start = 1, stop = 1 )
-table(dat.pre$code2)
-
-5838 * .118  # expected count for X
-14000*.027  # expected count for C
-14000*.025  # expected count for P
+# number of participants per group, extracted from report
+n = dplyr::tibble(
+  group=factor(c('Compassionate Choices', 'What is Speciesism','Control')),
+  n=c(14000, 14000, 5838))
 
 
-# merge them
-dat = merge( dat.pre, dat.post, by = "code" )
+##### Data cleaning #####
+# merge pre and post data
+data_raw = dplyr::full_join(data_pre, data_post, by="code",
+                            suffix=c('_pre', '_post'))
 
-dat = merge( dat.pre, dat.post, by = "id" )
+# Add treatment or control group and school cluster variables
+data = dplyr::mutate(data_raw,
+                     code = str_to_upper(code),
+
+                     # extract the treatment or control group from "code"
+                     group = stringr::str_sub(code, 0, 1),
+                     group = dplyr::recode_factor(group,
+                                                  C="Compassionate Choices",
+                                                  X="Control",
+                                                  P="What is Speciesism"),
+
+                     # extract the school code from "code"
+                     school_code = stringr::str_sub(code, 0, 3)) %>%
+
+  # merge in the names of schools and other school-level data
+  dplyr::left_join(data_schools, by='school_code') %>%
+
+  # properly encode identity questions
+  # -1 will be automatically convereted to NA here...and dplyr will insist on
+  # warning despite there being no sanctioned solution with recode
+  dplyr::mutate(
+    identify_post = dplyr::recode_factor(identify_post,
+                                         `0`="0",
+                                         `1`="Meat-eater",
+                                         `2`="Vegetarian",
+                                         `3`="Vegan",
+                                         .default='NA'),
+    identify_pre = dplyr::recode_factor(identify_pre,
+                                        `0`="0",
+                                        `1`="Meat-eater",
+                                        `2`="Vegetarian",
+                                        `3`="Vegan",
+                                        .default='NA'))
 
 
-################################# 3829 NORRIS 2014 ################################# 
+##### Validation #####
+# Are any responses missing "code"?
+any(is.na(data_raw$code)) # FALSE
+
+# Are any non-null school codes duplicated?
+as.logical(anyDuplicated(
+  dplyr::filter(data_schools, !is.na(school_code)))) # FALSE
+
+# XXX What does this coding mean?
+dplyr::filter(data, identify_pre == "0" | identify_post == "0") # 3 observations
+
+# Are any responses not matched to a school?
+any(is.na(data$school)) # FALSE
+
+# XXX How many observations are from the two inseperable clusters?
+nrow(dplyr::filter(data, startsWith(code, 'CBA'))) # 20 observations
+
+# Progress codes apply to each survey part, pre or post, independently
+# -11 Control who tried to do survey after close of study.
+# -10 Ejected for not reading leaflet.
+#  -3 "database anomaly", exclude
+#  -2 Participant completed multiple copies of the survey.
+#     Apparently all their surveys will be flagged with this, not just extras.
+#    Exclude.
+#  -1 Completed all questions
+#   0 Completed no questions
+#   1...12 The number of the last survey completed. (Is this order in the
+#     spreadsheet or in the survey?)
+#  13 completed all but phone number
+#
+# The code 2 suggests that question 2 would be the last answered. However, in
+# both cases it appears that questions 1 through 4 were not answered, but
+# subsequent questions were.
+dplyr::filter(data, !is.na(progressCode_pre) & !is.na(progressCode_post)) %>%
+  dplyr::filter(progressCode_post > 0)  %>%
+  dplyr::select(c("id_pre", "id_post", "code", "progressCode_pre",
+                  "progressCode_post",
+                  # questions in order asked in the survey instrument
+                  "discuss_post", "followUp", "giftPreference_post", "identify_post",
+                  "oftenBeans_post", "oftenBeef_post", "oftenChicken_post",
+                  "oftenDairy_post"))
+
+
+##### Replicate reported results #####
+# Response rates, pre-test
+dplyr::filter(data, progressCode_pre %in% c(-1, 13)) %>%
+  dplyr::count(group, name='n_respondents') %>%
+  dplyr::full_join(n, by='group') %>%
+  dplyr::mutate(response_rate = round(100 * n_respondents / n, 1))
+# Matches
+# 11.8% expected for X
+#  2.7% expected for C
+#  2.5% expected for P
+
+# Response rates, post-test
+dplyr::filter(data, progressCode_post == -1) %>%
+  dplyr::count(group, name='n_respondents') %>%
+  dplyr::full_join(n, by='group') %>%
+  dplyr::mutate(response_rate = round(100 * n_respondents / n, 1))
+# Matches
+
+# Rates of diet pattern change
+dplyr::filter(data, data$progressCode_post == -1) %>%
+  tidyr::pivot_longer(
+    cols=c('identify_pre', 'identify_post'),
+    names_to='timepoint',
+    values_to='identify'
+  ) %>%
+  dplyr::group_by(group, timepoint, identify) %>%
+  dplyr::tally() %>%
+  tidyr::pivot_wider(names_from='timepoint', values_from='n')
+# Matches roughly, but off by one or two in a couple spots.
+
+# Calculate odds ratio of being nearly vegan in the post to the pre-test.
+dplyr::filter(data, data$progressCode_post == -1) %>%
+  dplyr::mutate(few_animal_products_post =
+                  oftenBeef_post <= 1 & oftenChicken_post <= 1 & oftenDairy_post <= 1 &
+                  oftenEggs_post <= 1 & oftenFish_post <= 1 & oftenPork_post <= 1 &
+                  oftenTurkey_post <= 1) %>%
+  dplyr::group_by(group) %>%
+  dplyr::count(few_animal_products_post)
+
+dplyr::filter(data, data$progressCode_post == -1) %>%
+  dplyr::mutate(few_animal_products_pre =
+                  oftenBeef_pre <= 1 & oftenChicken_pre <= 1 & oftenDairy_pre <= 1 &
+                  oftenEggs_pre <= 1 & oftenFish_pre <= 1 & oftenPork_pre <= 1 &
+                  oftenTurkey_pre <= 1) %>%
+  dplyr::group_by(group) %>%
+  dplyr::count(few_animal_products_pre)
+
+# XXX Manually transcribed from above calculation
+or_control = (15 / 358) / (7 / 366)
+or_cc = (19 / 181) / (13 / 187)
+or_sp = (14 / 187) / (6 / 195)
+# Matches figure
+
+
+################################# 3829 NORRIS 2014 #################################
 
 setwd(original.data.dir)
 setwd('Norris 2014, #3830')
@@ -1436,14 +1583,14 @@ get_rr_adj( condition.var.name = "condition",
 #              pre.consump = mean(pre.consump) )
 # #  because the effect direction reverses upon controlling for pre-consumption
 # temp = dat %>% filter( condition != '"Even If You Like Meat"')
-# mod = glm( Y ~ condition, 
+# mod = glm( Y ~ condition,
 #            data = temp,
 #            family = "poisson" )
 # summary(mod)
 
-################################# 3829 NORRIS 2016 ################################# 
+################################# 3829 NORRIS 2016 #################################
 
-# ~~~ data also seem to be wrong 
+# ~~~ data also seem to be wrong
 setwd(original.data.dir)
 setwd('Norris 2016, #3829')
 setwd("Data from author/Pay Per Read Fall 2015")
@@ -1494,7 +1641,7 @@ dat$pre.consump = dat$`Beef (hamburger, steak, roast beef, etc.):In the past 3 m
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
 
-################################# **#3826 CHALLENGE 22+ (ANIMALS NOW) ################################# 
+################################# **#3826 CHALLENGE 22+ (ANIMALS NOW) #################################
 
 setwd("~/Dropbox/Personal computer/Independent studies/2019/AWR (animal welfare review meat consumption)/Literature search/Full texts for review/*INCLUDED STUDIES/*Challenges/Challenge 22+ (Animals Now) 2018/Faunalytics 2019, #3826/Data from author")
 
@@ -1511,15 +1658,15 @@ dat = read_xlsx("Cha22 Data.xlsx")
 # ~~~ is option #6 vegan??
 bl.med = median(dat$Diet_before)
 
-# RR of being vegetarian after vs. before challenge 
+# RR of being vegetarian after vs. before challenge
 # (since they don't have a category for no animal product consumption)
 # their "38.2% veg*ns" corresponds to survey options 5 and 6 combined
-dat %>% summarise( mean(Diet_before >= 5), 
+dat %>% summarise( mean(Diet_before >= 5),
                    mean(Diet_after >= 5) )
 
 # ~~~ assume that option 6 is vegan
-dat %>% summarise( pre.vegans = sum(Diet_before == 6), 
-                   pre.nonvegans = sum(Diet_before < 6), 
+dat %>% summarise( pre.vegans = sum(Diet_before == 6),
+                   pre.nonvegans = sum(Diet_before < 6),
                    post.vegans = sum(Diet_after == 6),
                    post.nonvegans = sum(Diet_after < 6) )
 
