@@ -50,8 +50,8 @@ dat %>% group_by(CE) %>%
             n = n())
 
 ##### Calculate Main RR #####
-# whether they were above or below (baseline) median 
-#  for total meat consumption at time 3, controlling for 
+# whether they were above or below (baseline) median
+#  for total meat consumption at time 3, controlling for
 # (continuous) meat consumption at baseline
 # dichtomize at baseline med
 bl.med = median(dat$size)
@@ -187,8 +187,8 @@ diff(agg.sanity$mean.chg)
 
 
 ##### Calculate Main RR #####
-# whether they were above or below (baseline) median 
-#  for total meat consumption (servings consumed over past week) at time 3, controlling for 
+# whether they were above or below (baseline) median
+#  for total meat consumption (servings consumed over past week) at time 3, controlling for
 # (continuous) meat consumption at baseline
 # dichtomize at baseline med
 dat = dat[ !is.na(dat$FFQtotalSumMeat.3) & !is.na(dat$FFQtotalSumMeat.1), ]
@@ -217,7 +217,7 @@ get_rr_adj( condition.var.name = "treatment",
             .dat = dat[ dat$treatment != "reduce",] )
 
 
-################################# CALDWELL 2016 ################################# 
+################################# CALDWELL 2016 #################################
 
 # their summary spreadsheet already had needed stats, so now just getting the % male
 setwd(original.data.dir)
@@ -772,7 +772,7 @@ escalc( measure = "RR",
 #(296/(296+362)) / (283/(338+283))
 
 
-################################# KUNST 2016 ################################# 
+################################# KUNST 2016 #################################
 
 setwd(original.data.dir)
 setwd("Kunst 2016, #1453/Data from author/kunst_hohle_2016")
@@ -1330,7 +1330,7 @@ data$pre.consump = data$oftenBeef_pre +
   data$oftenDairy_pre +
   data$oftenEggs_pre +
   data$oftenFish_pre +
-  data$oftenPork_pre + 
+  data$oftenPork_pre +
   data$oftenTurkey_pre
 
 data$post.consump = data$oftenBeef_post +
@@ -1338,7 +1338,7 @@ data$post.consump = data$oftenBeef_post +
   data$oftenDairy_post +
   data$oftenEggs_post +
   data$oftenFish_post +
-  data$oftenPork_post + 
+  data$oftenPork_post +
   data$oftenTurkey_post
 
 
@@ -1517,7 +1517,16 @@ get_rr_adj( condition.var.name = "condition",
 # summary(mod)
 
 ################################# 3829 NORRIS 2016 #################################
+##### Notes #####
+# - The survey instrument suggests post survey was 3 months after the
+#   intervention (p1), but the report variously indicates 1 month ("We then
+#   contacted them a month later to see if their diets had changed."),
+#   3-5 months ("with the post-test [...] being administered three to five
+#   months later."), and 3 months ("Three months later we asked the participants
+#   to take the post-test survey.")
 
+
+##### Load data #####
 # ~~~ data also seem to be wrong
 setwd(original.data.dir)
 setwd('Norris 2016, #3829')
@@ -1526,26 +1535,85 @@ setwd("Data from author/Pay Per Read Fall 2015")
 dat.pre = read_xlsx("PPR 2015 Fall-12 pre-test data.xlsx")
 dat.post = read_xlsx("PPR 2015 Fall 2016-05-03 post-test full cleaned.xlsx")
 
-# some IDs are duplicated...not sure why
-table(duplicated(dat.pre$`What is your MTurk Worker ID?`))
-table(duplicated(dat.post$`What is your MTurk Worker ID?`))
-# remove these
-bad.ids = c( dat.pre$`What is your MTurk Worker ID?`[ duplicated(dat.pre$`What is your MTurk Worker ID?`) ],
-             dat.post$`What is your MTurk Worker ID?`[ duplicated(dat.pre$`What is your MTurk Worker ID?`) ] )
-dat.pre = dat.pre[ !dat.pre$`What is your MTurk Worker ID?` %in% bad.ids, ]
-dat.post = dat.post[ !dat.post$`What is your MTurk Worker ID?` %in% bad.ids, ]
+# XXX For local testing
+dat.pre = read_xlsx("Survey Data To Share with Other Organizations/Pay Per Read Fall 2015/PPR 2015 Fall-12 pre-test data.xlsx")
+
+# load each sheet to troubleshoot data filtering
+dat.pre.no.test = read_xlsx("Survey Data To Share with Other Organizations/Pay Per Read Fall 2015/PPR 2015 Fall-12 pre-test data.xlsx",
+                            sheet="Test Cases Removed")
+dat.pre.final = read_xlsx("Survey Data To Share with Other Organizations/Pay Per Read Fall 2015/PPR 2015 Fall-12 pre-test data.xlsx",
+                            sheet="Bad & Internationals removed")
+
+dat.post = read_xlsx("Survey Data To Share with Other Organizations/Pay Per Read Fall 2015/PPR 2015 Fall 2016-05-03 post-test full cleaned.xlsx",
+                     sheet="Follow-up Raw Data")
 
 
-# recode food-specific variables as numeric
+##### Clean data #####
+dat.pre = dplyr::mutate(dat.pre,
+  # count the number of comprehension checks passed
+  count_passed_checks =
+    (`According to the pamphlet, what does the egg industry do with most male chicks?`
+      == "Kill them shortly after birth, often by grinding alive") +
+    (`What kind of animal does not have a photo in this pamphlet?` ==
+      "Whales") +
+    (`According to the pamphlet, Emily the pig:` ==
+      "Figured out how to unlatch her cage and then released other pigs from their cages"),
+
+  Randomize = as.factor(Randomize)
+)
+
+
+##### Attempt filtering data #####
+# Find `Response ID`s from test responses
+test.ids = sort(setdiff(unique(dat.pre$`Response ID`),
+                        unique(dat.pre.no.test$`Response ID`)))
+
+# attempt to replicate filtering
+data.my.clean = dplyr::filter(dat.pre,
+  # Remove non-US respondents
+  Country == "United States" &
+
+  # Passing at least 2 of 3 comprehension checks
+  count_passed_checks == 3 &
+
+  # Remove test responses
+  !(`Response ID` %in% test.ids) &
+
+  # Remove multiple respondents from the same id
+  !duplicated(`What is your MTurk Worker ID?`))
+
+
+##### Validation against report #####
+# How many pre surveys in each arm?
+
+# Chicken Reduction Booklet – 628
+# Even If You Like Meat – 634
+# Speciesism – 601
+# Your Choice – 592
+
+# the data I attempted to filter doesn't match
+dplyr::count(data.my.clean, Randomize)
+
+# nor does the data labelled "final"
+dplyr::count(dat.pre.final, Randomize)
+
+
+# How many post surveys in each arm?
+
+# Chicken Reduction Booklet – 404
+# Even If You Like Meat – 386
+# Speciesism – 393
+# Your Choice – 356
+
+
+##### Outdated #####
+# OLD recode food-specific variables as numeric
 ( pre.food.vars = c(names(dat.pre)[35:39], names(dat.pre)[41:42]) )
 names(dat.post)
 
-# so this was carried forward from pre-data
-table(dat$`Beef (hamburger, steak, roast beef, etc.):In the past 3 months, how often did you eat the following?   ` == dat$`Beef (hamburger, steak, roast beef, etc.):In the past 3 months, how often did you eat the following?Â  Â `)
-
 
 # merge the datasets
-dat = inner_join( dat.pre,
+dat = inner_join(dat.pre,
                  dat.post, by = "What is your MTurk Worker ID?")
 nrow(dat)
 
@@ -1553,12 +1621,7 @@ nrow(dat)
 length( intersect( unique(dat.post$`What is your MTurk Worker ID?`),
                    unique(dat.pre$`What is your MTurk Worker ID?`) ) )
 
-
-
-
 dat$pre.consump = dat$`Beef (hamburger, steak, roast beef, etc.):In the past 3 months, how often did you eat the following?   `
-
-
 
 
 
