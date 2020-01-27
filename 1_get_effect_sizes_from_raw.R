@@ -50,8 +50,8 @@ dat %>% group_by(CE) %>%
             n = n())
 
 ##### Calculate Main RR #####
-# whether they were above or below (baseline) median 
-#  for total meat consumption at time 3, controlling for 
+# whether they were above or below (baseline) median
+#  for total meat consumption at time 3, controlling for
 # (continuous) meat consumption at baseline
 # dichtomize at baseline med
 bl.med = median(dat$size)
@@ -187,8 +187,8 @@ diff(agg.sanity$mean.chg)
 
 
 ##### Calculate Main RR #####
-# whether they were above or below (baseline) median 
-#  for total meat consumption (servings consumed over past week) at time 3, controlling for 
+# whether they were above or below (baseline) median
+#  for total meat consumption (servings consumed over past week) at time 3, controlling for
 # (continuous) meat consumption at baseline
 # dichtomize at baseline med
 dat = dat[ !is.na(dat$FFQtotalSumMeat.3) & !is.na(dat$FFQtotalSumMeat.1), ]
@@ -217,7 +217,7 @@ get_rr_adj( condition.var.name = "treatment",
             .dat = dat[ dat$treatment != "reduce",] )
 
 
-################################# CALDWELL 2016 ################################# 
+################################# CALDWELL 2016 #################################
 
 # their summary spreadsheet already had needed stats, so now just getting the % male
 setwd(original.data.dir)
@@ -772,7 +772,7 @@ escalc( measure = "RR",
 #(296/(296+362)) / (283/(338+283))
 
 
-################################# KUNST 2016 ################################# 
+################################# KUNST 2016 #################################
 
 setwd(original.data.dir)
 setwd("Kunst 2016, #1453/Data from author/kunst_hohle_2016")
@@ -1330,7 +1330,7 @@ data$pre.consump = data$oftenBeef_pre +
   data$oftenDairy_pre +
   data$oftenEggs_pre +
   data$oftenFish_pre +
-  data$oftenPork_pre + 
+  data$oftenPork_pre +
   data$oftenTurkey_pre
 
 data$post.consump = data$oftenBeef_post +
@@ -1338,7 +1338,7 @@ data$post.consump = data$oftenBeef_post +
   data$oftenDairy_post +
   data$oftenEggs_post +
   data$oftenFish_post +
-  data$oftenPork_post + 
+  data$oftenPork_post +
   data$oftenTurkey_post
 
 
@@ -1515,50 +1515,123 @@ get_rr_adj( condition.var.name = "condition",
 #            family = "poisson" )
 # summary(mod)
 
-################################# 3829 NORRIS 2016 #################################
+################################# 3829 NORRIS 2016 #############################
+##### Notes #####
+# - I could not replicate the filtering from raw to final data exactly with the
+#   provided information, so used the provided final data
+# - Number of responses by arm is slightly off for the post-test
+# - Includes respondents from many countries
 
-# ~~~ data also seem to be wrong
+##### Load data #####
 setwd(original.data.dir)
 setwd('Norris 2016, #3829')
 setwd("Data from author/Pay Per Read Fall 2015")
 
-dat.pre = read_xlsx("PPR 2015 Fall-12 pre-test data.xlsx")
-dat.post = read_xlsx("PPR 2015 Fall 2016-05-03 post-test full cleaned.xlsx")
+# XXX For local testing
+setwd("Survey Data To Share with Other Organizations/Pay Per Read Fall 2015/")
 
-# some IDs are duplicated...not sure why
-table(duplicated(dat.pre$`What is your MTurk Worker ID?`))
-table(duplicated(dat.post$`What is your MTurk Worker ID?`))
-# remove these
-bad.ids = c( dat.pre$`What is your MTurk Worker ID?`[ duplicated(dat.pre$`What is your MTurk Worker ID?`) ],
-             dat.post$`What is your MTurk Worker ID?`[ duplicated(dat.pre$`What is your MTurk Worker ID?`) ] )
-dat.pre = dat.pre[ !dat.pre$`What is your MTurk Worker ID?` %in% bad.ids, ]
-dat.post = dat.post[ !dat.post$`What is your MTurk Worker ID?` %in% bad.ids, ]
+raw_data = read_xlsx("PPR 2015 Fall 2016-05-03 post-test full cleaned.xlsx",
+  sheet="Merged Data Baseline + Followup", .name_repair="universal")
 
 
-# recode food-specific variables as numeric
-( pre.food.vars = c(names(dat.pre)[35:39], names(dat.pre)[41:42]) )
-names(dat.post)
+##### Clean data #####
+data = dplyr::mutate(raw_data,
+  # count the number of comprehension checks passed
+  count_passed_checks =
+    (According.to.the.pamphlet..what.does.the.egg.industry.do.with.most.male.chicks.
+      == "Kill them shortly after birth, often by grinding alive") +
+    (What.kind.of.animal.does.not.have.a.photo.in.this.pamphlet. == "Whales") +
+    (According.to.the.pamphlet..Emily.the.pig.
+      == "Figured out how to unlatch her cage and then released other pigs from their cages"),
 
-# so this was carried forward from pre-data
-table(dat$`Beef (hamburger, steak, roast beef, etc.):In the past 3 months, how often did you eat the following?   ` == dat$`Beef (hamburger, steak, roast beef, etc.):In the past 3 months, how often did you eat the following?Â  Â `)
+  Randomize = as.factor(Randomize)
+) %>%
+
+  dplyr::select(
+    "Response.ID",
+    "What.is.your.MTurk.Worker.ID.",
+    "Country",
+    "What.is.your.gender.",
+    "Randomize",
+    "According.to.the.pamphlet..what.does.the.egg.industry.do.with.most.male.chicks.",
+    "According.to.the.pamphlet..Emily.the.pig.",
+    "What.kind.of.animal.does.not.have.a.photo.in.this.pamphlet.",
+    "count_passed_checks",
+    dplyr::contains("In.the.past.3.months"),
+    dplyr::contains("In.the.past.1.month"),
+    -dplyr::starts_with("Non.dairy"),
+    -dplyr::starts_with("Veggie.meats"),
+    -dplyr::starts_with("Beans")
+) %>%
+
+  dplyr::rename(
+    "pre.beef" = "Beef..hamburger..steak..roast.beef..etc...In.the.past.3.months..how.often.did.you.eat.the.following.Â..Â.",
+    'pre.chicken' = "Chicken..fried.chicken..in.soup..grilled.chicken..etc...In.the.past.3.months..how.often.did.you.eat.the.following.Â..Â.",
+    'pre.dair' = "Dairy..cheese..milk..yogurt..etc...In.the.past.3.months..how.often.did.you.eat.the.following.Â..Â.",
+    'pre.eggs' = "Eggs..scrambled..omelet..egg.salad..etc...In.the.past.3.months..how.often.did.you.eat.the.following.Â..Â.",
+    'pre.fish' = "Fish..salmon..tuna..fish.sticks..etc...In.the.past.3.months..how.often.did.you.eat.the.following.Â..Â.",
+    'pre.pork' = "Pork..ham..pork.chops..ribs..etc...In.the.past.3.months..how.often.did.you.eat.the.following.Â..Â.",
+    'pre.turkey' = "Turkey..turkey.dinner..turkey.sandwich..in.soup..etc...In.the.past.3.months..how.often.did.you.eat.the.following.Â..Â.",
+    'post.beef' = "Beef..hamburger..steak..roast.beef..etc...In.the.past.1.month..how.often.did.you.eat.the.following.Â..Â.",
+    'post.chicken' = "Chicken..fried.chicken..in.soup..grilled.chicken..etc...In.the.past.1.month..how.often.did.you.eat.the.following.Â..Â.",
+    'post.dairy' = "Dairy..cheese..milk..yogurt..etc...In.the.past.1.month..how.often.did.you.eat.the.following.Â..Â.",
+    'post.eggs' = "Eggs..scrambled..omelet..egg.salad..etc...In.the.past.1.month..how.often.did.you.eat.the.following.Â..Â.",
+    'post.fish' = "Fish..salmon..tuna..fish.sticks..etc...In.the.past.1.month..how.often.did.you.eat.the.following.Â..Â.",
+    'post.pork' = "Pork..ham..pork.chops..ribs..etc...In.the.past.1.month..how.often.did.you.eat.the.following.Â..Â.",
+    'post.turkey' = "Turkey..turkey.dinner..turkey.sandwich..in.soup..etc...In.the.past.1.month..how.often.did.you.eat.the.following.Â..Â."
+  )
+
+##### Validation against report #####
+# How many pre surveys in each arm?
+dplyr::count(data, Randomize)
+# Chicken Reduction Booklet – 628
+# Even If You Like Meat – 634
+# Speciesism – 601
+# Your Choice – 592
+
+# How many post surveys in each arm?
+dplyr::filter(data,
+  !is.na(post.beef)
+) %>%
+  dplyr::count(Randomize)
+# Results are slightly off 406, 388, ...
+# Chicken Reduction Booklet – 404
+# Even If You Like Meat – 386
+# Speciesism – 393
+# Your Choice – 356
 
 
-# merge the datasets
-dat = inner_join( dat.pre,
-                 dat.post, by = "What is your MTurk Worker ID?")
-nrow(dat)
-
-# sanity check: expected number of rows
-length( intersect( unique(dat.post$`What is your MTurk Worker ID?`),
-                   unique(dat.pre$`What is your MTurk Worker ID?`) ) )
-
-
-
-
-dat$pre.consump = dat$`Beef (hamburger, steak, roast beef, etc.):In the past 3 months, how often did you eat the following?   `
-
-
-
+##### Attempt filtering data #####
+# pretest_raw_data = read_xlsx(
+#   "PPR 2015 Fall 2016-05-03 post-test full cleaned.xlsx",
+#   sheet="Raw Data", .name_repair="universal")
+#
+# pretest_data =
+#   dplyr::mutate(pretest_raw_data,
+#     # count the number of comprehension checks passed
+#     count_passed_checks =
+#       (According.to.the.pamphlet..what.does.the.egg.industry.do.with.most.male.chicks.
+#         == "Kill them shortly after birth, often by grinding alive") +
+#       (What.kind.of.animal.does.not.have.a.photo.in.this.pamphlet. == "Whales") +
+#       (According.to.the.pamphlet..Emily.the.pig.
+#         == "Figured out how to unlatch her cage and then released other pigs from their cages"),
+#
+#     Randomize = as.factor(Randomize)
+#   ) %>%
+#
+#   dplyr::filter(
+#     # Passing at least 2 of 3 comprehension checks
+#     (count_passed_checks > 1) &
+#
+#     # Remove test responses
+#     (Time.Started >= '2015-11-27')
+#
+# )
+#
+# # Not sure why these two aren't identical
+# pre_but_not_post = setdiff(pretest_data$Response.ID, raw_data$Response.ID)
+#
+# View(pretest_data[pretest_data$Response.ID %in% pre_but_not_post,])
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
