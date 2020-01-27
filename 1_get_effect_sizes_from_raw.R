@@ -625,7 +625,7 @@ write.csv(draw, "cooney_2014_prepped_effect_sizes.csv")
 
 # outcome is number of weekly meals containing animal products
 setwd(original.data.dir)
-setwd("Doebel 2015, #3799")
+setwd("Doebel 2015, #3866")
 dat = read.csv("raw_data.csv")
 
 # group the booklets with same message type, as in JP's analysis
@@ -1361,7 +1361,6 @@ vcovHC(mod, type="HC0", cluster = "school_code")
 ( agg.cc = data %>% filter(group != "What Is Speciesism") %>%
     summarise( N = sum( !is.na(post.consump) & !is.na(pre.consump) ),
                male = mean(gender == 2) ) ) # per codebook, 2 is male
-
 
 
 ##### Speciesism: Calculate Main RR #####

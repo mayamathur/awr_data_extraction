@@ -115,7 +115,7 @@ d = dplyr::add_row(.data = d,
 # total sample size in paper: 105 (per pg 52; Table 13) + 296 (per pg 95; Table 46)
 
 # Table 13, personalized & not tailored
-escalc_add_row( authoryear = "Arndt 2016",
+escalc_add_row( authoryear = "Schnabelrauch Arndt 2016",
                 substudy = "Study 1, personalized & not tailored",
                 desired.direction = 1,
                 effect.measure = "smd",
@@ -134,7 +134,7 @@ escalc_add_row( authoryear = "Arndt 2016",
                 n2i = 40 )
 
 # Table 13, generalized & not tailored
-escalc_add_row( authoryear = "Arndt 2016",
+escalc_add_row( authoryear = "Schnabelrauch Arndt 2016",
                 substudy = "Study 1, generalized & not tailored",
                 desired.direction = 1,
                 effect.measure = "smd",
@@ -156,7 +156,7 @@ escalc_add_row( authoryear = "Arndt 2016",
 
 # Table 46, self-schema & not tailored
 # using 296/9 for all sample sizes in this table; somehow the actual breakdown isn't reported
-escalc_add_row( authoryear = "Arndt 2016",
+escalc_add_row( authoryear = "Schnabelrauch Arndt 2016",
                 substudy = "Study 2, self-schema & not tailored",
                 desired.direction = 1,
                 effect.measure = "smd",
@@ -175,7 +175,7 @@ escalc_add_row( authoryear = "Arndt 2016",
                 n2i = round(296/9) )
 
 # Table 46, altruistic & not tailored
-escalc_add_row( authoryear = "Arndt 2016",
+escalc_add_row( authoryear = "Schnabelrauch Arndt 2016",
                 substudy = "Study 2, altruistic & not tailored",
                 desired.direction = 1,
                 effect.measure = "smd",
@@ -194,7 +194,7 @@ escalc_add_row( authoryear = "Arndt 2016",
                 n2i = round(296/9) )
 
 # Table 46, egotistic & not tailored
-escalc_add_row( authoryear = "Arndt 2016",
+escalc_add_row( authoryear = "Schnabelrauch Arndt 2016",
                 substudy = "Study 2, egotistic & not tailored",
                 desired.direction = 1,
                 effect.measure = "smd",
@@ -213,7 +213,7 @@ escalc_add_row( authoryear = "Arndt 2016",
                 n2i = round(296/9) )
 
 # Table 46, non-specific & not tailored
-escalc_add_row( authoryear = "Arndt 2016",
+escalc_add_row( authoryear = "Schnabelrauch Arndt 2016",
                 substudy = "Study 2, non-specific & not tailored",
                 desired.direction = 1,
                 effect.measure = "smd",
@@ -519,7 +519,7 @@ d = rbind( d, read.csv("cooney_2014_prepped_effect_sizes.csv")[,-1] )
 ##### **Doebel 2015 #####
 # this one had a ton of effect sizes, so was prepped more automatically
 setwd(original.data.dir)
-setwd("Doebel 2015, #3799")
+setwd("Doebel 2015, #3866")
 
 d = rbind( d, read.csv("doebel_2015_prepped_effect_sizes.csv")[,-1] )
 
@@ -1441,10 +1441,69 @@ d = dplyr::add_row(.data = d,
                    vi = 0.0817 )
 
 
+##### deLanauze 2019, #4033 #####
+
+# get SDs from p-values and means
+
+p = 
+
+sd.cntrl = ( hw.cntrl / qt(.975, df = n.cntrl-1) ) * sqrt(n.cntrl)
+# sanity check
+
+# bm
+d = dplyr::add_row(.data = d,
+                   authoryear = "deLanauze 2019",
+                   desired.direction = ,
+                   effect.measure = "smd",
+                   interpretation = "",
+                   use.rr.analysis = 1,
+                   use.grams.analysis = 0,
+                   use.veg.analysis = 0,
+                   yi = ,
+                   vi = )
+
+
+# confirm equivalence of transformation
+n0 = 100
+n1 = 100
+y0 = rnorm(n=n0, mean=0, sd=2)
+y1 = rnorm(n=n1, mean=y0 + 1, sd=2)  # make them correlated
+diff = y1-y0
+
+# independent-samples t-test
+t1 = t.test(y0, y1)$statistic
+
+# paired t-test
+t2 = t.test(y0, y1, paired = TRUE)$statistic
+
+
+# directly calculate d
+escalc( measure = "SMD",
+                
+                m1i = mean(y0),
+                sd1i = sd(y0),
+                n1i = n0,  # sample sizes on pg 52
+                
+                m2i = mean(y1),
+                sd2i = sd(y1),
+                n2i = n1 )
+# bm
+
+t * sqrt( (n0+n1) / (n0*n1) )
+
+# they did a paired t-test, but we're treating as independent, so t-value we use
+#  will be larger than it should be, so resulting d will be larger than what we 
+#  would have gotten with direct independent calculation
+
+
+
 
 # save intermediate dataset
 setwd(data.dir)
 write.csv(d, "data_prepped_step1.csv", row.names = FALSE)
+
+
+
 
 
 
@@ -1765,7 +1824,7 @@ d2$unique
 #  (should be none)
 d$unique[ !d$unique %in% d2$unique ]
 
-# studies in qualitative data that aren't in entered effect sizes
+# studies in qualitative data for which we haven't entered effect sizes
 # can occur if we're awaiting author help
 d2$unique[ !d2$unique %in% d$unique ]
 
@@ -1785,6 +1844,7 @@ setwd("Dual review of quality")
 d3 = read.csv("subjective_data_full_prepped.csv")
 
 # check for studies lacking entries in subjective data
+# should be only 
 d$authoryear[ !d$authoryear %in% d3$authoryear ]
 
 # merge with main dataset
@@ -1828,6 +1888,7 @@ d$logRR = NA
 d$varlogRR = NA
 
 ##### RRs #####
+# no conversion needed, obviously
 d$logRR[ d$effect.measure == "log-rr" ] = d$yi[ d$effect.measure == "log-rr" ]
 d$varlogRR[ d$effect.measure == "log-rr" ] = d$vi[ d$effect.measure == "log-rr" ]
 
@@ -1879,14 +1940,18 @@ d$published = !is.na(d$`Journal/conference (if peer-reviewed)`)
 
 d = d %>%
   rename(
+    # meta-information about study and article
     year = Year,
     title = Title,
+    ref = `Ref #`,
     journal = `Journal/conference (if peer-reviewed)`,
     other.source = `Other source (if not peer-reviewed)`,
     exclude.main = `Excluded challenge`,
     borderline = `Borderline inclusion`,
     mm.fave = `Among MM's favorites methodologically, exclusive of small sample size`,
     stats.source = `Stats source (public data, data from author, paper, hopeless)`,
+    
+    # study design, intervention, and outcome variables
     perc.male = `Percent male`,
     country = `Subject country`,
     design = Design,
@@ -1901,11 +1966,20 @@ d = d %>%
     x.min.exposed = `Total time exposed to intervention (minutes)`,
     y.cat = `Outcome category (purchase or consumption)`,
     y.lag.days = `Outcome time lag from intervention (days)`,
+    
+    # quality variables
     qual.y.prox = `Outcome proximity (intended, self-reported, actual)`,
     qual.missing = `Missing data (%)`,
     qual.prereg = Preregistered,
     qual.public.data = `Public data`,
-    qual.public.code = `Public code`
+    qual.public.code = `Public code`,
+    
+    # prose
+    prose.x = `Intervention (X)`,
+    prose.control = `Control condition`,
+    prose.outcome = `Outcome (Y)`,
+    prose.population = `Population`,
+    prose.notes = `Notes`
   )
 
 # get rid of columns with capital letters (not used in analysis)
@@ -1988,7 +2062,7 @@ d$design = recode_factor( d$design,
                            "Within-subject RCT" = "b.Within-subject RCT",
                           "Cluster RCT" = "c.Cluster RCT",
                            "Nonrandomized controlled study" = "d.Nonrandomized controlled study",
-                          "Pre-post within-subject" = "e.Nonrandomized, pre-post, within-subject study")
+                          "Pre/post non-randomized" = "e.Nonrandomized, pre-post, within-subject study")
 
 # binary country variable
 d$north.america = 0
@@ -2028,11 +2102,61 @@ d$randomized = grepl("RCT", d$design)
 d[ d == "NR" ] = NA
 d[ d == "na" ] = NA
 
+
+############################### SIMPLIFIED "TABLE 1" DATASET ###############################
+
+d.small = d %>% dplyr::select( unique, 
+                               authoryear,
+                               substudy,
+                               title,
+                               journal,
+                               other.source,
+                               borderline,
+                               exclude.main,
+                               prose.population,
+                               country,
+                               n.paper,
+                               perc.male,
+                               prose.x,
+                               prose.control,
+                               x.tailored,
+                               x.has.text,
+                               x.has.visuals,
+                               x.suffer,
+                               x.pure.animals,
+                               x.min.exposed,
+                               x.pushy,
+                               prose.outcome,
+                               y.cat,
+                               
+                               design,
+                               randomized,
+                               qual.y.prox,
+                               qual.missing,
+                               qual.prereg,
+                               qual.public.data,
+                               qual.public.code,
+                               qual.exch,
+                               qual.gen,
+                               qual.sdb,
+                               
+                               effect.measure,
+                               desired.direction,
+                               yi,
+                               vi,
+                               logRR,
+                               varlogRR,
+                               RR.lo,
+                               RR.hi ) 
+
 ############################### WRITE PREPPED DATA ###############################
 
 setwd(data.dir)
+# analysis dataset
 write.csv(d, "prepped_data.csv", row.names = FALSE)
 
+# same as above, but leaner and meaner choice of variables
+write.csv(d.small, "prepped_data_lean.csv", row.names = FALSE)
 
 
 

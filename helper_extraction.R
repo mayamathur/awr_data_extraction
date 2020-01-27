@@ -157,17 +157,18 @@ smd_var = function(N = NULL,
   return( term1 + term2 )
 }
 
-# uses square-root transformation (assumes common outcome; otherwise conservative)
-logOR_to_logRR = function( logOR,
-                           varlogOR ) {
-  logRR = log( sqrt( exp(logOR) ) )
 
-  # delta method
-  # let x = logOR
-  # derivative of log( sqrt( exp(x) ) ) = 0.5
-  varlogRR = 0.5^2 * varlogOR 
-  return( list(logRR = logRR, varlogRR = varlogRR) )
-}
+# # uses square-root transformation (assumes common outcome; otherwise conservative)
+# logOR_to_logRR = function( logOR,
+#                            varlogOR ) {
+#   logRR = log( sqrt( exp(logOR) ) )
+# 
+#   # delta method
+#   # let x = logOR
+#   # derivative of log( sqrt( exp(x) ) ) = 0.5
+#   varlogRR = 0.5^2 * varlogOR 
+#   return( list(logRR = logRR, varlogRR = varlogRR) )
+# }
 
 
 # given OR and denominator probability, solve for numerator probability
@@ -176,15 +177,25 @@ OR_to_p1 = Vectorize( function(OR, p0) {
   return( (p0 * OR) / ( p0 * (OR-1) + 1 ) )
 }, vectorize.args = c("OR", "p0") )
 
+
 # uses square-root transformation (assumes common outcome; otherwise conservative)
 # and Chinn conversion
+# gets variance by delta method
 d_to_logRR = function( smd, smd.se ) {
-  logOR = smd * (pi / sqrt(3))
-  varlogOR = smd.se^2 * (pi^2 / 3)
   
-  RR.stats = logOR_to_logRR( logOR = logOR,
-                             varlogOR = varlogOR)
-  return( list(logRR = RR.stats$logRR, varlogRR = RR.stats$varlogRR) )
+  # simplified the math
+  # Chinn conversion to log-OR followed by TVW's square-root transformation
+  #  to RR so that we can imagine dichotomizing near median
+  logRR = log( sqrt( exp( smd * pi / sqrt(3) ) ) )
+  varlogRR = ( pi^2 / 12 ) * smd.se^2
+  
+  return( list(logRR = logRR, varlogRR = varlogRR) )
 }
+
+# d_to_logRR( smd = .2, smd.se = .3 )
+
+
+
+
 
 
