@@ -1402,19 +1402,21 @@ dat.pre$`Think back to the meals and snacks you have had in the last 7 days. / H
 # they're in different variables
 
 ##### Recode Outcomes in Pre-Data #####
+# outcome categories are in separate variables, always coded as NA or 1
 ( varsA = names(dat.pre)[ grepl( "7 or more times last week", names(dat.pre) ) ] )
 ( varsB = names(dat.pre)[ grepl( "4-6 times last week", names(dat.pre) ) ] )
 ( varsC = names(dat.pre)[ grepl( "1-3 times last week", names(dat.pre) ) ] )
 ( varsD = names(dat.pre)[ grepl( "Not last week", names(dat.pre) ) ] )
 
-dat.pre[ ,varsA ] = dat.pre[ ,varsA ] + 4  # so that the 1s are coded as 5s and the NAs stay NA
-dat.pre[ ,varsB ] = dat.pre[ ,varsB ] + 3  # so that the 1s are coded as 5s and the NAs stay NA
-dat.pre[ ,varsC ] = dat.pre[ ,varsC ] + 2  # so that the 1s are coded as 5s and the NAs stay NA
-dat.pre[ ,varsD ] = dat.pre[ ,varsD ] + 1  # so that the 1s are coded as 5s and the NAs stay NA
+# recode so that higher scores = more consumption
+dat.pre[ ,varsA ] = dat.pre[ ,varsA ] + 4  # so that the 1s for "7+ times/week" become 5s and the NAs stay NA
+dat.pre[ ,varsB ] = dat.pre[ ,varsB ] + 3  # so that the 1s become 4s and the NAs stay NA
+dat.pre[ ,varsC ] = dat.pre[ ,varsC ] + 2  # so that the 1s become 3s and the NAs stay NA
+dat.pre[ ,varsD ] = dat.pre[ ,varsD ] + 1  # so that the 1s become 2s and the NAs stay NA
 # leave the "Never" category alone
 
 # sanity check
-View(head(dat.pre))
+# View(head(dat.pre))
 
 library(rccmisc)
 # sum all of these variables
@@ -1432,23 +1434,20 @@ dat.pre$pre.consump = psum( dat.pre[,21:45], na.rm=TRUE )
 # this one has "0" instead of NA
 dat.post[, c(varsA, varsB, varsC, varsD, varsE) ][ dat.post[, c(varsA, varsB, varsC, varsD, varsE) ] == 0 ] = NA
 
-dat.post[ ,varsA ] = dat.post[ ,varsA ] + 4  # so that the 1s are coded as 5s and the NAs stay NA
-dat.post[ ,varsB ] = dat.post[ ,varsB ] + 3  # so that the 1s are coded as 5s and the NAs stay NA
-dat.post[ ,varsC ] = dat.post[ ,varsC ] + 2  # so that the 1s are coded as 5s and the NAs stay NA
-dat.post[ ,varsD ] = dat.post[ ,varsD ] + 1  # so that the 1s are coded as 5s and the NAs stay NA
+dat.post[ ,varsA ] = dat.post[ ,varsA ] + 4 
+dat.post[ ,varsB ] = dat.post[ ,varsB ] + 3 
+dat.post[ ,varsC ] = dat.post[ ,varsC ] + 2  
+dat.post[ ,varsD ] = dat.post[ ,varsD ] + 1  
 # leave the "Never" category alone
 
 # sanity check
-View(head(dat.post))
+# View(head(dat.post))
 
 library(rccmisc)
 # sum all of these variables
 names(dat.post[16:40])
 dat.post$post.consump = psum( dat.post[,16:40], na.rm=TRUE )
 
-# binary outcome
-bl.med = median( dat$post.consump[ dat$condition == "control" ] )
-dat.post$Y = dat.post$post.consump < bl.med
 
 ##### Merge Datasets #####
 dat = inner_join( dat.pre,
@@ -1460,11 +1459,11 @@ nrow(dat)
 # need to merge the 3 "please read" columns
 library(tidyr)
 
-dat = dat %>% mutate( your.choice = recode(`Please read the pamphlet below before continuing to the rest of /  the survey: /  /  Your Choice /  - PDF`,
+dat = dat %>% mutate( your.choice = dplyr::recode(`Please read the pamphlet below before continuing to the rest of /  the survey: /  /  Your Choice /  - PDF`,
                                            `1` = '"Your Choice"' ),
-                      even.if = recode( `Please read the pamphlet below before continuing to the rest of the / survey /  Even if /  you like Mea...`,
+                      even.if = dplyr::recode( `Please read the pamphlet below before continuing to the rest of the / survey /  Even if /  you like Mea...`,
                                         `1` = '"Even If You Like Meat"'),
-                      control = recode( `Please read the pamphlet below before continuing to the rest of the / survey: /  Immigrant Detention...`,
+                      control = dplyr::recode( `Please read the pamphlet below before continuing to the rest of the / survey: /  Immigrant Detention...`,
                                         `1` = "control") )
 
 dat$condition = coalesce( dat$your.choice, dat$even.if, dat$control )
@@ -1474,6 +1473,12 @@ dat$condition = coalesce( dat$your.choice, dat$even.if, dat$control )
 # reported: 134 EIYLM, 167 YC, 158 control
 # could this be because they used different outcome?
 table(dat$condition)
+
+# binary outcome
+# bm
+bl.med = median( dat$post.consump[ dat$condition == "control" ] )
+dat$Y = dat$post.consump < bl.med
+
 
 ##### Sex #####
 mean( dat$`What is your gender?` == 1, na.rm = TRUE )

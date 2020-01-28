@@ -814,7 +814,7 @@ setwd("Data from author/Pay Per Read Fall 2015")
 d = rbind( d, read.csv("norris_2016_prepped_effect_sizes.csv")[,-1] )
 
 
-##### Norris 2019 #####
+##### **Norris 2019 #####
 
 # Compassionate Choices
 d = dplyr::add_row(.data = d,
@@ -1628,31 +1628,33 @@ escalc_add_row( authoryear = "Challenge 22+ (Animals Now) 2018",
 
 
 
-# ###### **Norris 2015 #####
-# # ~~ this is not a study??
-#
-# # "Your Choice"
-# d = dplyr::add_row(.data = d,
-#                    authoryear = "Norris 2015",
-#                    desired.direction = 0,
-#                    effect.measure = "log-rr",
-#                    interpretation = "Low vs. high animal product consumption",
-#                    use.rr.analysis = 1,
-#                    use.grams.analysis = 0,
-#                    use.veg.analysis = 0,
-#                    yi = -0.108307,
-#                    vi = 0.01944182 )
-#
-# d = dplyr::add_row(.data = d,
-#                    authoryear = "Norris 2015",
-#                    desired.direction = 0,
-#                    effect.measure = "log-rr",
-#                    interpretation = "Low vs. high animal product consumption",
-#                    use.rr.analysis = 1,
-#                    use.grams.analysis = 0,
-#                    use.veg.analysis = 0,
-#                    yi = -0.05842669,
-#                    vi = 0.02098244 )
+###### **Norris 2014 #####
+
+# "Your Choice"
+d = dplyr::add_row(.data = d,
+                   authoryear = "Norris 2014",
+                   substudy = '"Your Choice"',
+                   desired.direction = 0,
+                   effect.measure = "log-rr",
+                   interpretation = "Low vs. high animal product consumption",
+                   use.rr.analysis = 1,
+                   use.grams.analysis = 0,
+                   use.veg.analysis = 0,
+                   yi = -0.108307,
+                   vi = 0.01944182 )
+
+# "Even If You Like Meat"
+d = dplyr::add_row(.data = d,
+                   authoryear = "Norris 2014",
+                   substudy = '"Even If You Like Meat"',
+                   desired.direction = 0,
+                   effect.measure = "log-rr",
+                   interpretation = "Low vs. high animal product consumption",
+                   use.rr.analysis = 1,
+                   use.grams.analysis = 0,
+                   use.veg.analysis = 0,
+                   yi = -0.05842669,
+                   vi = 0.02098244 )
 
 # save intermediate dataset
 setwd(data.dir)
