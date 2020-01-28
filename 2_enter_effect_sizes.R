@@ -29,11 +29,6 @@
 #   When a servings variable wasn't available, we tried to instead dichotomize at "reduce meat consumption" vs. "stay
 #   the same or increase" (e.g., Reese 2015).
 #
-#  - We considered two alternative effect size codings (grams of meat and "going vegetarian"). Some studies had raw data,
-#   so we could calculate multiple codings per point estimate (which were not included together in the same analysis, of course).
-#  For "going vegetarian", this only included studies in which subjects reported how much meat they had consumed
-#  and excluded outcomes like "willingness to choose a vegetarian restaurant".
-#
 #  - When different interventions in the study had different scopes (e.g., one leaflet says "go vegetarian" but another says
 #   "go vegan"), defined outcome based on the most stringent intervention (e.g., vegan > vegetarian). See, e.g., Cooney 2015.
 
@@ -99,6 +94,7 @@ d = dplyr::add_row(.data = d,
 
 ##### **Anderson 2016 (PLOS), Study 3 ######
 # same study, 3 effect sizes for different analyses
+# ~~ WRONG BECAUSE THIS IS THE RR OF SUBJECT'S PREVIOUS CONSUMPTION
 d = dplyr::add_row(.data = d,
                    authoryear = "Anderson 2016",
                    substudy = NA,
@@ -808,114 +804,15 @@ escalc_add_row( authoryear = "Spanikova 2015",
                 di = round( (1-p.cntrl) * n.group) )  # control not choosing veg
 
 
-##### Norris 2018 (Leafleting and Booklet Effectiveness) #####
+##### **Norris 2016 #####
 
-# measure the purple bars in the saved figure (post vs. pre ORs in each group)
-# start at 1, the lowest point on x-axis, and add the proportion of the
-#  x-axis occupied by the bar
-# important: these are odds ratios of avoiding meat at F/U vs. at baseline!
-#  NOT ORs comparing to the control group
-OR.cntrl = (245/167) * 1.5
-OR.compass = 1.5  # almost exactly on a gridline = 167 px
-OR.species = (272 / 167) * 1.5
+# data were prepped in get_effect_sizes_from_raw.R
+setwd(original.data.dir)
+setwd('Norris 2016, #3829')
+setwd("Data from author/Pay Per Read Fall 2015")
 
-# sample sizes in each group
-# from "Creating a New Single-Week Vegan"
-n.cntrl = 372
-n.compass = 156+32+11
-n.species = 165+31+3
+d = rbind( d, read.csv("norris_2016_prepped_effect_sizes.csv")[,-1] )
 
-# baseline P(vegan)
-# for control, compass, and species respectively
-# ~~~ unfortunately they didn't report this for the control group,
-#   so imputing the other 2 groups' average
-# ~~~ later felt this was too much of an assumption
-p0 = c( (11+3)/398, 11/n.compass, 3/n.species )
-
-# use their unhelpful ORs to back out P(vegan at F/U)
-( p1 = OR_to_p1( OR = c(OR.cntrl, OR.compass, OR.species),
-                 p0 = p0 ) )
-
-p1/p0
-
-# # rare outcome, so OR approximates RR
-# escalc_add_row( authoryear = "Norris n.d.",
-#                 substudy = '"Compassionate Choices"',
-#                 desired.direction = -1,  # ~~~ check
-#                 effect.measure = "log-rr",
-#                 interpretation = "No vs. any animal product consumption",
-#                 use.rr.analysis = 1,
-#                 use.grams.analysis = 0,
-#                 use.veg.analysis = 0,
-#                 measure = "RR",
-#
-#                 ai = round(p1[2] * n.compass), # treatment avoiding animal products at F/U
-#                 bi = round( (1-p1[2]) * n.compass),  # treatment not avoiding animal products at F/U
-#                 ci = round(p1[1] * n.cntrl),  # control avoiding animal products at F/U
-#                 di = round( (1-p1[1]) * n.cntrl) )  # control not avoiding at F/U
-#
-#
-# escalc_add_row( authoryear = "Norris n.d.",
-#                 substudy = '"Speciesism"',
-#                 desired.direction = 1,  # ~~~ check
-#                 effect.measure = "log-rr",
-#                 interpretation = "No vs. any animal product consumption",
-#                 use.rr.analysis = 1,
-#                 use.grams.analysis = 0,
-#                 use.veg.analysis = 0,
-#                 measure = "RR",
-#
-#                 ai = round(p1[3] * n.compass), # treatment avoiding animal products at F/U
-#                 bi = round( (1-p1[3]) * n.compass),  # treatment not avoiding animal products at F/U
-#                 ci = round(p1[1] * n.cntrl),  # control avoiding animal products at F/U
-#                 di = round( (1-p1[1]) * n.cntrl) )  # control not avoiding at F/U
-
-
-##### Norris 2016 #####
-
-# ~~~ need to make a decision about whether to impute baseline probability or not and
-#  then handle this and Norris n.d. in the same way
-# this one gives the baseline probability (albeit combined for all treatment arms),
-#  so can work with the ORs
-# see page 4, "Definition of Outcome" section
-p0 = .028
-
-# odds ratios scraped from purple bars of plot
-OR.unit = 118  # px
-# booklet order as in plot (Simple, Even, Species, Your Choice)
-OR = c(162/OR.unit, 181/OR.unit, 232/OR.unit, 134/OR.unit)
-n0 = c(628, 634, 601, 592)
-n1 = c(404, 386, 393, 356)
-
-substudy = c('"A Simple Way to Help"',
-             '"Even If You Like Meat"',
-             '"Speciesism"',
-             '"Your Choice"')
-
-# ~~ this analysis isn't ideal because we're treating baseline and F/U as independent instead of
-#  paired, so SEs will be conservative assuming positive correlation between baseline and F/U
-#  behavior
-for (i in 1:4) {
-  # calculate probability of avoidance at F/U from OR and p0
-  # from Wolfram: solve (P/(1-P)) / (p/(1-p)) = \delta for P
-  p1 = (OR[i] * p0) / ( (OR[i] - 1) * p0 + 1 )
-
-  # COMMENTED OUT FOR NOW BECAUSE NEED TO MAKE DECISION ABOUT IMPUTATION
-  # escalc_add_row( authoryear = "Norris 2016",
-  #                 substudy = substudy[i],
-  #                 desired.direction = 1,
-  #                 effect.measure = "log-rr",
-  #                 interpretation = "Eating any animal product less than vs. more than once weekly",
-  #                 use.rr.analysis = 1,
-  #                 use.grams.analysis = 0,
-  #                 use.veg.analysis = 0,
-  #                 measure = "RR",
-  #
-  #                 ai = round(p1 * n1[i]), # F/U avoiding animal products
-  #                 bi = round( (1-p1) * n1[i]),  # F/U not avoiding animal products
-  #                 ci = round(p0 * n0[i]),  # baseline avoiding animal products
-  #                 di = round( (1-p0) * n0[i]) )  # baseline not intending
-}
 
 ##### Norris 2019 #####
 
@@ -1727,12 +1624,6 @@ escalc_add_row( authoryear = "Challenge 22+ (Animals Now) 2018",
 ##### #3834 Summer Vegan Pledge (Animal Aid) 2019 #####
 
 # 57% said they would remain vegan
-
-
-# bm
-
-
-
 
 
 

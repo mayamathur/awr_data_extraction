@@ -105,6 +105,8 @@ dat$Y = dat$FFeaten < cntrl.med
 
 ##### Calculate Main RR #####
 # controlling for subject's own consumption in control condition
+# ~~~ does this make sense??
+# ~~~ need to use same approach as for Norris 2016
 mod = glm( Y ~ CTeaten,
            data = dat,
            family = "poisson" )
@@ -1516,7 +1518,8 @@ get_rr_adj( condition.var.name = "condition",
 # summary(mod)
 
 ################################# 3829 NORRIS 2016 #############################
-##### Notes #####
+
+##### Notes from JP #####
 # - I could not replicate the filtering from raw to final data exactly with the
 #   provided information, so used the provided final data
 # - Number of responses by arm is slightly off for the post-test
@@ -1526,9 +1529,6 @@ get_rr_adj( condition.var.name = "condition",
 setwd(original.data.dir)
 setwd('Norris 2016, #3829')
 setwd("Data from author/Pay Per Read Fall 2015")
-
-# XXX For local testing
-setwd("Survey Data To Share with Other Organizations/Pay Per Read Fall 2015/")
 
 raw_data = read_xlsx("PPR 2015 Fall 2016-05-03 post-test full cleaned.xlsx",
   sheet="Merged Data Baseline + Followup", .name_repair="universal")
@@ -1632,6 +1632,104 @@ dplyr::filter(data,
 # pre_but_not_post = setdiff(pretest_data$Response.ID, raw_data$Response.ID)
 #
 # View(pretest_data[pretest_data$Response.ID %in% pre_but_not_post,])
+
+##### Make Outcome Measure #####
+
+# since some booklets made mixed appeals that included all animal products, 
+#  use sum of all animal product consumption
+
+# find all outcome variables (both pre and post)
+y.inds = grepl( x = names(data), pattern = "beef|chicken|dair|egg|fish|turkey" )
+y.names = names(data)[y.inds]
+( y.pre.names = y.names[ grepl( x = y.names, pattern = "pre" ) ] )
+( y.post.names = y.names[ grepl( x = y.names, pattern = "post" ) ] )
+
+
+# recode all food-specific outcomes as simple ordinal scales
+# higher scores are worse (more consumption)
+data = data %>% mutate_at( vars(y.names),
+                           function(x) car::recode( x,
+                                                      "'never' = 0;
+                                                      'less than 1 time per week' = 1;
+                                                      '1-6 times per week' = 2;
+                                                      '1-3 times per day' = 3;
+                                                      '4 or more times per day' = 4" ) )
+
+# make aggregated consumption variable
+data$pre.consump = rowSums( data[, y.pre.names ] )
+data$post.consump = rowSums( data[, y.post.names ] )
+
+# baseline median
+bl.med = median(data$pre.consump, na.rm = TRUE)
+
+# rename conditions to match extracted qualitative data
+data$condition = NA
+data$condition[ data$Randomize == "A Simple Way to Help" ] = '"A Simple Way to Help"'
+data$condition[ data$Randomize == "EIYLM" ] = '"Even If You Like Meat"'
+data$condition[ data$Randomize == "Speciesism" ] = '"Speciesism"'
+data$condition[ data$Randomize == "Your Choice" ] = '"Your Choice"'
+
+# # metafor's underlying code for MPRR
+# # see Zou 2007
+# pi12 <- bi/ni
+# pi21 <- ci/ni
+# pi1. <- (ai+bi)/ni  # ni is total N for whole table
+# pi.1 <- (ai+ci)/ni
+# 
+# yi <- log(pi1.) - log(pi.1)
+# vi <- (pi12 + pi21) / (ni * pi1. * pi.1)
+
+# effect sizes from raw data
+draw = as.data.frame( matrix( ncol = 10, nrow = 0 ) )
+names(draw) = c( "authoryear",
+                 "substudy",
+                 "desired.direction",
+                 "effect.measure",
+                 "interpretation",
+                 "use.rr.analysis",
+                 "use.grams.analysis",
+                 "use.veg.analysis",
+                 "yi",
+                 "vi")
+
+( all.conditions = unique( data$condition ) )
+
+for (j in 1:length( all.conditions ) ) {
+  temp = data[ data$condition == all.conditions[j], ]
+  
+  # print percent male
+  print( paste( all.conditions[j], "percent male:",
+                round( 100* mean( temp$What.is.your.gender. == "Male", na.rm = TRUE ), 1 ) ) )
+  
+  # print percent missing
+  print( paste( all.conditions[j], "percent missing:",
+                round( 100* mean( is.na(temp$post.consump), na.rm = TRUE ), 1 ) ) )
+  
+  cat("\n\n")
+  
+  tab = table(temp$pre.consump < bl.med, temp$post.consump < bl.med)
+  
+  es = escalc( "MPRR",
+          ai = tab[1,1],
+          bi = tab[1,2], 
+          ci = tab[2,1],
+          di = tab[2,2] )
+  
+  draw <<- add_row(draw,
+                   authoryear = "Norris 2016",
+                   substudy = all.conditions[j],
+                   desired.direction = es$yi > 0,
+                   effect.measure = "log-rr",
+                   interpretation = "Low vs. high animal product consumption",
+                   use.rr.analysis = 1,
+                   use.grams.analysis = 0,
+                   use.veg.analysis = 0,
+                   yi = as.numeric(es$yi),
+                   vi = as.numeric(es$vi)
+  )
+}
+
+write.csv(draw, "norris_2016_prepped_effect_sizes.csv")
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
