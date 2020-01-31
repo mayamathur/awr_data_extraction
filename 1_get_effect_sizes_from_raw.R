@@ -89,6 +89,7 @@ dat = dat[ dat$ReadDescFilter == "read desc", ]
 expect_equal( nrow(dat), 114 )
 
 # missing data: 1/114
+# "CT" = control; "FF" = factory farming
 table(is.na(dat$CTeaten) | is.na(dat$FFeaten))
 dat = dat[ !is.na(dat$CTeaten) & !is.na(dat$FFeaten), ]
 
@@ -100,35 +101,14 @@ mean(dat$CTeaten)
 mean(dat$FFeaten)
 
 cntrl.med = median( dat$CTeaten )
-dat$Y = dat$FFeaten < cntrl.med
 
+( tab = table(dat$CTeaten < cntrl.med, dat$FFeaten < cntrl.med) )
 
-##### Calculate Main RR #####
-# controlling for subject's own consumption in control condition
-# ~~~ does this make sense??
-# ~~~ need to use same approach as for Norris 2016
-mod = glm( Y ~ CTeaten,
-           data = dat,
-           family = "poisson" )
-summary(mod)
-
-library(sandwich)
-diag( vcovHC(mod, type="HC0") )
-
-# # sanity check: expect effect size to be much smaller, as in original paper,
-# #  when ignoring within-subject correlation
-# escalc( measure = "RR",
-#
-#         ai = 61,  # these are from my code
-#         bi = 52,
-#         ci = 55,
-#         di = 58 )
-
-es = escalc( "MPRR",
-             ai = tab[1,1],
-             bi = tab[1,2], 
-             ci = tab[2,1],
-             di = tab[2,2] )
+escalc( "MPRR",
+        ai = tab[1,1],
+        bi = tab[1,2], 
+        ci = tab[2,1],
+        di = tab[2,2] )
 
 
 

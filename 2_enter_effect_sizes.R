@@ -94,7 +94,6 @@ d = dplyr::add_row(.data = d,
 
 ##### **Anderson 2016 (PLOS), Study 3 ######
 # same study, 3 effect sizes for different analyses
-# ~~ WRONG BECAUSE THIS IS THE RR OF SUBJECT'S PREVIOUS CONSUMPTION
 d = dplyr::add_row(.data = d,
                    authoryear = "Anderson 2016",
                    substudy = NA,
@@ -104,8 +103,8 @@ d = dplyr::add_row(.data = d,
                    use.rr.analysis = 1,
                    use.grams.analysis = 0,
                    use.veg.analysis = 0,
-                   yi = -0.5397,
-                   vi = 0.00613555 )
+                   yi = 0.1092,
+                   vi = 0.0060 )
 
 ##### Arndt (2016)
 # total sample size in paper: 105 (per pg 52; Table 13) + 296 (per pg 95; Table 46)
