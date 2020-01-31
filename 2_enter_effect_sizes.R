@@ -1108,26 +1108,16 @@ escalc_add_row( authoryear = "Flens 2018",
                 n2i = 200 )
 
 ##### Schwitzgebel (2019) #####
-# ~~~ sounds like they are reporting percents at individual purchase level
-#  so these calculations ignore correlation within subjects
-#  emailed them about this
-escalc_add_row( authoryear = "Schwitzgebel 2019",
-                substudy = NA,
-                desired.direction = 1,
-                effect.measure = "log-rr",
-                interpretation = "Purchase contained meat",
-                use.rr.analysis = 1,
-                use.grams.analysis = 0,
-                use.veg.analysis = 0,
-                measure = "RR",
-
-                ai = round( 0.45 * 5981/4 ), # Tx meat purchases post-intervention
-                bi = round( (1-0.45) * 5981/4 ),  # Tx non-meat purchases post-intervention
-                ci = round( 0.52 * (5981/4) ),  # control meat purchases post-intervention
-                di = round( (1-0.52) * (5981/4) ) ) # control non-meat purchases post-intervention
-
-# sanity check: close to their error bar widths? yes.
-# sqrt( (.45*.55) / (5981/4) ) * 1.96
+d = dplyr::add_row(.data = d,
+                   authoryear = "Schwitzgebel 2019",
+                   desired.direction = 1,
+                   effect.measure = "log-rr",
+                   interpretation = "Purchase contained meat",
+                   use.rr.analysis = 1,
+                   use.grams.analysis = 0,
+                   use.veg.analysis = 0,
+                   yi = -0.13597,
+                   vi = 0.002580292 )
 
 
 ##### FIAPO (2017) #####

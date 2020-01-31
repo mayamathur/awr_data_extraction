@@ -124,6 +124,12 @@ diag( vcovHC(mod, type="HC0") )
 #         ci = 55,
 #         di = 58 )
 
+es = escalc( "MPRR",
+             ai = tab[1,1],
+             bi = tab[1,2], 
+             ci = tab[2,1],
+             di = tab[2,2] )
+
 
 
 ################################# ANDERSON 2017 #################################
@@ -1736,6 +1742,40 @@ for (j in 1:length( all.conditions ) ) {
 
 write.csv(draw, "norris_2016_prepped_effect_sizes.csv")
 
+
+################################# 3842 SCHWITZGEBEL 2019 #############################
+
+setwd(original.data.dir)
+setwd('Schwitzgebel 2019, #3842')
+setwd("Data from author")
+
+dat = read_xlsx("Data-Transactions-ReducedMathur-200115b.xlsx", sheet=1); nrow(dat)
+
+# sanity check
+# author said in email: 52% meat in control group vs. 45% in experimental group
+dat %>% group_by(Condition) %>% 
+  summarise( mean(Meat) )
+
+
+##### Calculate Main RR #####
+# whether they were above or below (baseline) median
+#  for total meat consumption at time 3, controlling for
+# (continuous) meat consumption at baseline
+# since these are individual purchase data, Y is already binary and 
+#  we don't need to dichotomize
+
+mod = glm( Meat ~ Condition,
+           data = dat,
+           family = "poisson" )
+summary(mod)
+
+library(sandwich)
+diag( vcovHC(mod, type="HC0", cluster = "UniqueIDNew") )
+
+# surprisingly, there is almost no clustering of purchase type within subjects, 
+#  which is why dropping clustering in above makes little difference
+library(ICC)
+ICCbareF(Meat, UniqueIDNew, dat)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 #                                     EXCLUDED CHALLENGES                                             #
