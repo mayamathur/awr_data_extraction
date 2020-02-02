@@ -400,6 +400,7 @@ d = dplyr::add_row(.data = d,
 
 ##### **Anderson 2017 (iAnimal), 360 video and 2D video ######
 
+# MM audited 2020-2-2
 d = dplyr::add_row(.data = d,
                    authoryear = "Anderson 2017",
                    substudy = "standard video",
@@ -425,11 +426,14 @@ d = dplyr::add_row(.data = d,
                    vi = 0.0005906098 )
 
 
+##### Bertolaso 2015 #####
+# MM audited 2020-2-2
 
-##### Bertolaso 2015, moral shocks & promotion #####
 # pre-post design, but they only report marginal means at each time, not change scores,
 # so we are only using post-intervention means
-# Table 1 (pg. 53)
+# all stats in Table 1 (pg. 53)
+
+# moral shocks & promotion 
 escalc_add_row( authoryear = "Bertolaso 2015",
                 substudy = "moral shocks & promotion focus",
                 desired.direction = 1,
@@ -448,9 +452,7 @@ escalc_add_row( authoryear = "Bertolaso 2015",
                 sd2i = 0.38,
                 n2i = 106 )
 
-
-##### Bertolaso 2015, moral shocks &  prevention #####
-# Table 1
+# moral shocks & prevention
 escalc_add_row( authoryear = "Bertolaso 2015",
                 substudy = "moral shocks & prevention focus",
                 desired.direction = 1,
@@ -470,8 +472,7 @@ escalc_add_row( authoryear = "Bertolaso 2015",
                 n2i = 108 )
 
 
-##### Bertolaso 2015, individualization & promotion #####
-# Table 1
+# individualization & promotion
 escalc_add_row( authoryear = "Bertolaso 2015",
                 substudy = "individualization & promotion focus",
                 desired.direction = 1,
@@ -490,9 +491,7 @@ escalc_add_row( authoryear = "Bertolaso 2015",
                 sd2i = 0.31,
                 n2i = 92 )
 
-
-##### Bertolaso 2015, moral shocks & promotion #####
-# Table 1
+# individualization & prevention
 escalc_add_row( authoryear = "Bertolaso 2015",
                 substudy = "individualization & prevention focus",
                 desired.direction = 1,

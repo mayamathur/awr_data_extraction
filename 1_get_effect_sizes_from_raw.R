@@ -125,6 +125,13 @@ setwd("Anderson 2017, #3797")
 #  (it's cast as data table after reading in to avoid errors)
 dat = data.table( read.csv("dtfu_prepped_data.csv") ) 
 
+# sample size
+sum( !is.na(dat$cond.f) & !is.na(dat$diet.f1) & !is.na(dat$diet.f2) & !is.na(dat$campus) )
+
+# percent male
+# per the "RECODE GENDER" section of their code, 1=female, 2=male, 3=other, 4=NA
+mean( dat$gender[ dat$gender %in% c(1,2,3) ] == 2 )
+
 # they fit a cumulative logit mixed model
 # verbatim from their code (cumulative logit mixed-model)
 # condition 0 = control
@@ -536,7 +543,9 @@ dat$condition = tolower(dat$`4- Booklet Version`)
 dat$sex = tolower(dat$Gender)
 
 # each food variable is the number of weekly weels containing that food
-# lower totals are better
+# lower totals are better per "Initial survey.pdf"
+# we know the "8s" are for post-intervention measures because the spreadsheet has a column
+#  dividing data at the 3-month FU (see names(d))
 dat$pre.total = dat$`3-Red Meat` + dat$`3-Poultry` + dat$`3-Fish` + dat$`3-Eggs`
 dat$post.total = dat$`8 - Red Meat` + dat$`8 -Poultry` + dat$`8 - Fish` + dat$`8 - Eggs`
 
@@ -545,6 +554,7 @@ bl.med = median( dat$pre.total, na.rm = TRUE )
 dat$Y = dat$post.total < bl.med
 
 # rename conditions
+# see handy table at the end : http://www.humaneleaguelabs.org/blog/2014-05-20-what-elements-make-vegetarian-leaflet-more-effective/
 dat$condition[ dat$condition == "g" ] = '"why", all animals, cruelty'
 dat$condition[ dat$condition == "h" ] = '"why", chickens, cruelty'
 dat$condition[ dat$condition == "i" ] = '"how", all animals, cruelty'
