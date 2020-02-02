@@ -118,16 +118,24 @@ escalc( "MPRR",
 
 ################################# ANDERSON 2017 #################################
 
+setwd(original.data.dir)
+setwd("Anderson 2017, #3797")
+
+# I made this by running the initial data-prep section of their code
+#  (it's cast as data table after reading in to avoid errors)
+dat = data.table( read.csv("dtfu_prepped_data.csv") ) 
 
 # they fit a cumulative logit mixed model
-setwd(original.data.dir)
-setwd("Anderson 2017 (iAnimal), #3797")
-
-dat = data.table( read.csv("dtfu_prepped_data.csv") ) # I made this by running the initial data-prep section of their code (cast as data table after reading in to avoid errors)
-
 # verbatim from their code (cumulative logit mixed-model)
+# condition 0 = control
+# condition 1 = 2D
+# condition 2 = 3D
 #model2dcontrol <- clmm(factor(diet.f2) ~ cond.f + (1|campus), data=dtfu[cond.f != 2])
 #model360control <- clmm(factor(diet.f2) ~ cond.f + (1|campus), data=dtfu[cond.f != 1])
+
+# the "t" and "f" outcome variables are identical
+table(dat$diet.f1 == dat$diet.t1)
+table(dat$diet.f2 == dat$diet.t2)
 
 # diet.f1 is an ordinal (6-level) variable for consumption frequency
 bl.med = median(dat$diet.f1)
@@ -386,19 +394,19 @@ get_rr_unadj(condition = "ANIMAL WELFARE",
              dat = dat2)
 
 
-##### Study 3, Calculate Main RR #####
+##### Study 3: Calculate Main RR #####
 dat3 = read.spss("Study 3. with ratings created.sav", to.data.frame=TRUE)
 
 # filter out vegetarians per author's email (saved)
 dat3 = dat3[ dat3$filter_. == "Selected",]
 
-# sample size
-nrow(dat3)
-prop.table(table(dat3$SEX))
-
 # remove non-animal conditions
 dat3 = dat3[ dat3$CONDITION %in% c("CONTROL", "ANIMAL WELFARE"), ]
 dat3 = droplevels(dat3)
+
+# sample size
+nrow(dat3)
+prop.table(table(dat3$SEX))
 
 cntrl.med = median( dat3$MEAT_BUYINGLIKEHOOD[dat3$CONDITION == "CONTROL"] )
 dat3$Y = dat3$MEAT_BUYINGLIKEHOOD < cntrl.med

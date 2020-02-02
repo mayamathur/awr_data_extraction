@@ -352,6 +352,7 @@ expect_equal( exp( d$yi[ d$authoryear == "Cordts 2014" ] ),
 
 
 ##### **Palomo-Velez 2018 #####
+# MM audited 2020-2-2
 # total sample size for paper: 151 + 161 + 270 from raw data
 # public data; used median split
 
@@ -396,9 +397,9 @@ d = dplyr::add_row(.data = d,
                    yi = 0.2020,
                    vi = 0.0123 )
 
+
 ##### **Anderson 2017 (iAnimal), 360 video and 2D video ######
-# had raw data, so used median split
-# see the separate file, recalculate_anderson_2017_estimates.R
+
 d = dplyr::add_row(.data = d,
                    authoryear = "Anderson 2017",
                    substudy = "standard video",
@@ -409,7 +410,7 @@ d = dplyr::add_row(.data = d,
                    use.grams.analysis = 0,
                    use.veg.analysis = 0,
                    yi = 0.17653,
-                   vi = 0.006540234 )
+                   vi = 0.002559955 )
 
 d = dplyr::add_row(.data = d,
                    authoryear = "Anderson 2017",
@@ -421,7 +422,7 @@ d = dplyr::add_row(.data = d,
                    use.grams.analysis = 0,
                    use.veg.analysis = 0,
                    yi = 0.07114,
-                   vi = 0.0081253938 )
+                   vi = 0.0005906098 )
 
 
 
