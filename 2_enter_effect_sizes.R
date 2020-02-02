@@ -52,8 +52,8 @@ library(testthat)
 library(readxl)
 library(stringr)
 
-data.dir = "~/Dropbox/Personal computer/Independent studies/2019/AWR (animal welfare review meat consumption)/Data extraction"
-code.dir = "~/Dropbox/Personal computer/Independent studies/2019/AWR (animal welfare review meat consumption)/Data extraction/awr_data_extraction_git"
+data.dir = "~/Dropbox/Personal computer/Independent studies/2019/AWR (animal welfare review meat consumption)/Linked to OSF (AWR)/Data extraction"
+code.dir = "~/Dropbox/Personal computer/Independent studies/2019/AWR (animal welfare review meat consumption)/Linked to OSF (AWR)/Data extraction/awr_data_extraction_git"
 # location of original datasets and code for reproducible studies
 original.data.dir = "~/Dropbox/Personal computer/Independent studies/2019/AWR (animal welfare review meat consumption)/Literature search/Full texts for review/*INCLUDED STUDIES"
 setwd(code.dir); source("helper_extraction.R")
@@ -1314,70 +1314,81 @@ d = dplyr::add_row(.data = d,
                    vi = 0.02071258 )
 
 
+##### Feltz 2019, #3858 #####
+# stats on page 11
+# this is the SMD of the gain scores themselves
+d = escalc_add_row( authoryear = "Feltz 2019",
+                    substudy = NA,
+                    desired.direction = 0,
+                    effect.measure = "smd",
+                    interpretation = "Within-subject change in animal product consumption SMD",
+                    use.rr.analysis = 1,
+                    use.grams.analysis = 0,
+                    use.veg.analysis = 0,
+                    
+                    measure = "SMD",
+                    m1i = 0.14,
+                    sd1i = 1.82,
+                    n1i = 58, 
+                    
+                    m2i = -0.04,
+                    sd2i = 1.44,
+                    n2i = 43 )
+
+
 ##### Lackner 2019, #3858 #####
-d = dplyr::add_row(.data = d,
-                   authoryear = "Lackner 2019",
-                   desired.direction = 1,
-                   effect.measure = "log-rr",
-                   interpretation = "Low vs. high meat consumption",
-                   use.rr.analysis = 1,
-                   use.grams.analysis = 0,
-                   use.veg.analysis = 0,
-                   yi = -0.3542,
-                   vi = 0.0817 )
 
 
-##### deLanauze 2019, #4033 #####
-
-# get SDs from p-values and means
-
-p = 
-
-sd.cntrl = ( hw.cntrl / qt(.975, df = n.cntrl-1) ) * sqrt(n.cntrl)
-# sanity check
-
-# bm
-d = dplyr::add_row(.data = d,
-                   authoryear = "deLanauze 2019",
-                   desired.direction = ,
-                   effect.measure = "smd",
-                   interpretation = "",
-                   use.rr.analysis = 1,
-                   use.grams.analysis = 0,
-                   use.veg.analysis = 0,
-                   yi = ,
-                   vi = )
-
-
-# confirm equivalence of transformation
-n0 = 100
-n1 = 100
-y0 = rnorm(n=n0, mean=0, sd=2)
-y1 = rnorm(n=n1, mean=y0 + 1, sd=2)  # make them correlated
-diff = y1-y0
-
-# independent-samples t-test
-t1 = t.test(y0, y1)$statistic
-
-# paired t-test
-t2 = t.test(y0, y1, paired = TRUE)$statistic
-
-
-# directly calculate d
-escalc( measure = "SMD",
-                
-                m1i = mean(y0),
-                sd1i = sd(y0),
-                n1i = n0,  # sample sizes on pg 52
-                
-                m2i = mean(y1),
-                sd2i = sd(y1),
-                n2i = n1 )
-# bm
-
-t * sqrt( (n0+n1) / (n0*n1) )
-
-# they did a paired t-test, but we're treating as independent, so t-value we use
+# ##### deLanauze 2019, #4033 #####
+# 
+# # get SDs from p-values and means
+# 
+# p = 
+# 
+# sd.cntrl = ( hw.cntrl / qt(.975, df = n.cntrl-1) ) * sqrt(n.cntrl)
+# # sanity check
+# 
+# # bm
+# d = dplyr::add_row(.data = d,
+#                    authoryear = "deLanauze 2019",
+#                    desired.direction = ,
+#                    effect.measure = "smd",
+#                    interpretation = "",
+#                    use.rr.analysis = 1,
+#                    use.grams.analysis = 0,
+#                    use.veg.analysis = 0,
+#                    yi = ,
+#                    vi = )
+# 
+# 
+# # confirm equivalence of transformation
+# n0 = 100
+# n1 = 100
+# y0 = rnorm(n=n0, mean=0, sd=2)
+# y1 = rnorm(n=n1, mean=y0 + 1, sd=2)  # make them correlated
+# diff = y1-y0
+# 
+# # independent-samples t-test
+# t1 = t.test(y0, y1)$statistic
+# 
+# # paired t-test
+# t2 = t.test(y0, y1, paired = TRUE)$statistic
+# 
+# 
+# # directly calculate d
+# escalc( measure = "SMD",
+#                 
+#                 m1i = mean(y0),
+#                 sd1i = sd(y0),
+#                 n1i = n0,  # sample sizes on pg 52
+#                 
+#                 m2i = mean(y1),
+#                 sd2i = sd(y1),
+#                 n2i = n1 )
+# 
+# t * sqrt( (n0+n1) / (n0*n1) )
+# 
+# # they did a paired t-test, but we're treating as independent, so t-value we use
 #  will be larger than it should be, so resulting d will be larger than what we 
 #  would have gotten with direct independent calculation
 
@@ -1940,11 +1951,16 @@ d$x.makes.request = dplyr::recode( d$x.pushy,
                                    "e.Mixed" = 1)
 
 d$design = recode_factor( d$design,
-                           "RCT" = "a.Between-subjects RCT",
+                           "Between-subjects RCT" = "a.Between-subjects RCT",
                            "Within-subject RCT" = "b.Within-subject RCT",
                           "Cluster RCT" = "c.Cluster RCT",
-                           "Nonrandomized controlled study" = "d.Nonrandomized controlled study",
-                          "Pre/post non-randomized" = "e.Nonrandomized, pre-post, within-subject study")
+                           "Between-subjects NRCT" = "d.Between-subjects NRCT",
+                          "Within-subject UCT" = "e.Within-subject UCT")
+
+
+# was study randomized?
+d$randomized = grepl(" RCT", d$design)
+
 
 # binary country variable
 d$north.america = 0
@@ -1976,8 +1992,7 @@ d$qual.y.prox = dplyr::recode( d$qual.y.prox,
                             "Intended" = "c.Intended" )
 
 
-# was study randomized?
-d$randomized = grepl("RCT", d$design)
+
 
 
 # recode missing data

@@ -1,5 +1,10 @@
 
-data.dir = "~/Dropbox/Personal computer/Independent studies/2019/AWR (animal welfare review meat consumption)/Data extraction"
+
+############################### PREP RECONCILED SUBJECTIVE RISKS OF BIAS ###############################
+
+# MM audited 2020-2-2
+
+data.dir = "~/Dropbox/Personal computer/Independent studies/2019/AWR (animal welfare review meat consumption)/Linked to OSF (AWR)/Data extraction"
 
 library(dplyr)
 library(tidyverse)
@@ -8,7 +13,8 @@ setwd(data.dir)
 setwd("Dual review of quality")
 d3 = read_xlsx("subjective_data_reconciled.xlsx")
 
-
+# separate the coders' data on each criterion (currently demarcated by "/" within cells of the dataframe)
+#  into separate columns
 d3 = d3 %>% separate( `Exchangeability (DR/JN/MM/reconciled)`,
                       c("exch.DR", "exch.JN", "exch.MM", "qual.exch"),
                       sep = "/" ) %>% 
@@ -21,14 +27,13 @@ d3 = d3 %>% separate( `Exchangeability (DR/JN/MM/reconciled)`,
 
 # recode missing data
 d3[ d3 == "nd" ] = NA
-# ~~ this one is temporary only
 d3[ d3 == "?" ] = NA
 
 # for some reason, reads in years in an absurd format (e.g., "2018.0" as a string)
 library(tidyverse)
 d3$Year = str_remove(d3$Year, "[.]0")
 
-# clean up format
+# clean up formatting (all lowercase)
 d3$qual.sdb = tolower(d3$qual.sdb)
 d3$qual.exch = tolower(d3$qual.exch)
 d3$qual.gen = tolower(d3$qual.gen)
