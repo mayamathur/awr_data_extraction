@@ -26,6 +26,8 @@ library(tidyverse)
 
 ################################# AMIOT 2018 #################################
 
+# MM audited 2020-2-2
+
 setwd(original.data.dir)
 setwd("Amiot 2018, #243")
 
@@ -64,7 +66,6 @@ get_rr_adj( condition.var.name = "CE",
 
 
 ##### Mediation by Positive Emotions #####
-
 # control for baseline meat consumption
 model.m = lm( emopos ~ CE + size, data = dat )
 model.y = lm( ysize ~ emopos + CE + size, data = dat )
@@ -77,6 +78,8 @@ res = mediate(model.m,
 
 
 ################################# ANDERSON 2016 (PLOS) #################################
+
+# MM audited 2020-2-2
 
 setwd(original.data.dir)
 setwd("Anderson 2016, #3742")
@@ -104,6 +107,7 @@ cntrl.med = median( dat$CTeaten )
 
 ( tab = table(dat$CTeaten < cntrl.med, dat$FFeaten < cntrl.med) )
 
+# marginal log-RR because this is a within-subject uncontrolled design
 escalc( "MPRR",
         ai = tab[1,1],
         bi = tab[1,2], 

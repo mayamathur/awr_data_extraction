@@ -2,7 +2,7 @@
 
 # Notes:
 #
-#  ** = had raw data
+#  ** = had raw data; see 1_get_effect_sizes_from_raw.R for how we calculated the estimates
 #
 #  - Analyzing on RR scale, not SMD, because for many studies, the Chinn assumption of an underlying
 #   normal RV seems not reasonable. For others, the common-outcome assumption seems questionable.
@@ -33,14 +33,14 @@
 #   "go vegan"), defined outcome based on the most stringent intervention (e.g., vegan > vegetarian). See, e.g., Cooney 2015.
 
 
-# Idea2:
-#  - Use the public datasets to compare vegetarianism as outcome vs. servings
-#  - For studies with both self-reported and intended, calculate w/in study difference between
-#    these measures and compare
-
-# Other notes for OSF documentation
+# Other notes 
 #  - When possible, calculated sample size and percent male ourselves, which is why it sometimes differed from
 #  what's reported in paper (e.g., due to missing data or exclusion of some conditions that weren't eligible)
+#
+# - Sometimes get_rr_adj's proportion of missing data differs from what we entered in
+#  qualitative spreadsheet. This is intentional. get_rr_adj is only aware of missing data
+#  due to observations that are in the raw data, but are dropped in analysis. Sometimes we
+#  knew there was additional missing data that were not even in the raw data. 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 #                                           PRELIMINARIES                                             #
@@ -78,7 +78,7 @@ names(d) = c( "authoryear",
 # asterisks denote studies with raw data
 
 ##### **Amiot 2018 (PLOS) #####
-
+# MM audited 2020-2-2
 d = dplyr::add_row(.data = d,
                    authoryear = "Amiot 2018",
                    substudy = NA,
@@ -93,6 +93,7 @@ d = dplyr::add_row(.data = d,
 
 
 ##### **Anderson 2016 (PLOS), Study 3 ######
+# MM audited 2020-2-2
 # same study, 3 effect sizes for different analyses
 d = dplyr::add_row(.data = d,
                    authoryear = "Anderson 2016",
@@ -141,7 +142,7 @@ escalc_add_row( authoryear = "Schnabelrauch Arndt 2016",
 
                 m1i = 2.21,
                 sd1i = 1.63,
-                n1i = 37,
+                n1i = 29,
 
                 m2i = 2.63,
                 sd2i = 2.02,
