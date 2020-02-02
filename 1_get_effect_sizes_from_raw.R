@@ -217,14 +217,13 @@ setwd("Caldwell 2016, #3794")
 
 dat = read.csv("CleanWelfareReformsData.csv")
 
+# exclude conditions that aren't meat consumption
 # sex
 dat %>% filter( experimentGroup %in% c("porkLegislation",
                                        "controlPorkLegislation",
                                        "porkPolicy",
                                        "controlPorkPolicy" ) ) %>%
   summarise( prop.male = mean( gender[ !gender %in% c("", "Prefer not to answer") ] == "Male" ) )
-
-mean(dat$gender[ !dat$gender %in% c("", "Prefer not to answer") ] == "Male")
 
 # missing data situation unclear given lack of codebook
 
@@ -252,7 +251,7 @@ get_rr_unadj(condition = "porkPolicy",
 #  and confirming number in control group
 
 setwd(original.data.dir)
-setwd("Caldwell 2017a, #3795")
+setwd("Caldwell 2017, #3795")
 
 dat = read_csv( "cleanVideoDataForAnalysis_forPublic.csv" )
 
@@ -331,8 +330,7 @@ write.csv(draw, "rouk_prepped_effect_sizes.csv")
 
 ################################# PALOMO-VELEZ #################################
 
-
-##### Study 1, Calculate Main RR #####
+##### Study 1: Calculate Main RR #####
 setwd(original.data.dir)
 setwd("Palomo-Velez, #107")
 library(foreign)
@@ -345,7 +343,7 @@ dat1 %>% group_by(CONDITION) %>%
             sd = sd(MEAT_BUYINGLIKEHOOD))
 
 
-# sample size for relevant comparison for us
+# sample size for all of study 1 groups relevant to us: 151
 dat1 = dat1[ dat1$CONDITION %in% c("Neutral essay", "Moral essay"), ]
 dat1 = droplevels(dat1)
 nrow(dat1)
@@ -353,7 +351,7 @@ nrow(dat1)
 # percent male
 prop.table(table(dat1$Gender))
 
-# no GLM needed; there are no other covariates
+# dichotomize at control median
 cntrl.med = median( dat1$MEAT_BUYINGLIKEHOOD[dat1$CONDITION == "Neutral essay"] )
 dat1$Y = dat1$MEAT_BUYINGLIKEHOOD < cntrl.med
 
@@ -363,20 +361,20 @@ get_rr_unadj(condition = "Moral essay",
              dat = dat1)
 
 
-##### Study 2, Calculate Main RR #####
+##### Study 2: Calculate Main RR #####
 setwd("From author")
 dat2 = read.spss("Study 2 with ratings created.sav", to.data.frame=TRUE)
 
 # filter out vegetarians per author's email (saved)
 dat2 = dat2[ dat2$filter_. == "Selected",]
 
-# sample size
-nrow(dat2)
-prop.table(table(dat2$SEX))
-
 # remove non-animal conditions
 dat2 = dat2[ dat2$CONDITION %in% c("CONTROL", "ANIMAL WELFARE"), ]
 dat2 = droplevels(dat2)
+
+# sample size: 161
+nrow(dat2)
+prop.table(table(dat2$SEX))
 
 cntrl.med = median( dat2$MEAT_BUYINGLIKEHOOD[dat2$CONDITION == "CONTROL"] )
 dat2$Y = dat2$MEAT_BUYINGLIKEHOOD < cntrl.med

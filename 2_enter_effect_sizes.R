@@ -107,7 +107,8 @@ d = dplyr::add_row(.data = d,
                    yi = 0.1092,
                    vi = 0.0060 )
 
-##### Arndt (2016)
+##### Schnabelrauch Arndt (2016) #####
+# MM audited 2020-2-2
 # total sample size in paper: 105 (per pg 52; Table 13) + 296 (per pg 95; Table 46)
 
 # Table 13, personalized & not tailored
@@ -229,7 +230,9 @@ escalc_add_row( authoryear = "Schnabelrauch Arndt 2016",
 
 
 
-##### Caldwell 2016 #####
+##### **Caldwell 2016 #####
+
+# MM audited 2020-2-2
 # reduce vs. keep consumption the same or increase
 
 # pork policy article
@@ -259,10 +262,14 @@ d = dplyr::add_row(.data = d,
                    vi = 0.0679 )
 
 
-##### Caldwell 2017a #####
+##### **Caldwell 2017a #####
+
+# MM audited 2020-2-2
+
 # reduce vs. keep consumption the same
 # no servings variable
-# for stats, used the Tableau plots on their website (https://mercyforanimals.lat/kinds-of-viral-videos-are-best-at-inspiring)
+# for stats, used the Tableau plots on their website
+#  (https://mercyforanimals.lat/kinds-of-viral-videos-are-best-at-inspiring)
 #  and used the supplement for N's
 
 # got number of control subjects from raw data (see get_effect_sizes_from_raw.R)
@@ -323,6 +330,7 @@ escalc_add_row( authoryear = "Caldwell 2017",
 
 
 ##### Cordts 2014 ######
+# MM audited 2020-2-2
 # Table 6
 escalc_add_row( authoryear = "Cordts 2014",
                 substudy = NA,
@@ -343,10 +351,11 @@ expect_equal( exp( d$yi[ d$authoryear == "Cordts 2014" ] ),
               (42/150) / (71/556) )
 
 
-##### **Palomo-Velez 2018, Study 1 #####
-# total sample size for paper: 151 + 383 + 270 from raw data
-
+##### **Palomo-Velez 2018 #####
+# total sample size for paper: 151 + 161 + 270 from raw data
 # public data; used median split
+
+# Study 1
 d = dplyr::add_row(.data = d,
                    authoryear = "Palomo-Velez 2018",
                    substudy = "Study 1",
@@ -360,8 +369,7 @@ d = dplyr::add_row(.data = d,
                    vi = 0.0230 )
 
 
-##### **Palomo-Velez 2018, Study 2 #####
-# data from author; used median split
+# Study 2
 d = dplyr::add_row(.data = d,
                    authoryear = "Palomo-Velez 2018",
                    substudy = "Study 2",
@@ -375,8 +383,7 @@ d = dplyr::add_row(.data = d,
                    vi = 0.0259 )
 
 
-##### **Palomo-Velez 2018, Study 3 #####
-# data from author; used median split
+# Study 3
 d = dplyr::add_row(.data = d,
                    authoryear = "Palomo-Velez 2018",
                    substudy = "Study 3",
