@@ -512,6 +512,7 @@ escalc_add_row( authoryear = "Bertolaso 2015",
 
 
 ##### **Cooney 2014 #####
+# MM audited 2020-2-2
 # this one had a ton of effect sizes, so was prepped more automatically
 setwd(original.data.dir)
 setwd("Cooney 2014, #3856")
@@ -520,6 +521,7 @@ d = rbind( d, read.csv("cooney_2014_prepped_effect_sizes.csv")[,-1] )
 
 
 ##### **Doebel 2015 #####
+# MM audited 2020-2-2
 # this one had a ton of effect sizes, so was prepped more automatically
 setwd(original.data.dir)
 setwd("Doebel 2015, #3866")
@@ -528,9 +530,7 @@ d = rbind( d, read.csv("doebel_2015_prepped_effect_sizes.csv")[,-1] )
 
 
 ##### **Cooney 2016 #####
-# there's also self-reported dietary change
-
-# same study, 3 effect sizes for different analyses
+# MM audited 2020-2-2
 d = dplyr::add_row(.data = d,
                    authoryear = "Cooney 2016",
                    substudy = NA,
@@ -544,15 +544,14 @@ d = dplyr::add_row(.data = d,
                    vi = 0.0026 )
 
 
-
 ##### Hennessy 2016, "why" leaflet #####
-# Table 3
-# "why" leaflet (intervention 1)
+# MM audited 2020-2-2
+# stats in Table 3
 # "Total" = sum of number of days over past week on which subject ate various animal products
 
 # control N: 170 (page 30)
-# "why" leaflet N: 79 (page 23)
-# "how" leaflet N: 78 (page 23)
+# "why" leaflet (#1) N: 79 (page 23)
+# "how" leaflet (#2) N: 78 (page 23)
 
 # number of days subject ate meat over past week + similar for dairy + similar for eggs
 escalc_add_row( authoryear = "Hennessy 2016",
@@ -594,7 +593,8 @@ escalc_add_row( authoryear = "Hennessy 2016",
 
 
 ##### **MacDonald 2016 #####
-# low vs. high (using baseline median)
+
+# MM audited 2020-2-2
 d = dplyr::add_row(.data = d,
                    authoryear = "MacDonald 2016",
                    substudy = "reduce",
@@ -622,8 +622,8 @@ d = dplyr::add_row(.data = d,
 
 
 ##### **Reese 2015 #####
+# MM audited 2020-2-3
 
-# reduce vs. not
 # this one had a ton of effect sizes, so was prepped more automatically
 setwd(original.data.dir)
 setwd("Reese 2015, #3787")
@@ -632,7 +632,9 @@ d = rbind( d, read.csv("reese_prepped_effect_sizes.csv")[,-1] )
 
 
 ##### **Kunst 2016 #####
+# MM audited 2020-2-3
 
+# total N from raw data: 168 + 101 + 187 + 190 = 646
 d = dplyr::add_row(.data = d,
                    authoryear = "Kunst 2016",
                    substudy = "Study 2A",
@@ -683,7 +685,9 @@ d = dplyr::add_row(.data = d,
 
 
 ##### **Kunst 2018 #####
+# MM audited 2020-2-3
 
+# total N from raw data: 178 + 183 = 361
 # American sample
 d = dplyr::add_row(.data = d,
                    authoryear = "Kunst 2018",
@@ -713,6 +717,7 @@ d = dplyr::add_row(.data = d,
 
 
 ##### Silva (2016) #####
+# MM audited 2020-2-3
 
 # measured Fig 1.2 in pixels (obviously arbitrary since it depends on zooming,
 #  but it's the relative bar measurements that matter)
@@ -720,20 +725,23 @@ d = dplyr::add_row(.data = d,
 # high cuteness: 217
 # low cuteness: 209
 # control: 180
-# distance from 1 to 5 on y-axis: 481 px
+# distance between "1" and "5" tick marks on y-axis: 481 px
+
+# intervention does not make any request, so using the "avoid meat" outcome per our hierarchy
 
 # start at 1, the lowest point on x-axis, and add the proportion of the
 #  x-axis occupied by the bar
-mean.hi.cute = 1 + (217 / 481) * (5-1)
-mean.lo.cute = 1 + (209 / 481) * (5-1)
-mean.cntrl = 1 + (180 / 481) * (5-1)
-sd.marg = 1.33  # conservatively use marginal SD for all groups since it's all we have
+( mean.hi.cute = 1 + (217 / 481) * (5-1) )
+( mean.lo.cute = 1 + (209 / 481) * (5-1) )
+( mean.cntrl = 1 + (180 / 481) * (5-1) )
+# conservatively use marginal SD for all groups (pg. 22) since it's all we have
+sd.marg = 1.33 
 
 escalc_add_row( authoryear = "Silva 2016",
                 substudy = "cute pig",
                 desired.direction = 1,
                 effect.measure = "smd",
-                interpretation = "Willingness to avoid meat SMD",
+                interpretation = "Willingness to avoid meat",
                 use.rr.analysis = 1,
                 use.grams.analysis = 0,
                 use.veg.analysis = 0,
@@ -751,7 +759,7 @@ escalc_add_row( authoryear = "Silva 2016",
                 substudy = "non-cute pig",
                 desired.direction = 1,
                 effect.measure = "smd",
-                interpretation = "Willingness to avoid meat SMD",
+                interpretation = "Willingness to avoid meat",
                 use.rr.analysis = 1,
                 use.grams.analysis = 0,
                 use.veg.analysis = 0,
@@ -767,18 +775,21 @@ escalc_add_row( authoryear = "Silva 2016",
 
 
 ##### Spanikova (2015) #####
+# MM audited 2020-2-3
 
 # n on pg. 15: 178 for restaurant task
-n.group = floor(178/8)  # assume equal sample size in each group
+# assume equal sample size in each of 8 groups described in Table 1
+n.group = floor(178/8)  
 
 # Table 5 (a weird, not-saturated logistic regression model)
-expit = function(p) { exp(p) / (1 + exp(p))}
+expit = function(x) { 1 / ( 1 + exp(-x) ) }
+
 # P( choose vegetarian | control )
-p.cntrl = expit( -1.12 + 0.95 )
+( p.cntrl = expit( -1.12 + 0.95 ) )
 # P( choose vegetarian | positive animal welfare intervention )
-p.pos = expit( -1.12 + 0.61 )
+( p.pos = expit( -1.12 + 0.61 ) )
 # P( choose vegetarian | negative animal welfare intervention )
-p.neg = expit( -1.12 + 0.61 - 0.33 )
+( p.neg = expit( -1.12 + 0.61 - 0.33 ) )
 
 escalc_add_row( authoryear = "Spanikova 2015",
                 substudy = "positive framing",
@@ -1356,7 +1367,6 @@ d = escalc_add_row( authoryear = "Feltz 2019",
 # sd.cntrl = ( hw.cntrl / qt(.975, df = n.cntrl-1) ) * sqrt(n.cntrl)
 # # sanity check
 # 
-# # bm
 # d = dplyr::add_row(.data = d,
 #                    authoryear = "deLanauze 2019",
 #                    desired.direction = ,

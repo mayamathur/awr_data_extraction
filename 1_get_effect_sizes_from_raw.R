@@ -172,12 +172,14 @@ diag( vcovHC(mod.3d, type="HC0", cluster = "campus") )
 
 ################################# MACDONALD 2016 #################################
 
-# note this also has outcome at a shorter time lag; using the longer time lag only
+# note this also has outcome at a shorter time lag; using the longer time lag per
+#  our hierarchy of outcome
 setwd(original.data.dir)
 setwd("MacDonald 2016, #3800")
 
 dat = read.csv("all_waves_cleaned.csv")
 
+# look at all the FFQ variables
 names(dat)[ grepl("FFQ", names(dat))]
 
 # confirm coding scheme
@@ -190,7 +192,6 @@ agg.sanity = dat %>% group_by(treatment) %>%
              sd.chg = sd(FFQtotalSumMeat_chg, na.rm = TRUE),
              n = length(!is.na(FFQtotalSumMeat_chg)) )
 diff(agg.sanity$mean.chg)
-
 
 
 ##### Calculate Main RR #####
@@ -480,8 +481,14 @@ names(draw) = c( "authoryear",
                  "yi",
                  "vi")
 
+# percent analyzed
+sum( !is.na(dats[[1]]$condition) & !is.na(dats[[1]]$consumption) ) + sum( !is.na(dats[[2]]$condition) & !is.na(dats[[2]]$consumption) )
+
 # dichotomize the outcome at reduce vs. stay the same or increase
 for ( i in 1:length(dats) ) {
+  # per preregistration file, scale is: 
+  # strongly decrease, decrease, somewhat decrease, undecided,
+  #  somewhat increase, increase, strongly increase
   dats[[i]] = mutate( dats[[i]],
                       Y = consumption <= 3 )
 
@@ -498,8 +505,8 @@ for ( i in 1:length(dats) ) {
 
   # get ES for each condition
   all.conditions = unique( dats[[i]]$condition[ !dats[[i]]$condition == "control" ] )
+  
   for (j in 1:length( all.conditions ) ) {
-
     es = get_rr_unadj( condition = all.conditions[j],
                  condition.var.name = "condition",
                  control.name = "control",
@@ -510,7 +517,7 @@ for ( i in 1:length(dats) ) {
                    substudy = paste( "Study ", i+2, ", ", all.conditions[j], sep=""),
                    desired.direction = es$yi > 0,
                    effect.measure = "log-rr",
-                   interpretation = "Reduce vs. don't",
+                   interpretation = "Reduce meat consumption vs. don't",
                    use.rr.analysis = 1,
                    use.grams.analysis = 0,
                    use.veg.analysis = 0,
@@ -530,8 +537,6 @@ write.csv(draw, "reese_prepped_effect_sizes.csv")
 
 
 ################################# COONEY 2014 #################################
-
-# ~~~ not double-checked
 
 setwd(original.data.dir)
 setwd("Cooney 2014, #3856")
@@ -660,13 +665,6 @@ table( apply( dat[,current.cols],
               sum ) ==
          dat$Total_Current )
 
-# # sanity check for Total_Chg variable
-# table( dat$Total_Chg == dat$Total_FollowupYN - dat$Total_Current )
-# # total_chg is not always equal to the relevant difference
-# # often off by a sign
-# # fix the Total_Chg variable accordingly
-# dat$Total_Chg = dat$Total_FollowupYN - dat$Total_Current
-
 # outcome: being below baseline median
 bl.med = median( dat$Total_Current, na.rm = TRUE )
 dat$Y = dat$Total_FollowupYN < bl.med
@@ -688,6 +686,9 @@ dat$condition[ dat$condition == "vegan" ] = 'vegan leaflet'
 # this variable is super messy
 dat %>% filter( Gender %in% c("female", "Female", "male", "Male", "other") ) %>%
   summarise( prop.male = mean( Gender %in% c("male", "Male") ) )
+
+# analyzed N: 553
+sum( !is.na(dat$Total_Chg) & !is.na(dat$Total_Current) & !is.na(dat$condition) )
 
 
 ##### Calculate Main RR #####
@@ -712,8 +713,7 @@ for (j in 1:length( all.conditions ) ) {
   # keep only the desired condition and control
   dat2 = dat %>% filter( condition %in% c( all.conditions[j], "control" ) )
 
-  es = get_rr_adj(
-                   condition.var.name = "condition",
+  es = get_rr_adj( condition.var.name = "condition",
                    control.name = "control",
                    baseline.var.name = "Total_Current",
                    .dat = dat2 )
@@ -760,6 +760,8 @@ dat = read_xlsx("cleanImpactStudyData.ForAnalysis.xlsx")
              total.sd = sd(totalAnimalProductConsumption),
              zero.mean = mean(zeroServingsOfMeat) ) )
 
+# analyzed N: 1279
+sum( !is.na(dat$group) & !is.na(dat$totalAnimalProductConsumption) )
 
 
 ##### Calculate Main RR #####
@@ -786,7 +788,7 @@ setwd(original.data.dir)
 setwd("Kunst 2016, #1453/Data from author/kunst_hohle_2016")
 
 
-##### Study 2A, Calculate Main RR #####
+##### Study 2A #####
 dat = read.spss("study2a.sav", to.data.frame=TRUE)
 
 # missing data
@@ -818,8 +820,8 @@ get_rr_unadj(condition = "head",
        dat = dat)
 
 # sanity check
-dat %>% group_by(con, Y) %>% summarise(n())
-(61/(24+61)) / (41/(41+42))
+dat %>% group_by(con) %>% summarise(mean(Y))
+.718 / 0.494
 
 
 # own mediation analysis
@@ -846,7 +848,8 @@ res = mediate(model.m,
               covariates = "Y")
 # point estimate: 102% mediated
 
-##### Study 2B, Calculate Main RR #####
+
+##### Study 2B #####
 dat = read.spss("study_2b.sav", to.data.frame=TRUE)
 
 # look at variable codings
@@ -878,7 +881,7 @@ get_rr_unadj(condition = "head",
        dat = dat)
 
 
-##### Study 3, Calculate Main RR #####
+##### Study 3 #####
 dat = read.spss("study3.sav", to.data.frame=TRUE)
 
 # look at variable codings
@@ -909,7 +912,7 @@ get_rr_unadj(condition = "animal shown",
        dat = dat)
 
 
-##### Study 5, Calculate Main RR #####
+##### Study 5 #####
 
 dat = read.spss("study5.sav", to.data.frame=TRUE)
 
@@ -945,7 +948,7 @@ get_rr_unadj(condition = "animal names",
 ################################# KUNST 2018 #################################
 
 setwd(original.data.dir)
-setwd("Kunst 2016/Data from author/kunst_haugestad_2018")
+setwd("Kunst 2018, #2870/Data from author/kunst_haugestad_2018")
 
 dat = read.spss("omnivores.sav", to.data.frame=TRUE)
 
@@ -1645,12 +1648,12 @@ dplyr::filter(data,
 # View(pretest_data[pretest_data$Response.ID %in% pre_but_not_post,])
 
 ##### Make Outcome Measure #####
-
+# MM took over from this point
 # since some booklets made mixed appeals that included all animal products, 
 #  use sum of all animal product consumption
 
 # find all outcome variables (both pre and post)
-y.inds = grepl( x = names(data), pattern = "beef|chicken|dair|egg|fish|turkey" )
+y.inds = grepl( x = names(data), pattern = "beef|chicken|dair|egg|fish|pork|turkey" )
 y.names = names(data)[y.inds]
 ( y.pre.names = y.names[ grepl( x = y.names, pattern = "pre" ) ] )
 ( y.post.names = y.names[ grepl( x = y.names, pattern = "post" ) ] )
