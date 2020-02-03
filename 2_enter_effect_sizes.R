@@ -833,6 +833,7 @@ d = rbind( d, read.csv("norris_2016_prepped_effect_sizes.csv")[,-1] )
 
 
 ##### **Norris 2019 #####
+# MM audited 2020-2-3
 
 # Compassionate Choices
 d = dplyr::add_row(.data = d,
@@ -862,6 +863,7 @@ d = dplyr::add_row(.data = d,
 
 
 ##### Byrd-Bredbenner 2010 #####
+# MM audited 2020-2-3
 
 # they measured pre-post changes, but change scores aren't reported, so
 #  just using means at F/U
@@ -869,7 +871,7 @@ escalc_add_row( authoryear = "Byrd-Bredbenner 2010",
                 substudy = NA,
                 desired.direction = 1,
                 effect.measure = "smd",
-                interpretation = "Intention to go vegetarian SMD",
+                interpretation = "Intention to go vegetarian",
                 use.rr.analysis = 1,
                 use.grams.analysis = 0,
                 use.veg.analysis = 0,
@@ -877,18 +879,18 @@ escalc_add_row( authoryear = "Byrd-Bredbenner 2010",
 
                 m1i = 1.94, # Table 1, treatment group
                 sd1i = 0.13 * sqrt(34),  # convert SE to SD
-                n1i = 34,
+                n1i = 34,  # pg 45 (beginning of Results)
 
                 m2i = 1.66,
                 sd2i = 0.09 * sqrt(37),
-                n2i = 37 )
+                n2i = 37 ) # pg 45 (beginning of Results)
 
 
 ##### Novotna 2019 #####
 # extract post-intervention means and CI limits
 #  in WebPlotDigitizer
 mn.cntrl = 2.96
-hw.cntrl = (mn.cntrl-2.77)
+hw.cntrl = (mn.cntrl-2.77)  # CI half-width
 n.cntrl = 34-8  # pg 26
 sd.cntrl = ( hw.cntrl / qt(.975, df = n.cntrl-1) ) * sqrt(n.cntrl)
 # sanity check
@@ -909,7 +911,7 @@ escalc_add_row( authoryear = "Novotna 2019",
                 substudy = "Documentary",
                 desired.direction = 1,
                 effect.measure = "smd",
-                interpretation = "Meat and dairy consumption SMD",
+                interpretation = "Meat and dairy consumption",
                 use.rr.analysis = 1,
                 use.grams.analysis = 0,
                 use.veg.analysis = 0,
@@ -919,15 +921,15 @@ escalc_add_row( authoryear = "Novotna 2019",
                 sd1i = sd.doc,
                 n1i = n.doc,
 
-                m2i = mn.babe,
-                sd2i = sd.babe,
-                n2i = n.babe )
+                m2i = mn.cntrl,
+                sd2i = sd.cntrl,
+                n2i = n.cntrl )
 
 escalc_add_row( authoryear = "Novotna 2019",
                 substudy = '"Babe" movie',
                 desired.direction = 1,
                 effect.measure = "smd",
-                interpretation = "Meat and dairy consumption SMD",
+                interpretation = "Meat and dairy consumption",
                 use.rr.analysis = 1,
                 use.grams.analysis = 0,
                 use.veg.analysis = 0,
