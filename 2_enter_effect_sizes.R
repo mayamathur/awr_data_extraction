@@ -411,7 +411,7 @@ d = dplyr::add_row(.data = d,
                    use.grams.analysis = 0,
                    use.veg.analysis = 0,
                    yi = 0.17653,
-                   vi = 0.002559955 )
+                   vi = 0.006292858 )
 
 d = dplyr::add_row(.data = d,
                    authoryear = "Anderson 2017",
@@ -423,7 +423,7 @@ d = dplyr::add_row(.data = d,
                    use.grams.analysis = 0,
                    use.veg.analysis = 0,
                    yi = 0.07114,
-                   vi = 0.0005906098 )
+                   vi = 0.001103623 )
 
 
 ##### Bertolaso 2015 #####
@@ -846,7 +846,7 @@ d = dplyr::add_row(.data = d,
                    use.grams.analysis = 0,
                    use.veg.analysis = 0,
                    yi = 0.05990,
-                   vi = 0.0048810802 )
+                   vi = 6.15334e-03 )
 
 # Speciesism
 d = dplyr::add_row(.data = d,
@@ -859,7 +859,7 @@ d = dplyr::add_row(.data = d,
                    use.grams.analysis = 0,
                    use.veg.analysis = 0,
                    yi = 0.16431,
-                   vi = 4.704840e-03 )
+                   vi = 0.0060461344 )
 
 
 ##### Byrd-Bredbenner 2010 #####
@@ -887,6 +887,7 @@ escalc_add_row( authoryear = "Byrd-Bredbenner 2010",
 
 
 ##### Novotna 2019 #####
+# MM audited 2020-2-3
 # extract post-intervention means and CI limits
 #  in WebPlotDigitizer
 mn.cntrl = 2.96
@@ -944,51 +945,20 @@ escalc_add_row( authoryear = "Novotna 2019",
                 n2i = n.cntrl)
 
 
-# ##### **Vegan Outreach 2019 (#3828; "10 Weeks to Vegan") #####
-#
-# escalc_add_row( authoryear = "Vegan Outreach 2019",
-#                 substudy = NA,
-#                 desired.direction = 1,
-#                 effect.measure = "log-rr",
-#                 interpretation = "Avoiding all animal products over 1 month after vs. before challenge",
-#                 use.rr.analysis = 1,
-#                 use.grams.analysis = 0,
-#                 use.veg.analysis = 0,
-#                 measure = "RR",
-#
-#                 ai = 43, # pre-intervention vegans
-#                 bi = 190+76,  # pre-intervention non-vegans
-#                 ci = 77,  # post- vegans
-#                 di = 140+92+77 ) # post-non-vegans
-#
-# escalc_add_row( authoryear = "Vegan Outreach 2019",
-#                 substudy = NA,
-#                 desired.direction = 1,
-#                 effect.measure = "log-rr",
-#                 interpretation = "Avoiding meat over 1 month after vs. before challenge",
-#                 use.rr.analysis = 0,
-#                 use.grams.analysis = 0,
-#                 use.veg.analysis = 1,
-#                 measure = "RR",
-#
-#                 ai = 43 + 76, # pre-intervention vegans + vegetarians
-#                 bi = 190,  # pre-intervention meat-eaters
-#                 ci = 77 + 92,  # post- vegans + vegetarians
-#                 di = 140 ) # post- meat-eaters
-
 ##### Tian (2016) #####
+# MM audited 2020-2-3
 
 # total sample size for paper
-# pg 189
-# divide by 2 because we're only using 2 of 4 conditions
-round( 277/2 + 243/2 + 301/2 + 217/2)
+# divide by 2 because we're only using 2 of 4 conditions for each study (not pasture or abbatoir conditions)
+round( 277/2 + 243/2 +  # Study 1 (page 189)
+         301/2 + 217/2 )  # Study 2 (page 191)
 
 # Study 1, Chinese (Table 1, abbatoir condition)
 escalc_add_row( authoryear = "Tian 2016",
                 substudy = "Study 1, Chinese",
                 desired.direction = 1,
                 effect.measure = "smd",
-                interpretation = "Willingness to eat beef SMD",
+                interpretation = "Willingness to eat beef",
                 use.rr.analysis = 1,
                 use.grams.analysis = 0,
                 use.veg.analysis = 0,
@@ -1022,12 +992,12 @@ escalc_add_row( authoryear = "Tian 2016",
                 sd2i = 1.37,
                 n2i = round(243/4) )
 
-# Study 2, Chinese (Table 3, abbatoir condition)
+# Study 2, Chinese (Table 3, animal image condition)
 escalc_add_row( authoryear = "Tian 2016",
                 substudy = "Study 2, Chinese",
                 desired.direction = 0,
                 effect.measure = "smd",
-                interpretation = "Willingness to eat beef SMD",
+                interpretation = "Willingness to eat beef",
                 use.rr.analysis = 1,
                 use.grams.analysis = 0,
                 use.veg.analysis = 0,
@@ -1041,12 +1011,12 @@ escalc_add_row( authoryear = "Tian 2016",
                 sd2i = 1.36,
                 n2i = round(217/4) )
 
-# Study 2, French (Table 3, abbatoir condition)
+# Study 2, French (Table 3, animal image condition)
 escalc_add_row( authoryear = "Tian 2016",
                 substudy = "Study 2, French",
                 desired.direction = 0,
                 effect.measure = "smd",
-                interpretation = "Willingness to eat beef SMD",
+                interpretation = "Willingness to eat beef",
                 use.rr.analysis = 1,
                 use.grams.analysis = 0,
                 use.veg.analysis = 0,
@@ -1062,18 +1032,20 @@ escalc_add_row( authoryear = "Tian 2016",
 
 
 ##### Earle 2019 #####
-# ~~~ emailed to try to get means and SDs
-# for now just convert the point-biserial correlation
+# MM audited 2020-2-3
+
+# emailed to try to get means and SDs, 
+#  but stuck with converting the point-biserial correlation
 
 # Study 1 (Table 1)
 res = r_to_d_ptbis( r = -0.31,
-              N = 299 )
+              n0 = round(299/2), n1 = round(299/2) )
 d = dplyr::add_row(.data = d,
                    authoryear = "Earle 2019",
                    substudy = "Study 1",
                    desired.direction = 1,
                    effect.measure = "smd",
-                   interpretation = "Willingness to eat meat SMD",
+                   interpretation = "Willingness to eat meat",
                    use.rr.analysis = 1,
                    use.grams.analysis = 0,
                    use.veg.analysis = 0,
@@ -1082,13 +1054,13 @@ d = dplyr::add_row(.data = d,
 
 # Study 2 (Table 3)
 res = r_to_d_ptbis( r = -0.35,
-                    N = 280 )
+                    n0 = round(280/2), n1 = round(280/2) )
 d = dplyr::add_row(.data = d,
                    authoryear = "Earle 2019",
                    substudy = "Study 2",
                    desired.direction = 1,
                    effect.measure = "smd",
-                   interpretation = "Willingness to eat meat SMD",
+                   interpretation = "Willingness to eat meat",
                    use.rr.analysis = 1,
                    use.grams.analysis = 0,
                    use.veg.analysis = 0,
@@ -1096,16 +1068,17 @@ d = dplyr::add_row(.data = d,
                    vi = res$se^2 )
 
 
-
-
 ##### Flens (2018) #####
-# ~~~ emailed to try to get non-conservative SD
-# Table 1
+# MM audited 2020-2-4
+
+# Table 1 (page 4)
 # create aggregated measure: consumption of all animal products
-# by summing each category they report
+#  by summing each category they report
+# per page 2, negative values represent decreases in consumption; positive indicate increases
 ( sum.trt = sum( c( 0.34, -0.04, -0.90, 1.21, 0.57, 0.12 ) ) )
 ( sum.cntrl = sum( c( 0.42, -0.01, -0.88, 0.84, 0.52, 0.20 ) ) )
 # assume independence for conservative pooled SE
+# emailed to try to get non-conservative SD, but to no avail
 ( sd.trt.pooled = sqrt( 1.57^2 + 1.58^2 + 1.24^2 + 1.27^2 + 1.62^2 + 1.35^2 ) )
 ( sd.cntrl.pooled = sqrt( 1.40^2 + 1.27^2 + 1.55^2 + 1.30^2 + 1.43^2 + 1.41^2 ) )
 
@@ -1113,7 +1086,7 @@ escalc_add_row( authoryear = "Flens 2018",
                 substudy = NA,
                 desired.direction = 0,
                 effect.measure = "smd",
-                interpretation = "Animal products consumption SMD",
+                interpretation = "Animal products consumption frequency",
                 use.rr.analysis = 1,
                 use.grams.analysis = 0,
                 use.veg.analysis = 0,
@@ -1121,13 +1094,13 @@ escalc_add_row( authoryear = "Flens 2018",
 
                 m1i = sum.trt,
                 sd1i = sd.trt.pooled,
-                n1i = 52,
+                n1i = 52,  # page 3
 
                 m2i = sum.cntrl,
                 sd2i = sd.cntrl.pooled,
-                n2i = 200 )
+                n2i = 200 )  # page 3
 
-##### Schwitzgebel (2019) #####
+##### **Schwitzgebel (2019) #####
 d = dplyr::add_row(.data = d,
                    authoryear = "Schwitzgebel 2019",
                    desired.direction = 1,
@@ -1137,7 +1110,7 @@ d = dplyr::add_row(.data = d,
                    use.grams.analysis = 0,
                    use.veg.analysis = 0,
                    yi = -0.13597,
-                   vi = 0.002580292 )
+                   vi = 0.007144952 )
 
 
 ##### FIAPO (2017) #####

@@ -117,14 +117,25 @@ hyphen_mean = Vectorize( function(string) {
 fake = hyphen_mean(c("14-28", "28"))
 
 ################################ EFFECT-SIZE CONVERSIONS ################################
-# Borenstein conversion
-r_to_d_ptbis = function(r, N=NA) {
+
+# agrees with http://www.campbellcollaboration.org/escalc/html/EffectSizeCalculator-SMD11.php
+r_to_d_ptbis = function(r, n0 = NA, n1 = NA) {
   
-  d = (2 * r) / sqrt(1 - r^2)
+  # Jacobs & Viechtbauer, Eq (5)
+  # note the h term is slightly different from Borenstein
+  # because latter assumes equal n in each group
+  h = ( (n0 + n1) / n0 ) + ( (n0 + n1) / n1 )
+  d = ( sqrt(h) * r ) / ( sqrt(1 - r^2) ) 
   
-  if( !is.na(N) ) {
-    # variance of r (Borenstein pg. 41)
+  
+  if( !is.na(n0) & !is.na(n1) ) {
+    N = n0 + n1
+    # variance of r (Borenstein pg. 41 or Jacobs & Viechtbauer, Eq. (10))
+    # Campbell Collaboration also uses this (http://www.campbellcollaboration.org/escalc/html/EffectSizeCalculator-SMD11.php)
     Vr = ( 1 - r^2 )^2 / (N-1)
+    
+    # as in Borenstein
+    # this is from the delta method: https://www.wolframalpha.com/input/?i=derivative+of+2r+%2F+sqrt%281-r%5E2%29+wrt+r
     Vd = 4 * Vr / ( 1 - r^2 )^3
     se = sqrt(Vd)
     lo = d - qnorm(.975) * se

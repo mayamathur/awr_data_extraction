@@ -160,14 +160,16 @@ mod.2d = glm( low.t2 ~ cond.f + diet.f1,
                 data = dat[cond.f != 2],
                 family = "poisson")
 summary(mod.2d)
-diag( vcovHC(mod.2d, type="HC0", cluster = "campus") )
+# despite clustering by campus, these SEs are smaller than naive model-based
+#  ones because model-based SEs for Poisson with binary outcome are overestimates
+diag( vcovCL(mod.2d, type="HC0", cluster = ~ campus) )
 
 ##### Point Estimate for 3D Video #####
 mod.3d = glm( low.t2 ~ cond.f + diet.f1,
                 data = dat[cond.f != 1],
                 family = "poisson" )
 summary(mod.3d)
-diag( vcovHC(mod.3d, type="HC0", cluster = "campus") )
+diag( vcovCL(mod.3d, type="HC0", cluster = ~ campus) )
 
 
 ################################# MACDONALD 2016 #################################
@@ -1155,7 +1157,7 @@ get_rr_unadj( condition = "low",
 
 
 
-################################# 3831 NORRIS 2018 #############################
+################################# 3831 NORRIS 2019 #############################
 
 ###### Notes #####
 # * Couldn't separate participants at Mesa Community College and at Arizona State
@@ -1366,7 +1368,7 @@ mod = glm( Y ~ ( group == "Compassionate Choices" ) + pre.consump,
            data = data[ data$group != "What is Speciesism", ],
            family = "poisson" )
 summary(mod)
-vcovHC(mod, type="HC0", cluster = "school_code")
+vcovCL(mod, type="HC0", cluster = ~ school_code)
 
 # percent male and analyzed N
 ( agg.cc = data %>% filter(group != "What Is Speciesism") %>%
@@ -1380,7 +1382,7 @@ mod = glm( Y ~ ( group == "What is Speciesism" ) + pre.consump,
            data = data[ data$group != "Compassionate Choices", ],
            family = "poisson" )
 summary(mod)
-vcovHC(mod, type="HC0", cluster = "school_code")
+vcovCL(mod, type="HC0", cluster = ~ school_code)
 
 # percent male and analyzed N
 ( agg.s = data %>% filter(group != "Compassionate Choices") %>%
@@ -1759,21 +1761,25 @@ dat = read_xlsx("Data-Transactions-ReducedMathur-200115b.xlsx", sheet=1); nrow(d
 dat %>% group_by(Condition) %>% 
   summarise( mean(Meat) )
 
+# sample size (subjects)
+# greater than the df = 162 reported in paper for pre/post comparison because we have only post-data
+# and smaller than n = 476 reported in paper because that included missing data on pre- or post-measure
+( n = length( unique( dat$UniqueIDNew[ !is.na(dat$Meat) & !is.na(dat$Condition ) ] ) ) )
+
+# percent missing data for our analysis
+(1143-n) / 1143
+
 
 ##### Calculate Main RR #####
-# whether they were above or below (baseline) median
-#  for total meat consumption at time 3, controlling for
-# (continuous) meat consumption at baseline
-# since these are individual purchase data, Y is already binary and 
+# since these are individual purchase data (1/0), Y is already binary and 
 #  we don't need to dichotomize
-
 mod = glm( Meat ~ Condition,
            data = dat,
            family = "poisson" )
 summary(mod)
 
 library(sandwich)
-diag( vcovHC(mod, type="HC0", cluster = "UniqueIDNew") )
+diag( vcovCL(mod, type="HC0", cluster = ~ UniqueIDNew) )
 
 # surprisingly, there is almost no clustering of purchase type within subjects, 
 #  which is why dropping clustering in above makes little difference
