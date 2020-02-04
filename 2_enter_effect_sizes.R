@@ -1193,6 +1193,7 @@ d = rbind( d, read.csv("rouk_prepped_effect_sizes.csv")[,-1] )
 
 
 ##### **ACE 2013a #####
+# MM audited 2020-2-4
 
 # "Compassionate Choices"
 d = dplyr::add_row(.data = d,
@@ -1220,6 +1221,8 @@ d = dplyr::add_row(.data = d,
                    yi = -0.1441575,
                    vi = 0.01128786 )
 
+# ~~~ previous version with unidentified mistakes
+# ~~~ take one last look at this
 # # "Compassionate Choices"
 # d = dplyr::add_row(.data = d,
 #                    authoryear = "ACE 2013a",
@@ -1247,8 +1250,10 @@ d = dplyr::add_row(.data = d,
 #                    vi = 0.01371752 )
 
 
-##### ACE 2013b #####
-# "Compassionate Choices"
+##### **ACE 2013b #####
+
+# MM audited 2020-2-4
+# ~~~ go over once more
 d = dplyr::add_row(.data = d,
                    authoryear = "ACE 2013b",
                    desired.direction = 1,
@@ -1257,8 +1262,8 @@ d = dplyr::add_row(.data = d,
                    use.rr.analysis = 1,
                    use.grams.analysis = 0,
                    use.veg.analysis = 0,
-                   yi = 0.1085201,
-                   vi = 0.02071258 )
+                   yi = -0.08581416,
+                   vi = 0.01900103 )
 
 
 ##### Feltz 2019, #3858 #####

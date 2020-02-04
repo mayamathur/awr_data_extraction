@@ -1036,6 +1036,9 @@ table(dat$`GROUP ASSIGNMENT`)
 ( bl.med = median( dat$post.consump[ dat$`GROUP ASSIGNMENT` == "N" ], na.rm = TRUE ) )
 dat$Y = dat$post.consump > bl.med  # HIGHER scores are better
 
+# sample size
+sum( !is.na(dat$Y) & !is.na(dat$`GROUP ASSIGNMENT`) & !is.na(dat$pre.consump) )
+
 ##### Compassionate Choices #####
 # being above vs. below control group median, controlling for baseline consumption
 get_rr_adj( condition.var.name = "GROUP ASSIGNMENT",
@@ -1043,13 +1046,13 @@ get_rr_adj( condition.var.name = "GROUP ASSIGNMENT",
              baseline.var.name = "pre.consump",
              .dat = dat[ dat$`GROUP ASSIGNMENT` != "E", ] )
 
-
 ##### Even If You Like Meat #####
 # being above vs. below control group median, controlling for baseline consumption
 get_rr_adj( condition.var.name = "GROUP ASSIGNMENT",
             control.name = "N",
             baseline.var.name = "pre.consump",
             .dat = dat[ dat$`GROUP ASSIGNMENT` != "C", ] )
+
 
 # sanity checks
 dat %>% group_by(`GROUP ASSIGNMENT`) %>% summarise(mean(Y, na.rm=TRUE))
@@ -1072,8 +1075,34 @@ setwd("Dataset and codebook")
 
 dat = read.spss("ACEhumaneeducationData.sav", to.data.frame = TRUE)
 
-# total consumption frequency post-intervention
-# higher scores are better (1 = 5x/day to 7 = Never)
+# # confirm effect direction coding
+# # "The only significant relationship was that control group respondents reported larger decreases in
+# #  egg consumption than respondents in the treatment group (p<.05). "
+# # since the coefficients in the below LM are negative, LOWER scores are BETTER
+# dat$CurrentEggsNumeric <- with(dat,
+#                                ifelse(CurrentEggs == 0, 0,
+#                                       ifelse(CurrentEggs == 1, .0667,
+#                                              ifelse(CurrentEggs == 2, .2143,
+#                                                     ifelse(CurrentEggs == 3, .6429,
+#                                                            ifelse(CurrentEggs == 4, 1.5,
+#                                                                   ifelse(CurrentEggs == 5, 3.5,
+#                                                                          ifelse(CurrentEggs == 6, 5.5, NA))))))))
+# dat$PastEggsNumeric <- with(dat,
+#                             ifelse(PastEGGS == 0, 0,
+#                                    ifelse(PastEGGS == 1, .0667,
+#                                           ifelse(PastEGGS == 2, .2143,
+#                                                  ifelse(PastEGGS == 3, .6429,
+#                                                         ifelse(PastEGGS == 4, 1.5,
+#                                                                ifelse(PastEGGS == 5, 3.5,
+#                                                                       ifelse(PastEGGS == 6, 5.5, NA))))))))
+# dat$ChangeEggs <- dat$CurrentEggsNumeric - dat$PastEggsNumeric
+# eggmodel <- lm(ChangeEggs ~ GROUPS, data=dat)
+# summary(eggmodel)
+
+
+# per their R analysis script, these are directly proportional to the individual 
+#  food variables, each of which is coded as eggs in the above code snippet:
+# data$CurrentAnimalProducts <- data$CurrentMeat + data$CurrentDairyNumeric + data$CurrentEggsNumeric
 dat$post.consump = dat$CurrentAnimalproductconsumption
 # and pre-intervention (as a covariate)
 dat$pre.consump = dat$Pastanimalproductconsumption
@@ -1091,8 +1120,7 @@ mean( dat$Sex == "Male", na.rm = TRUE )
 
 # make outcome variable
 ( bl.med = median( dat$post.consump[ dat$GROUPS == "Control and did not attend FF presentation" ], na.rm = TRUE ) )
-dat$Y = dat$post.consump > bl.med  # higher scores are better
-
+dat$Y = dat$post.consump < bl.med  # LOWER scores are better per the above
 
 
 # being above vs. below control group median, controlling for baseline consumption
