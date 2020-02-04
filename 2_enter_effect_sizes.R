@@ -1101,6 +1101,7 @@ escalc_add_row( authoryear = "Flens 2018",
                 n2i = 200 )  # page 3
 
 ##### **Schwitzgebel (2019) #####
+# MM audited 2020-2-4
 d = dplyr::add_row(.data = d,
                    authoryear = "Schwitzgebel 2019",
                    desired.direction = 1,
@@ -1113,9 +1114,10 @@ d = dplyr::add_row(.data = d,
                    vi = 0.007144952 )
 
 
-##### FIAPO (2017) #####
+##### **FIAPO (2017) #####
+# MM auditied 2020-2-4
 
-(91-2) + # Study 1, baseline non-vegans in control group (excluded the baseline vegans)
+(91-2) + (188-21) + # Study 1, baseline non-vegans in control group (excluded the baseline vegans)
 525 + 515 +
   553 + 447
 
@@ -1134,16 +1136,17 @@ escalc_add_row( authoryear = "FIAPO 2017",
 
                 # proportions from Table A; N's from Table 1
                 ai = round( 0.005*21 + 0.0266*146 ), # Tx who *went* vegan, of initial non-vegans
-                bi = round( (188-21) - round(0.005*21 + 0.0266*146) ),  # Tx who did not *go* vegan, of initial non-vegans
+                bi = round( ( (188-21) - round(0.005*21 + 0.0266*146) ),  # Tx who did not *go* vegan, of initial non-vegans
                 ci = 0,  # control who went vegan
-                di = 91 ) # control who did not go vegan
-
-# Study 2: 2D video, everyone
+                di = 91-2 ) # control who did not go vegan
+                
+# Study 2: 2D video
+# from raw data
 escalc_add_row( authoryear = "FIAPO 2017",
                 substudy = "2D video",
                 desired.direction = 1,
                 effect.measure = "smd",
-                interpretation = "Willingness to reduce meat SMD",
+                interpretation = "Willingness to reduce meat",
                 use.rr.analysis = 1,
                 use.grams.analysis = 0,
                 use.veg.analysis = 0,
@@ -1157,12 +1160,13 @@ escalc_add_row( authoryear = "FIAPO 2017",
                 sd2i = 2.048048,
                 n2i = 515 )
 
-# Study 3: 2D video, everyone
+# Study 3: virtual reality
+# from raw data
 escalc_add_row( authoryear = "FIAPO 2017",
                 substudy = "virtual reality",
                 desired.direction = 1,
                 effect.measure = "smd",
-                interpretation = "Willingness to reduce meat SMD",
+                interpretation = "Willingness to reduce meat",
                 use.rr.analysis = 1,
                 use.grams.analysis = 0,
                 use.veg.analysis = 0,
@@ -1175,85 +1179,6 @@ escalc_add_row( authoryear = "FIAPO 2017",
                 m2i = 6.550336,
                 sd2i = 2.983744,
                 n2i = 447 )
-
-
-# # total N for paper
-# # don't include initial vegans in counts for Study 1
-# (91-2) + # Study 1, baseline non-vegans in control group (excluded the baseline vegans)
-#   (188-21) +  # Study 1, baseline non-vegans in intervention group (excluded the baseline vegans)
-#   142 + 167 +  # Study 2, baseline vegetarians in control and experimental groups in 2D intervention group
-#   343 + 362 +  # Study 2, baseline non-vegetarians in control and experimental groups in 2D intervention group
-#   220 + 98 + # Study 2, baseline vegetarians in control and experimental groups in 3D intervention group
-#   224 + 440 # Study 2, baseline non-vegetarians in control and experimental groups in 3D intervention group
-
-
-# # Study 2: 2D video, baseline vegetarians
-# # from Table B
-# # no SDs given, so use reported "p<0.05" to conservatively get SD assuming p=0.05 exactly
-# # then use Wilson's online calculator (~~~CITE IT IN PAPER!): http://www.campbellcollaboration.org/escalc/html/EffectSizeCalculator-SMD2.php
-# # change score among baseline vegetarians: calculate t-value at p=0.05
-# # data entered in calculator: N's = 167, 142
-# # t = 1.967721 per below
-# qt( p = 0.975,
-#     df = 167 + 142 - 2 )
-# d = dplyr::add_row(.data = d,
-#                    authoryear = "FIAPO 2017",
-#                    substudy = "2D video, baseline vegetarians",
-#                    desired.direction = 1,
-#                    effect.measure = "smd",
-#                    interpretation = "Willingness to reduce animal products SMD",
-#                    use.rr.analysis = 1,
-#                    use.grams.analysis = 0,
-#                    use.veg.analysis = 0,
-#                    yi = 0.2246,
-#                    vi = 0.0131 )
-#
-# # Study 2: 2D video, baseline non-vegetarians
-# # data entered in calculator: N's = 343, 362
-# qt( p = 0.975,
-#     df = 343 + 362 - 2 )
-# d = dplyr::add_row(.data = d,
-#                    authoryear = "FIAPO 2017",
-#                    substudy = "2D video, baseline non-vegetarians",
-#                    desired.direction = 1,
-#                    effect.measure = "smd",
-#                    interpretation = "Willingness to reduce animal products SMD",
-#                    use.rr.analysis = 1,
-#                    use.grams.analysis = 0,
-#                    use.veg.analysis = 0,
-#                    yi = 0.1478,
-#                    vi = 0.0057 )
-#
-# # Study 3: VR video, baseline vegetarians
-# # data entered in calculator: N's = 220, 98
-# qt( p = 0.975,
-#     df = 220 + 98 - 2 )
-# d = dplyr::add_row(.data = d,
-#                    authoryear = "FIAPO 2017",
-#                    substudy = "virtual reality, baseline vegetarians",
-#                    desired.direction = 1,
-#                    effect.measure = "smd",
-#                    interpretation = "Willingness to reduce animal products SMD",
-#                    use.rr.analysis = 1,
-#                    use.grams.analysis = 0,
-#                    use.veg.analysis = 0,
-#                    yi = 0.2389,
-#                    vi = 0.0148 )
-#
-# # Study 3: VR video, baseline non-vegetarians
-# qt( p = 0.975,
-#     df = 224 + 440 - 2 )
-# d = dplyr::add_row(.data = d,
-#                    authoryear = "FIAPO 2017",
-#                    substudy = "virtual reality, baseline non-vegetarians",
-#                    desired.direction = 1,
-#                    effect.measure = "smd",
-#                    interpretation = "Willingness to reduce animal products SMD",
-#                    use.rr.analysis = 1,
-#                    use.grams.analysis = 0,
-#                    use.veg.analysis = 0,
-#                    yi = 0.1612,
-#                    vi = 0.0068 )
 
 
 ##### Rouk 2017 #####

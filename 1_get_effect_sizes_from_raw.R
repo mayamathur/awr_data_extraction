@@ -1081,13 +1081,16 @@ get_rr_adj( condition.var.name = "GROUPS",
             .dat = dat )
 
 
-################################# 3862 FIAPO 2019 #################################
+################################# 3862 FIAPO 2017 #################################
+
+setwd(original.data.dir)
+setwd("FIAPO 2017, #3862/Data from author")
 
 ##### Study 2: 2D video #####
 dc = read.spss("VO (control) data.sav", to.data.frame=TRUE)
 dt = read.spss("VO (experimental) data.sav", to.data.frame=TRUE)
 
-
+# get means, SDs, and Ns for control and treatment group separately
 ( res.c = dc %>% summarise( nv.mn = mean(Food_Non_Veg, na.rm = TRUE),
                             nv.sd = sd(Food_Non_Veg, na.rm = TRUE),
                             n = sum(!is.na(Food_Non_Veg))) )
@@ -1118,7 +1121,8 @@ dt = read.spss("VR (experimental) data.sav", to.data.frame=TRUE)
                             nv.sd = sd(Non_Veg_TotalScore_Exp, na.rm = TRUE),
                             n = sum(!is.na(Non_Veg_TotalScore_Exp))) )
 
-# reported: 2.84 :)
+# reported: 2.84
+# matches exactly :)
 res.t$nv.mn - res.c$nv.mn
 
 
