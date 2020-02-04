@@ -1115,11 +1115,11 @@ d = dplyr::add_row(.data = d,
 
 
 ##### **FIAPO (2017) #####
-# MM auditied 2020-2-4
+# MM audited 2020-2-4
 
 (91-2) + (188-21) + # Study 1, baseline non-vegans in control group (excluded the baseline vegans)
-525 + 515 +
-  553 + 447
+1000 + # from raw data
+1040  # from raw data
 
 # Study 1: leafleting
 # combine data in Table A and Table 1 to get RR of *becoming* vegan
@@ -1182,7 +1182,8 @@ escalc_add_row( authoryear = "FIAPO 2017",
 
 
 ##### Rouk 2017 #####
-# reduce vs. not
+# MM audited 2020-2-4
+
 # this one had a ton of effect sizes, so was prepped more automatically
 setwd(original.data.dir)
 setwd("Rouk 2017, #3832")
@@ -1191,32 +1192,59 @@ d = rbind( d, read.csv("rouk_prepped_effect_sizes.csv")[,-1] )
 
 
 
-##### ACE 2013a #####
-# "Compassionate Choices"
-d = dplyr::add_row(.data = d,
-                   authoryear = "ACE 2013a",
-                   substudy = '"Compassionate Choices"',
-                   desired.direction = 1,
-                   effect.measure = "log-rr",
-                   interpretation = "Low vs. high animal product consumption",
-                   use.rr.analysis = 1,
-                   use.grams.analysis = 0,
-                   use.veg.analysis = 0,
-                   yi = 0.2234456,
-                   vi = 0.0216619 )
+##### **ACE 2013a #####
 
 # "Compassionate Choices"
 d = dplyr::add_row(.data = d,
                    authoryear = "ACE 2013a",
-                   substudy = '"Even If You Like Meat"',
-                   desired.direction = 1,
+                   substudy = '"Compassionate Choices"',
+                   desired.direction = 0,
                    effect.measure = "log-rr",
                    interpretation = "Low vs. high animal product consumption",
                    use.rr.analysis = 1,
                    use.grams.analysis = 0,
                    use.veg.analysis = 0,
-                   yi = 0.08799533,
-                   vi = 0.01371752 )
+                   yi = -0.4794118,
+                   vi = 0.1210723 )
+
+# "Even if You Like Meat"
+d = dplyr::add_row(.data = d,
+                   authoryear = "ACE 2013a",
+                   substudy = '"Even If You Like Meat"',
+                   desired.direction = 0,
+                   effect.measure = "log-rr",
+                   interpretation = "Low vs. high animal product consumption",
+                   use.rr.analysis = 1,
+                   use.grams.analysis = 0,
+                   use.veg.analysis = 0,
+                   yi = -0.1441575,
+                   vi = 0.01128786 )
+
+# # "Compassionate Choices"
+# d = dplyr::add_row(.data = d,
+#                    authoryear = "ACE 2013a",
+#                    substudy = '"Compassionate Choices"',
+#                    desired.direction = 0,
+#                    effect.measure = "log-rr",
+#                    interpretation = "Low vs. high animal product consumption",
+#                    use.rr.analysis = 1,
+#                    use.grams.analysis = 0,
+#                    use.veg.analysis = 0,
+#                    yi = 0.2234456,
+#                    vi = 0.0216619 )
+# 
+# # "Even if You Like Meat"
+# d = dplyr::add_row(.data = d,
+#                    authoryear = "ACE 2013a",
+#                    substudy = '"Even If You Like Meat"',
+#                    desired.direction = 0,
+#                    effect.measure = "log-rr",
+#                    interpretation = "Low vs. high animal product consumption",
+#                    use.rr.analysis = 1,
+#                    use.grams.analysis = 0,
+#                    use.veg.analysis = 0,
+#                    yi = 0.08799533,
+#                    vi = 0.01371752 )
 
 
 ##### ACE 2013b #####

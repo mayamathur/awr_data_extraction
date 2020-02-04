@@ -302,6 +302,14 @@ dat$Y = dat$fishConsumpIntent90Days %in% c("Completely eliminate",
 
 ( all.conditions = unique( dat$X[ dat$X != "control" ] ) )
 
+# sanity check
+# reproduce stats in their bar plot "Intent to reduce or eliminate fish consumption in the following 90 days"
+# matches :)
+dat %>% group_by(X) %>%
+  summarise(mean(Y))
+
+# sample size
+sum( !is.na(dat$X) & !is.na(dat$Y) )
 
 # effect sizes from raw data
 draw = as.data.frame( matrix( ncol = 10, nrow = 0 ) )
@@ -334,7 +342,7 @@ for (j in 1:length( all.conditions ) ) {
                    substudy = all.conditions[j],
                    desired.direction = es$yi > 0,
                    effect.measure = "log-rr",
-                   interpretation = "Reduce vs. don't",
+                   interpretation = "Reduce vs. don't fish consumption",
                    use.rr.analysis = 1,
                    use.grams.analysis = 0,
                    use.veg.analysis = 0,
@@ -1015,6 +1023,7 @@ dat = read_xlsx("ACE leafleting trial with group assignment.xlsx")
 
 # total consumption frequency post-intervention
 # higher scores are better (1 = 5x/day to 7 = Never)
+# see "Guide to Leafleting Data" codebook
 dat$post.consump = dat$dairy...25 + dat$red...26 + dat$poultry...27 + dat$fish...28 + dat$eggs...29
 # and pre-intervention (as a covariate)
 dat$pre.consump = dat$dairy...5 + dat$red...6 + dat$poultry...7 + dat$fish...8 + dat$eggs...9
@@ -1025,7 +1034,7 @@ dat$pre.consump = dat$dairy...5 + dat$red...6 + dat$poultry...7 + dat$fish...8 +
 table(dat$`GROUP ASSIGNMENT`)
 
 ( bl.med = median( dat$post.consump[ dat$`GROUP ASSIGNMENT` == "N" ], na.rm = TRUE ) )
-dat$Y = dat$post.consump > bl.med  # higher scores are better
+dat$Y = dat$post.consump > bl.med  # HIGHER scores are better
 
 ##### Compassionate Choices #####
 # being above vs. below control group median, controlling for baseline consumption
@@ -1042,6 +1051,18 @@ get_rr_adj( condition.var.name = "GROUP ASSIGNMENT",
             baseline.var.name = "pre.consump",
             .dat = dat[ dat$`GROUP ASSIGNMENT` != "C", ] )
 
+# sanity checks
+dat %>% group_by(`GROUP ASSIGNMENT`) %>% summarise(mean(Y, na.rm=TRUE))
+# controlling for baseline status explains apparent discrepancy between RRs and raw
+#  probabilities from table above
+
+# confirm that effects are in undesired direction:
+summary( glm( Y ~ (`GROUP ASSIGNMENT` == "C") + pre.consump, 
+              data = dat[ dat$`GROUP ASSIGNMENT` %in% c("C", "N"), ],
+              family = "poisson" ) )
+summary( glm( Y ~ (`GROUP ASSIGNMENT` == "E") + pre.consump, 
+              data = dat[ dat$`GROUP ASSIGNMENT` %in% c("E", "N"), ],
+              family = "poisson" ) )
 
 ################################# 3837 ACE 2013b #################################
 
@@ -1090,6 +1111,12 @@ setwd("FIAPO 2017, #3862/Data from author")
 dc = read.spss("VO (control) data.sav", to.data.frame=TRUE)
 dt = read.spss("VO (experimental) data.sav", to.data.frame=TRUE)
 
+# sex
+( sum(dc$gender == "Male") + sum(dt$gender == "Male") ) / ( nrow(dc) +  nrow(dt) )
+
+# sample size: 1040
+nrow(dc) + nrow(dt)
+
 # get means, SDs, and Ns for control and treatment group separately
 ( res.c = dc %>% summarise( nv.mn = mean(Food_Non_Veg, na.rm = TRUE),
                             nv.sd = sd(Food_Non_Veg, na.rm = TRUE),
@@ -1110,6 +1137,12 @@ res.t$nv.mn - res.c$nv.mn
 
 dc = read.spss("VR (control) data.sav", to.data.frame=TRUE)
 dt = read.spss("VR (experimental) data.sav", to.data.frame=TRUE)
+
+# sex
+( sum(dc$gender == "Male") + sum(dt$gender == "Male") ) / ( nrow(dc) +  nrow(dt) )
+
+# sample size: 1000
+nrow(dc) + nrow(dt)
 
 
 ( res.c = dc %>% summarise( nv.mn = mean(Non_Veg_TotalScore_Control, na.rm = TRUE),
