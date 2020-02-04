@@ -1256,7 +1256,7 @@ d = dplyr::add_row(.data = d,
 # ~~~ go over once more
 d = dplyr::add_row(.data = d,
                    authoryear = "ACE 2013b",
-                   desired.direction = 1,
+                   desired.direction = 0,
                    effect.measure = "log-rr",
                    interpretation = "Low vs. high animal product consumption",
                    use.rr.analysis = 1,
@@ -1264,6 +1264,9 @@ d = dplyr::add_row(.data = d,
                    use.veg.analysis = 0,
                    yi = -0.08581416,
                    vi = 0.01900103 )
+
+# bm: stopped here, but need to go over above again
+
 
 
 ##### Feltz 2019, #3858 #####

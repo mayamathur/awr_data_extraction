@@ -1015,15 +1015,48 @@ get_rr_unadj(condition = "head",
 
 ################################# 3838 ACE 2013a #################################
 
+# ~~~ HAS PROBLEMS
+
 setwd(original.data.dir)
 setwd('Animal Charity Evaluators 2013a, #3838')
 setwd("Dataset and codebook")
 
 dat = read_xlsx("ACE leafleting trial with group assignment.xlsx")
 
+# sample size
+# reported: 477+123+23
+#  agrees :)
+nrow(dat)
+# sanity check: breakdown by groups also matches reported
+table(dat$`GROUP ASSIGNMENT`)
+
+# per the "Guide to Leafleting Data" codebook, higher scores are better (1 = 5x/day to 7 = Never)
+
+# ~~~ HERE IS WHERE THE PROBLEMS START
+# sanity check and confirmation of effect direction coding
+# "The first categorized respondents’ consumption of red meat, poultry, and fish as having increased,
+#    decreased, or stayed the same over the three months, using the frequencies respondents
+#    reported for their consumption at the start and end of the three month period.
+#    In the sample as a whole, fewer reported increasing than decreasing how often they ate
+#    red meat (17% and 21%), poultry (16% and 19%), and fish (10%, 22%).
+#    proportion reducing red meat; matches
+mean(dat$red...26 > dat$red...6, na.rm=TRUE)
+#  poultry (reported: 19%); doesn't match
+mean(dat$poultry...27 > dat$poultry...7, na.rm=TRUE)
+#  fish (reported: 22%)
+mean(dat$fish...28 > dat$fish...8, na.rm = TRUE)
+# ??????
+# if I reverse all the inequalities, fish matches but red meat no longer does
+
+# try to reproduce proportion who stopped eating red meat
+dat %>%
+  #filter( red...6 < 7 ) %>%  # maybe they filtered on people who at least some red meat at baseline?
+  group_by(`GROUP ASSIGNMENT`) %>%
+  summarise( mean( red...26 == 7, na.rm = TRUE ) )
+# ???
+
+
 # total consumption frequency post-intervention
-# higher scores are better (1 = 5x/day to 7 = Never)
-# see "Guide to Leafleting Data" codebook
 dat$post.consump = dat$dairy...25 + dat$red...26 + dat$poultry...27 + dat$fish...28 + dat$eggs...29
 # and pre-intervention (as a covariate)
 dat$pre.consump = dat$dairy...5 + dat$red...6 + dat$poultry...7 + dat$fish...8 + dat$eggs...9
@@ -1067,6 +1100,7 @@ summary( glm( Y ~ (`GROUP ASSIGNMENT` == "E") + pre.consump,
               data = dat[ dat$`GROUP ASSIGNMENT` %in% c("E", "N"), ],
               family = "poisson" ) )
 
+
 ################################# 3837 ACE 2013b #################################
 
 setwd(original.data.dir)
@@ -1075,7 +1109,9 @@ setwd("Dataset and codebook")
 
 dat = read.spss("ACEhumaneeducationData.sav", to.data.frame = TRUE)
 
-# # confirm effect direction coding
+# not much reported in their analysis to reproduce
+
+# # confirm effect direction coding since seemingly not stated anywhere
 # # "The only significant relationship was that control group respondents reported larger decreases in
 # #  egg consumption than respondents in the treatment group (p<.05). "
 # # since the coefficients in the below LM are negative, LOWER scores are BETTER
@@ -1100,9 +1136,10 @@ dat = read.spss("ACEhumaneeducationData.sav", to.data.frame = TRUE)
 # summary(eggmodel)
 
 
-# per their R analysis script, these are directly proportional to the individual 
+# per their R analysis script, these variables are directly proportional to the individual 
 #  food variables, each of which is coded as eggs in the above code snippet:
 # data$CurrentAnimalProducts <- data$CurrentMeat + data$CurrentDairyNumeric + data$CurrentEggsNumeric
+# so again, LOWER scores are better
 dat$post.consump = dat$CurrentAnimalproductconsumption
 # and pre-intervention (as a covariate)
 dat$pre.consump = dat$Pastanimalproductconsumption
@@ -1120,7 +1157,7 @@ mean( dat$Sex == "Male", na.rm = TRUE )
 
 # make outcome variable
 ( bl.med = median( dat$post.consump[ dat$GROUPS == "Control and did not attend FF presentation" ], na.rm = TRUE ) )
-dat$Y = dat$post.consump < bl.med  # LOWER scores are better per the above
+dat$Y = dat$post.consump < bl.med  # lower scores are better per the above
 
 
 # being above vs. below control group median, controlling for baseline consumption
