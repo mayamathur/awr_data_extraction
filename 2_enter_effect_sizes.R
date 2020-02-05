@@ -1242,7 +1242,7 @@ d = dplyr::add_row(.data = d,
 
 
 ##### Feltz 2019, #3858 #####
-# MM audited 2020-2-4
+# MM audited 2020-2-5
 
 # stats and sample sizes on page 11
 # this is the SMD of the gain scores themselves
@@ -1267,7 +1267,7 @@ d = escalc_add_row( authoryear = "Feltz 2019",
 
 ##### **Lackner 2019, #3858 #####
 
-# MM audited 2020-2-4
+# MM audited 2020-2-5
 d = dplyr::add_row(.data = d,
                    authoryear = "Lackner 2019",
                    desired.direction = 0,
@@ -1333,8 +1333,6 @@ d = dplyr::add_row(.data = d,
 #  would have gotten with direct independent calculation
 
 
-
-
 # save intermediate dataset
 setwd(data.dir)
 write.csv(d, "data_prepped_step1.csv", row.names = FALSE)
@@ -1342,12 +1340,9 @@ write.csv(d, "data_prepped_step1.csv", row.names = FALSE)
 
 
 
-
-
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 #                                     STEP 2 - HIGH-BIAS CHALLENGES                                      #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
-
 
 # read it back in
 setwd(data.dir)
@@ -1368,16 +1363,15 @@ escalc_add_row( authoryear = "30-Day VeggieChallenge (ProVeg) 2016",
                 measure = "RR",
 
                 ai = 14, # pre-intervention vegans
-                bi = 60+20+102+32+60+15+17,  # pre-intervention non-vegans
+                bi = 60+20+102+32+60+15+17,  # pre-intervention non-vegans (2016)
                 ci = 36,  # post- vegans
-                di = 17+16+72+54+57+48+21 ) # post-non-vegans
+                di = 17+16+72+54+57+48+21 ) # post-non-vegans (2016)
 14/(14+60+20+102+32+60+15+17)
 36/(17+16+72+54+57+48+21)
 
 
 ##### #3865 30-day VeggieChallenge 2015 (ProVeg) #####
-
-# ~~~ doesn't have a folder or row in spreadsheet
+# MM audited 2020-2-5
 
 # Mensink Table 2b
 escalc_add_row( authoryear = "30-Day VeggieChallenge (ProVeg) 2015",
@@ -1394,15 +1388,16 @@ escalc_add_row( authoryear = "30-Day VeggieChallenge (ProVeg) 2015",
                 bi = 21+40+27+48,  # pre-intervention non-vegans
                 ci = 17,  # post- vegans
                 di = 4+29+32+35 ) # post-non-vegans
+
+# sanity check
 15/(15+21+40+27+48)
 17/(17+4+29+32+35)
 
 
 ##### #3827 30-day VeggieChallenge 2017 (ProVeg) #####
+# MM audited 2020-2-5
 
-# Moleman 2018
-
-# Table 6:
+# Moleman 2018's Table 6:
 # pre-intervention: 4% vegans
 # post-intervention: 20% vegans
 # hence the absurdly large point estimate
@@ -1426,8 +1421,11 @@ escalc_add_row( authoryear = "30-Day VeggieChallenge (ProVeg) 2017",
 ( (799+1155+530+697) / (799+1155+530+697+1239+2473+4689+217+1658+2043) ) / ( 697 / (697+4727+7502+2573) )
 
 
-##### #3828 10 Weeks to Vegan (Vegan Outreach) #####
 
+##### #3828 10 Weeks to Vegan (Vegan Outreach) #####
+# MM audited 2020-2-5
+
+# "Food Intake" table
 escalc_add_row( authoryear = "10 Weeks to Vegan (Vegan Outreach) 2018",
                 substudy = NA,
                 desired.direction = 1,
@@ -1442,13 +1440,17 @@ escalc_add_row( authoryear = "10 Weeks to Vegan (Vegan Outreach) 2018",
                 bi = 190+76,  # pre-intervention non-vegans
                 ci = 77,  # post- vegans
                 di = 140+92 ) # post-non-vegans
+
+# sanity check
 43/(190+76+43)
 77/(140+92+77)
 
 
 ###### #3839 - Great Vegan Challenge (Animal Aid) #####
+# MM audited 2020-2-5
+
 # from Grassian
-# measure bar heights
+# measure bar heights on page 10 ("Dietary Trends Over Time")
 
 total.px = 850  # total vertical height representing 100%
 bl.vegans.px = 31  # height of vegan part of the "0 months" bar
@@ -1475,6 +1477,7 @@ escalc_add_row( authoryear = "The Great Vegan Challenge (Animal Aid) 2016",
 
 
 ##### #3840 Veganuary (Veganuary) 2014 #####
+# MM audited 2020-2-5
 
 # % staying vegan, % reducing consumption of each category
 # both broken down by baseline diet
@@ -1483,6 +1486,7 @@ escalc_add_row( authoryear = "The Great Vegan Challenge (Animal Aid) 2016",
 #  but am comparing the proportion who said they were vegan before challenge
 #  to proportion saying they ate only vegan food during the challenge
 
+# no pages in this document, but PDF has relevant stats circled
 
 escalc_add_row( authoryear = "Veganuary (Veganuary) 2014",
                 substudy = NA,
@@ -1496,15 +1500,15 @@ escalc_add_row( authoryear = "Veganuary (Veganuary) 2014",
 
                 ai = .149 * 3325, # pre-intervention vegans
                 bi = (1-.149) * 3325,  # pre-intervention non-vegans
-                ci = .4641 * 711,  # post- vegans
-                di = (1-.4641) * 711 ) # post-non-vegans
+                ci = 330,  # post- vegans
+                di = 711-330 ) # post-non-vegans
 
 
 ##### #3847, #3849 - Veganuary (Veganuary) 2016 #####
+# MM audited 2020-2-5
 
-# can do RR of being vegan after vs. before challenge
-# this is a Fauna report, so more info available
-# Table on page 6
+# #3849 is a Fauna report, so more info available
+# Table on page 3
 escalc_add_row( authoryear = "Veganuary (Veganuary) 2016",
                 substudy = NA,
                 desired.direction = 1,
@@ -1521,54 +1525,23 @@ escalc_add_row( authoryear = "Veganuary (Veganuary) 2016",
                 di = (1-.54) * 3369 ) # post-non-vegans
 
 ###### **#3826 Challenge 22+ (Animals Now) #####
+# MM audited 2020-2-5
 
-# counts from get_effect_sizes_from_raw.R
-escalc_add_row( authoryear = "Challenge 22+ (Animals Now) 2018",
-                substudy = NA,
-                desired.direction = 1,
-                effect.measure = "log-rr",
-                interpretation = "Being vegan after vs. before intervention",
-                use.rr.analysis = 1,
-                use.grams.analysis = 0,
-                use.veg.analysis = 0,
-                measure = "RR",
-
-                ai = 88, # pre-intervention vegans
-                bi = 632,  # pre-intervention non-vegans
-                ci = 133,  # post- vegans
-                di = 587 ) # post-non-vegans
-# sanity check
-( 133 / (133+587) ) / ( 88 / (88+632) )
-
-##### #3853, #3854 - Veganuary (Veganuary) 2015 #####
-
-# 49% stayed vegan after six months
-
-##### #3846 - Veganuary (Veganuary) 2017 #####
-
-# 67% intending to stay vegan
-
-##### #3845 - Veganuary (Veganuary) 2018 #####
-
-# 62% intend to stay vegan
-
-##### #3841 - Veganuary (Veganuary) 2019 #####
-
-# 47% intending to stay vegan
-
-##### #3833, #3835 - Summer Vegan Pledge (Animal Aid) 2018 #####
-
-# 53% said they have remained vegan
-
-
-##### #3834 Summer Vegan Pledge (Animal Aid) 2019 #####
-
-# 57% said they would remain vegan
-
-
+d = dplyr::add_row(.data = d,
+                   authoryear = "Challenge 22+ (Animals Now) 2018",
+                   substudy = NA,
+                   desired.direction = 1,
+                   effect.measure = "log-rr",
+                   interpretation = "Being vegan after vs. before intervention",
+                   use.rr.analysis = 1,
+                   use.grams.analysis = 0,
+                   use.veg.analysis = 0,
+                   yi = 0.0739,
+                   vi = 0.0001 )
 
 
 ###### **Norris 2014 #####
+# MM audited 2020-2-5
 
 # "Your Choice"
 d = dplyr::add_row(.data = d,
@@ -1595,6 +1568,34 @@ d = dplyr::add_row(.data = d,
                    use.veg.analysis = 0,
                    yi = -0.05842669,
                    vi = 0.02098244 )
+
+##### #3853, #3854 - Veganuary (Veganuary) 2015 #####
+
+# 49% stayed vegan after six months
+
+##### #3846 - Veganuary (Veganuary) 2017 #####
+
+# 67% intending to stay vegan
+
+##### #3845 - Veganuary (Veganuary) 2018 #####
+
+# 62% intend to stay vegan
+
+##### #3841 - Veganuary (Veganuary) 2019 #####
+
+# 47% intending to stay vegan
+
+##### #3833, #3835 - Summer Vegan Pledge (Animal Aid) 2018 #####
+
+# 53% said they have remained vegan
+
+##### #3834 Summer Vegan Pledge (Animal Aid) 2019 #####
+
+# 57% said they would remain vegan
+
+
+
+
 
 # save intermediate dataset
 setwd(data.dir)

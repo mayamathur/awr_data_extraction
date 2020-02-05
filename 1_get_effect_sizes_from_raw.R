@@ -51,6 +51,9 @@ dat %>% group_by(CE) %>%
             size.sd = sd(size),
             n = n())
 
+# sample size
+expect_equal( nrow(dat), 32 )
+
 ##### Calculate Main RR #####
 # whether they were above or below (baseline) median
 #  for total meat consumption at time 3, controlling for
@@ -77,7 +80,7 @@ res = mediate(model.m,
 # 13% mediated
 
 
-################################# ANDERSON 2016 (PLOS) #################################
+################################# ANDERSON 2016 #################################
 
 # MM audited 2020-2-2
 
@@ -89,6 +92,8 @@ dat = read.spss("Study3_data.sav", to.data.frame=TRUE)
 
 # remove subjects who didn't follow instructions, as in article
 dat = dat[ dat$ReadDescFilter == "read desc", ]
+
+# sample size vs. expected
 expect_equal( nrow(dat), 114 )
 
 # missing data: 1/114
@@ -244,6 +249,9 @@ dat %>% filter( experimentGroup %in% c("porkLegislation",
   summarise( prop.male = mean( gender[ !gender %in% c("", "Prefer not to answer") ] == "Male" ) )
 
 # missing data situation unclear given lack of codebook
+
+# sample size
+sum( !is.na(dat$experimentGroup) & !is.na(dat$pork.decrease) )
 
 ##### Get RRs ######
 # outcome variable
@@ -422,7 +430,7 @@ dat3 = dat3[ dat3$filter_. == "Selected",]
 dat3 = dat3[ dat3$CONDITION %in% c("CONTROL", "ANIMAL WELFARE"), ]
 dat3 = droplevels(dat3)
 
-# sample size
+# sample size: 270
 nrow(dat3)
 prop.table(table(dat3$SEX))
 
@@ -491,7 +499,7 @@ names(draw) = c( "authoryear",
                  "yi",
                  "vi")
 
-# percent analyzed
+# sample size
 sum( !is.na(dats[[1]]$condition) & !is.na(dats[[1]]$consumption) ) + sum( !is.na(dats[[2]]$condition) & !is.na(dats[[2]]$consumption) )
 
 # dichotomize the outcome at reduce vs. stay the same or increase
@@ -1151,9 +1159,11 @@ table(dat$GROUPS)
 # remove subjects who unintentionally received FF presentation
 dat = dat %>% filter( GROUPS != "Control but attended FF presentation" )
 
-
 # percent male
 mean( dat$Sex == "Male", na.rm = TRUE )
+
+# sample size
+sum( !is.na(dat$GROUPS) & !is.na(dat$pre.consump) & !is.na(dat$post.consump) )
 
 # make outcome variable
 ( bl.med = median( dat$post.consump[ dat$GROUPS == "Control and did not attend FF presentation" ], na.rm = TRUE ) )
@@ -1591,7 +1601,6 @@ dat$condition = coalesce( dat$your.choice, dat$even.if, dat$control )
 table(dat$condition)
 
 # binary outcome
-# bm
 bl.med = median( dat$post.consump[ dat$condition == "control" ] )
 dat$Y = dat$post.consump < bl.med
 
@@ -1891,6 +1900,8 @@ diag( vcovCL(mod, type="HC0", cluster = ~ UniqueIDNew) )
 library(ICC)
 ICCbareF(Meat, UniqueIDNew, dat)
 
+
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 #                                     EXCLUDED CHALLENGES                                             #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
@@ -1910,21 +1921,26 @@ dat = read_xlsx("Cha22 Data.xlsx")
 # 3 = consume 2-4X/week
 # 4 = consume <=1X/week
 # 5 = no meat
-# ~~~ is option #6 vegan??
+# 6 = vegan (confirmed by Reut in email)
 bl.med = median(dat$Diet_before)
 
+# sanity check
 # RR of being vegetarian after vs. before challenge
-# (since they don't have a category for no animal product consumption)
 # their "38.2% veg*ns" corresponds to survey options 5 and 6 combined
 dat %>% summarise( mean(Diet_before >= 5),
                    mean(Diet_after >= 5) )
 
-# ~~~ assume that option 6 is vegan
-dat %>% summarise( pre.vegans = sum(Diet_before == 6),
-                   pre.nonvegans = sum(Diet_before < 6),
-                   post.vegans = sum(Diet_after == 6),
-                   post.nonvegans = sum(Diet_after < 6) )
+# analyzed N
+sum( !is.na(dat$Diet_after) & !is.na(dat$Diet_after) )
 
+( tab = table(dat$Diet_before == 6, dat$Diet_after == 6) )
+
+# marginal log-RR because this is a within-subject uncontrolled design
+escalc( "MPRR",
+        ai = tab[1,1],
+        bi = tab[1,2], 
+        ci = tab[2,1],
+        di = tab[2,2] )
 
 
 
