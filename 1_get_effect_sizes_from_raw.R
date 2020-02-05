@@ -1231,6 +1231,9 @@ setwd('Lackner 2019, #3858/Data from author')
 
 dat = read_xlsx("ZL_Data_meta-analysis.xlsx")
 
+# not much to reproduce here for sanity checks since they only analyzed our
+#  eligible outcome in mediation analyses
+
 # between-subjects manipulation of food processing stage (low vs. high)
 #  with repeated measures for each subject
 #  but each subject only rated their intentions once at the end
@@ -1240,7 +1243,7 @@ dat = dat[ !duplicated(dat$Subject_ID), ]
 # analyzed N
 nrow(dat)
 
-# per paper, intention variable is coded such that lower scores are good
+# per paper, intention variable is coded such that lower scores are good (page 6)
 cntrl.med = median( dat$Intentions[dat$Processed_Stage == "high"] )
 dat$Y = dat$Intentions < cntrl.med
 

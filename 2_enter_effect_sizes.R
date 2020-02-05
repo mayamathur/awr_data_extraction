@@ -1193,7 +1193,12 @@ d = rbind( d, read.csv("rouk_prepped_effect_sizes.csv")[,-1] )
 
 
 ##### **ACE 2013a #####
-# MM audited 2020-2-4
+# ~~~ HAS PROBLEMS (see get_effect_sizes_from_raw.R)
+# so currently using their own SMD from their meta-analysis
+
+# in a pinch, could use their SMDs from their own meta-analysis 
+#  which are stratified by specific food outcome, so would need averaging:
+#  https://animalcharityevaluators.org/advocacy-interventions/interventions/leafleting/#report
 
 # "Compassionate Choices"
 d = dplyr::add_row(.data = d,
@@ -1221,43 +1226,13 @@ d = dplyr::add_row(.data = d,
                    yi = -0.1441575,
                    vi = 0.01128786 )
 
-# ~~~ previous version with unidentified mistakes
-# ~~~ take one last look at this
-# # "Compassionate Choices"
-# d = dplyr::add_row(.data = d,
-#                    authoryear = "ACE 2013a",
-#                    substudy = '"Compassionate Choices"',
-#                    desired.direction = 0,
-#                    effect.measure = "log-rr",
-#                    interpretation = "Low vs. high animal product consumption",
-#                    use.rr.analysis = 1,
-#                    use.grams.analysis = 0,
-#                    use.veg.analysis = 0,
-#                    yi = 0.2234456,
-#                    vi = 0.0216619 )
-# 
-# # "Even if You Like Meat"
-# d = dplyr::add_row(.data = d,
-#                    authoryear = "ACE 2013a",
-#                    substudy = '"Even If You Like Meat"',
-#                    desired.direction = 0,
-#                    effect.measure = "log-rr",
-#                    interpretation = "Low vs. high animal product consumption",
-#                    use.rr.analysis = 1,
-#                    use.grams.analysis = 0,
-#                    use.veg.analysis = 0,
-#                    yi = 0.08799533,
-#                    vi = 0.01371752 )
-
 
 ##### **ACE 2013b #####
-
 # MM audited 2020-2-4
-# ~~~ go over once more
 d = dplyr::add_row(.data = d,
                    authoryear = "ACE 2013b",
                    desired.direction = 0,
-                   effect.measure = "log-rr",
+                   effect.measure = "smd",
                    interpretation = "Low vs. high animal product consumption",
                    use.rr.analysis = 1,
                    use.grams.analysis = 0,
@@ -1265,33 +1240,44 @@ d = dplyr::add_row(.data = d,
                    yi = -0.08581416,
                    vi = 0.01900103 )
 
-# bm: stopped here, but need to go over above again
-
-
 
 ##### Feltz 2019, #3858 #####
-# stats on page 11
+# MM audited 2020-2-4
+
+# stats and sample sizes on page 11
 # this is the SMD of the gain scores themselves
 d = escalc_add_row( authoryear = "Feltz 2019",
                     substudy = NA,
                     desired.direction = 0,
                     effect.measure = "smd",
-                    interpretation = "Within-subject change in animal product consumption SMD",
+                    interpretation = "Within-subject change in animal product consumption",
                     use.rr.analysis = 1,
                     use.grams.analysis = 0,
                     use.veg.analysis = 0,
                     
                     measure = "SMD",
-                    m1i = 0.14,
+                    m1i = 0.14,  # intervention 
                     sd1i = 1.82,
                     n1i = 58, 
                     
-                    m2i = -0.04,
+                    m2i = -0.04,  # control
                     sd2i = 1.44,
                     n2i = 43 )
 
 
-##### Lackner 2019, #3858 #####
+##### **Lackner 2019, #3858 #####
+
+# MM audited 2020-2-4
+d = dplyr::add_row(.data = d,
+                   authoryear = "Lackner 2019",
+                   desired.direction = 0,
+                   effect.measure = "log-rr",
+                   interpretation = "Low vs. high intended meat consumption",
+                   use.rr.analysis = 1,
+                   use.grams.analysis = 0,
+                   use.veg.analysis = 0,
+                   yi = -0.3542,
+                   vi = 0.0817 )
 
 
 # ##### deLanauze 2019, #4033 #####
