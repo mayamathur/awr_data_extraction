@@ -1136,7 +1136,7 @@ escalc_add_row( authoryear = "FIAPO 2017",
 
                 # proportions from Table A; N's from Table 1
                 ai = round( 0.005*21 + 0.0266*146 ), # Tx who *went* vegan, of initial non-vegans
-                bi = round( ( (188-21) - round(0.005*21 + 0.0266*146) ),  # Tx who did not *go* vegan, of initial non-vegans
+                bi = round( (188-21) - round(0.005*21 + 0.0266*146) ),  # Tx who did not *go* vegan, of initial non-vegans
                 ci = 0,  # control who went vegan
                 di = 91-2 ) # control who did not go vegan
                 
@@ -1278,6 +1278,36 @@ d = dplyr::add_row(.data = d,
                    use.veg.analysis = 0,
                    yi = -0.3542,
                    vi = 0.0817 )
+
+
+###### **Norris 2014 #####
+# MM audited 2020-2-5
+
+# "Your Choice"
+d = dplyr::add_row(.data = d,
+                   authoryear = "Norris 2014",
+                   substudy = '"Your Choice"',
+                   desired.direction = 0,
+                   effect.measure = "log-rr",
+                   interpretation = "Low vs. high animal product consumption",
+                   use.rr.analysis = 1,
+                   use.grams.analysis = 0,
+                   use.veg.analysis = 0,
+                   yi = -0.108307,
+                   vi = 0.01944182 )
+
+# "Even If You Like Meat"
+d = dplyr::add_row(.data = d,
+                   authoryear = "Norris 2014",
+                   substudy = '"Even If You Like Meat"',
+                   desired.direction = 0,
+                   effect.measure = "log-rr",
+                   interpretation = "Low vs. high animal product consumption",
+                   use.rr.analysis = 1,
+                   use.grams.analysis = 0,
+                   use.veg.analysis = 0,
+                   yi = -0.05842669,
+                   vi = 0.02098244 )
 
 
 # ##### deLanauze 2019, #4033 #####
@@ -1539,60 +1569,29 @@ d = dplyr::add_row(.data = d,
                    yi = 0.0739,
                    vi = 0.0001 )
 
-
-###### **Norris 2014 #####
-# MM audited 2020-2-5
-
-# "Your Choice"
-d = dplyr::add_row(.data = d,
-                   authoryear = "Norris 2014",
-                   substudy = '"Your Choice"',
-                   desired.direction = 0,
-                   effect.measure = "log-rr",
-                   interpretation = "Low vs. high animal product consumption",
-                   use.rr.analysis = 1,
-                   use.grams.analysis = 0,
-                   use.veg.analysis = 0,
-                   yi = -0.108307,
-                   vi = 0.01944182 )
-
-# "Even If You Like Meat"
-d = dplyr::add_row(.data = d,
-                   authoryear = "Norris 2014",
-                   substudy = '"Even If You Like Meat"',
-                   desired.direction = 0,
-                   effect.measure = "log-rr",
-                   interpretation = "Low vs. high animal product consumption",
-                   use.rr.analysis = 1,
-                   use.grams.analysis = 0,
-                   use.veg.analysis = 0,
-                   yi = -0.05842669,
-                   vi = 0.02098244 )
-
 ##### #3853, #3854 - Veganuary (Veganuary) 2015 #####
-
+# MM audited 2020-2-5
 # 49% stayed vegan after six months
 
 ##### #3846 - Veganuary (Veganuary) 2017 #####
-
+# MM audited 2020-2-5
 # 67% intending to stay vegan
 
 ##### #3845 - Veganuary (Veganuary) 2018 #####
-
+# MM audited 2020-2-5
 # 62% intend to stay vegan
 
 ##### #3841 - Veganuary (Veganuary) 2019 #####
-
+# MM audited 2020-2-5
 # 47% intending to stay vegan
 
 ##### #3833, #3835 - Summer Vegan Pledge (Animal Aid) 2018 #####
-
+# MM audited 2020-2-5
 # 53% said they have remained vegan
 
 ##### #3834 Summer Vegan Pledge (Animal Aid) 2019 #####
-
+# MM audited 2020-2-5
 # 57% said they would remain vegan
-
 
 
 
@@ -1607,14 +1606,14 @@ write.csv(d, "data_prepped_step2.csv", row.names = FALSE)
 #                                     STEP 3 - MERGE IN QUALITATIVE DATA AND PREP ANALYSIS VARIABLES                                      #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
+# MM audited 2020-2-5
+
 # read it back in
 setwd(data.dir)
 d = read.csv("data_prepped_step2.csv")
 
 # how many unique studies?
 length(unique(d$authoryear))
-table(d$authoryear)
-
 # how many point estimates?
 nrow(d)
 
@@ -1623,7 +1622,7 @@ nrow(d)
 setwd(data.dir)
 # NOTE: this step breaks if cell values are hyphenated!
 d2 = read_xlsx("Extracted qualitative data.xlsx", na = "NR")
-# remove missing rows
+# remove missing rows, used for human-readability
 d2 = d2 %>% filter(!is.na(`First author last name`))
 
 
@@ -1659,8 +1658,16 @@ d2$unique
 d$unique[ !d$unique %in% d2$unique ]
 
 # studies in qualitative data for which we haven't entered effect sizes
-# can occur if we're awaiting author help
-d2$unique[ !d2$unique %in% d$unique ]
+# should occur only for hopeless studies (i.e., impossible to get stats)
+known.hopeless = c( "Dowsett 2018",
+                    "Diaz 2019",
+                    "de Lanauze 2019",
+                    "Summer Vegan Pledge (Animal Aid) 2018",
+                    "Summer Vegan Pledge (Animal Aid) 2019",
+                    "Veganuary (Veganuary) 2017",
+                    "Veganuary (Veganuary) 2018",
+                    "Veganuary (Veganuary) 2019" )
+expect_equal( sort(d2$unique[ !d2$unique %in% d$unique ]), sort(known.hopeless) )
 
 # merge them
 d = merge( d,
@@ -1672,13 +1679,15 @@ d = merge( d,
 
 ############################### MERGE IN SUBJECTIVELY-RATED QUALITY DATA ###############################
 
+# MM audited 2020-2-5
+
 setwd(data.dir)
 setwd("Dual review of quality")
 
 d3 = read.csv("subjective_data_full_prepped.csv")
 
 # check for studies lacking entries in subjective data
-# should be only 
+# should be only high-bias challenges
 d$authoryear[ !d$authoryear %in% d3$authoryear ]
 
 # merge with main dataset
@@ -1705,19 +1714,16 @@ setwd(data.dir)
 d = read.csv("data_prepped_step3.csv", check.names = FALSE)
 
 ############################### CONVERT EFFECT SIZES - to RRs ###############################
+# MM audited 2020-2-5
 
-# minimal sanity check for absurd values
-round( sort(d$yi), 2 )
-sort(sqrt(d$vi))
-round( sort(d$yi/sqrt(d$vi)), 2 )  # z-scores
-
+# types of effect measures 
 table( d$effect.measure )
 
 # synchronize directions so that positive is always good
 d$yi[ d$desired.direction == 1 ] = abs(d$yi[ d$desired.direction == 1 ])
 d$yi[ d$desired.direction == 0 ] = -abs(d$yi[ d$desired.direction == 0 ])
 
-# analysis scale
+# init estimates on scale used for analysis
 d$logRR = NA
 d$varlogRR = NA
 
@@ -1732,11 +1738,12 @@ RR.stats = d_to_logRR( smd = d$yi[ d$effect.measure == "smd" ],
 d$logRR[ d$effect.measure == "smd" ] = RR.stats$logRR
 d$varlogRR[ d$effect.measure == "smd" ] = RR.stats$varlogRR
 
-# ##### ORs #####
-# RR.stats = logOR_to_logRR( logOR = d$yi[ d$effect.measure == "log-or" ],
-#                            varlogOR = d$vi[ d$effect.measure == "log-or" ] )
-# d$logRR[ d$effect.measure == "log-or" ] = RR.stats$logRR
-# d$varlogRR[ d$effect.measure == "log-or" ] = RR.stats$varlogRR
+
+# sanity check for absurd values
+round( sort( exp(d$logRR) ), 2 )
+sort(sqrt(d$varlogRR))
+round( sort(d$logRR/sqrt(d$varlogRR)), 2 )  # z-scores
+
 
 ##### Calculate Approximate CI limits for Forest Plot #####
 z.crit = qnorm(.975)
@@ -1748,7 +1755,7 @@ d$RR.hi = exp( d$logRR + z.crit * sqrt(d$varlogRR) )
 table( is.na(d$logRR), d$effect.measure)
 
 # don't use these for the non-main-RR analyses
-d$logRR[ d$use.rr.analysis == 0 ] = NA  # e.g., could have log-RRs for going vegetarian vs. not, but those aren't for main analysis
+d$logRR[ d$use.rr.analysis == 0 ] = NA  
 d$varlogRR[ d$use.rr.analysis == 0 ] = NA
 d$RR.lo[ d$use.rr.analysis == 0 ] = NA
 d$RR.hi[ d$use.rr.analysis == 0 ] = NA
@@ -1770,6 +1777,7 @@ d = read.csv("data_prepped_step4.csv", check.names = FALSE)
 
 ############################### MAKE NEW VARIABLES AND RENAME THE EXISTING ONES ###############################
 
+# publication status
 d$published = !is.na(d$`Journal/conference (if peer-reviewed)`)
 
 d = d %>%
@@ -1795,7 +1803,7 @@ d = d %>%
     x.has.visuals = `Intervention has visuals`,
     x.pure.animals = `Intervention is purely animal welfare`,
     x.suffer = `Intervention has specific description or images of animal suffering`,
-    x.pushy = `Intervention pushiness (reduce, go vegan, go vegetarian, no request, other)`,
+    x.rec = `Intervention recommendation (reduce, go vegan, go vegetarian, no request, other)`,
     x.tailored = `Intervention personally tailored`,
     x.min.exposed = `Total time exposed to intervention (minutes)`,
     y.cat = `Outcome category (purchase or consumption)`,

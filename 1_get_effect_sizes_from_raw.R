@@ -1513,7 +1513,7 @@ sum( !is.na(data$post.consump) & !is.na(data$pre.consump) )
 1 - (agg.s$N / (14000 + 5838))
 
 
-################################# 3829 NORRIS 2014 #################################
+################################# 3830 NORRIS 2014 #################################
 
 setwd(original.data.dir)
 setwd('Norris 2014, #3830')
@@ -1525,11 +1525,11 @@ dat.post = read_xlsx("Post data MM cleaned.xlsx", sheet=1); nrow(dat.post)
 # recode food-specific variables as numeric
 dat.pre$`Think back to the meals and snacks you have had in the last 7 days. / How many different times did...-Red meat (beef, pork, etc.)-Not last week, but I sometimes eat`
 # ughhhh
-# they're in different variables
+# the indicators for each response to a given question are in different variables
 
 ##### Recode Outcomes in Pre-Data #####
 # outcome categories are in separate variables, always coded as NA or 1
-( varsA = names(dat.pre)[ grepl( "7 or more times last week", names(dat.pre) ) ] )
+( varsA = names(dat.pre)[ grepl( "7 or more times last week", names(dat.pre) ) ] )  # vector because 1 for each food type
 ( varsB = names(dat.pre)[ grepl( "4-6 times last week", names(dat.pre) ) ] )
 ( varsC = names(dat.pre)[ grepl( "1-3 times last week", names(dat.pre) ) ] )
 ( varsD = names(dat.pre)[ grepl( "Not last week", names(dat.pre) ) ] )
@@ -1578,11 +1578,10 @@ dat.post$post.consump = psum( dat.post[,16:40], na.rm=TRUE )
 ##### Merge Datasets #####
 dat = inner_join( dat.pre,
                   dat.post, by = "What is your MTurk Worker ID?  We need this in order to / approve the HIT.  If you're not sure what...")
-nrow(dat)
 
 
 ##### Make Intervention Variable #####
-# need to merge the 3 "please read" columns
+# need to merge the 3 "please read" columns into one condition variables
 library(tidyr)
 
 dat = dat %>% mutate( your.choice = dplyr::recode(`Please read the pamphlet below before continuing to the rest of /  the survey: /  /  Your Choice /  - PDF`,
@@ -1614,12 +1613,13 @@ mean( dat$`What is your gender?` == 1, na.rm = TRUE )
 # Even If: 197 to 141
 # Your Choice: 238 to 176
 
-# percent remaining at F/U in each group
-164/219
-141/197
-176/238
+# missing data for each group
+1 - (164/219)  # control
+1 - (141/197)  # EIYLM
+1 - (176/238)  # YC
 # appears nondifferential by group
 
+# overall missing data, including control group
 1 - ( nrow(dat.post) / nrow(dat.pre) )
 
 ##### Finally Get the RRs #####

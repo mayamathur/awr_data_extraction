@@ -190,14 +190,18 @@ OR_to_p1 = Vectorize( function(OR, p0) {
 
 
 # uses square-root transformation (assumes common outcome; otherwise conservative)
-# and Chinn conversion
+# and Hasselblad/Chinn conversion
 # gets variance by delta method
 d_to_logRR = function( smd, smd.se ) {
   
   # simplified the math
-  # Chinn conversion to log-OR followed by TVW's square-root transformation
+  # Hasselblad conversion to log-OR followed by TVW's square-root transformation
   #  to RR so that we can imagine dichotomizing near median
   logRR = log( sqrt( exp( smd * pi / sqrt(3) ) ) )
+  
+  # delta method:
+  # derivative of log( sqrt( exp(c*d) ) ) wrt d = pi/(2*sqrt(3))
+  # so squared derivative is pi^2 / 12
   varlogRR = ( pi^2 / 12 ) * smd.se^2
   
   return( list(logRR = logRR, varlogRR = varlogRR) )
