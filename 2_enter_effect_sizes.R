@@ -1750,6 +1750,12 @@ z.crit = qnorm(.975)
 d$RR.lo = exp( d$logRR - z.crit * sqrt(d$varlogRR) )
 d$RR.hi = exp( d$logRR + z.crit * sqrt(d$varlogRR) )
 
+
+##### Affirmative vs. Nonaffirmative #####
+d$pval = 2 * ( 1 - pnorm( abs(d$logRR) / sqrt(d$varlogRR) ) )
+d$affirm = d$pval < 0.05 & d$logRR > 0
+table(d$affirm)
+
 # sanity check
 # fine for RMDs to be NA since those are for the grams analysis
 table( is.na(d$logRR), d$effect.measure)
@@ -1777,8 +1783,7 @@ d = read.csv("data_prepped_step4.csv", check.names = FALSE)
 
 ############################### MAKE NEW VARIABLES AND RENAME THE EXISTING ONES ###############################
 
-# publication status
-d$published = !is.na(d$`Journal/conference (if peer-reviewed)`)
+# MM audited 2020-2-5
 
 d = d %>%
   rename(
@@ -1829,60 +1834,42 @@ has.caps = tolower(names(d)) != names(d)
 d = d[ , has.caps == FALSE | names(d) %in% c("logRR", "varlogRR", "RR.lo", "RR.hi") ]
 
 
-############################### RECODE SOME VARS ###############################
+############################### RECODE VARS AND MAKE NEW ONES ###############################
 
-# # for hyphenated ranges, take the mean
-# d$y.lag.days = unname(hyphen_mean(d$y.lag.days))
-# d$qual.missing = unname(hyphen_mean(d$yqual.missing))
+# MM audited 2020-2-5
 
-
+##### Cast As Numeric #####
 make.numeric = c("perc.male",
                  "x.min.exposed",
                  "qual.missing")
-
 d = d %>%
   mutate_at( make.numeric, as.numeric )
 
-# # temp: look for coding issues
-# analysis.vars = c("effect.measure",
-#                   "perc.male",
-#                   "design",
-#                   "published",
-#                   "x.has.text",
-#                   "x.has.visuals",
-#                   "x.pure.animals",
-#                   "x.suffer",
-#                   "x.tailored",
-#                   "x.min.exposed",
-#                   "y.cat",
-#                   "y.lag.days" )
-#
-# quality.vars = grepl("qual", names(d))
-#
-# library(tableone)
-# CreateTableOne(data=d[,analysis.vars])
-# CreateTableOne(data=d[,quality.vars])
 
-
-# variables for moderator analysis
+##### Simple Recodings #####
+d$published = !is.na(d$journal)
 d$y.lag.wks = d$y.lag.days/7
 d$y.long.lag = d$y.lag.days >= 7
-d$rct = grepl("RCT", d$design)
+d$randomized = grepl(" RCT", d$design)  # the leading space prevents "NRCT" from counting as randomized
 d$reproducible = (d$qual.prereg == "Yes") & (d$qual.public.data == "Yes")
 d$x.long = d$x.min.exposed >= 5
-
-# other variables
-# ~~ move this?
 # recode percent male as a 10-percentage point increase
 d$perc.male.10 = d$perc.male/10
 
+
+##### Recode Categorical Variables to Force Levels #####
 library(car)
-d$x.pushy = recode_factor( d$x.pushy,
+d$x.rec = recode_factor( d$x.rec,
                            "No request" = "a.No request",
                            "Reduce" = "b.Reduce",
                            "Go vegetarian" = "c.Go vegetarian",
                            "Go vegan" = "d.Go vegan",
                            "Mixed" = "e.Mixed")
+
+d$qual.y.prox = dplyr::recode( d$qual.y.prox,
+                               "Actual" = "a.Actual",
+                               "Self-reported" = "b.Self-reported",
+                               "Intended" = "c.Intended" )
 
 # collapse categories
 d$qual.y.prox2 = recode_factor( d$qual.y.prox,
@@ -1892,7 +1879,7 @@ d$qual.y.prox2 = recode_factor( d$qual.y.prox,
 
 # collapse categories
 # any request vs. no request
-d$x.makes.request = dplyr::recode( d$x.pushy,
+d$x.makes.request = dplyr::recode( d$x.rec,
                                    "a.No request" = 0,
                                    "b.Reduce" = 1,
                                    "c.Go vegetarian" = 1,
@@ -1906,19 +1893,6 @@ d$design = recode_factor( d$design,
                            "Between-subjects NRCT" = "d.Between-subjects NRCT",
                           "Within-subject UCT" = "e.Within-subject UCT")
 
-
-# was study randomized?
-d$randomized = grepl(" RCT", d$design)
-
-
-# binary country variable
-d$north.america = 0
-d$north.america[ d$country == "NR" ] = NA
-d$north.america[ d$country %in% c("USA", "USA, Canada") ] = 1
-table(d$north.america, d$country, useNA = "ifany")
-
-
-# force factor levels
 # rename in a risk-of-bias way
 d$qual.sdb = dplyr::recode( d$qual.sdb,
                                    "strong" = "a.Low",
@@ -1935,14 +1909,6 @@ d$qual.gen = dplyr::recode( d$qual.gen,
                             "medium" = "b.Medium",
                             "weak" = "c.High",
                             "unclear" = "d.Unclear" )
-d$qual.y.prox = dplyr::recode( d$qual.y.prox,
-                            "Actual" = "a.Actual",
-                            "Self-reported" = "b.Self-reported",
-                            "Intended" = "c.Intended" )
-
-
-
-
 
 # recode missing data
 d[ d == "NR" ] = NA
@@ -1950,6 +1916,8 @@ d[ d == "na" ] = NA
 
 
 ############################### SIMPLIFIED "TABLE 1" DATASET ###############################
+
+# MM audited 2020-2-5
 
 d.small = d %>% dplyr::select( unique, 
                                authoryear,
@@ -1971,7 +1939,7 @@ d.small = d %>% dplyr::select( unique,
                                x.suffer,
                                x.pure.animals,
                                x.min.exposed,
-                               x.pushy,
+                               x.rec,
                                prose.outcome,
                                y.cat,
                                
@@ -2003,7 +1971,6 @@ write.csv(d, "prepped_data.csv", row.names = FALSE)
 
 # same as above, but leaner and meaner choice of variables
 write.csv(d.small, "prepped_data_lean.csv", row.names = FALSE)
-
 
 
 
