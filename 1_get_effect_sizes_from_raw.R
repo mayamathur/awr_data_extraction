@@ -19,6 +19,9 @@ library(data.table)
 library(readxl)
 library(tidyverse)
 
+# library(checkpoint)
+# checkpoint("2015-04-26", checkpointLocation = tempdir())
+
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 #                                   MAIN-ANALYSIS STUDIES                                             #

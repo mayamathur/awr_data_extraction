@@ -1873,9 +1873,11 @@ d$qual.y.prox = dplyr::recode( d$qual.y.prox,
 
 # collapse categories
 d$qual.y.prox2 = recode_factor( d$qual.y.prox,
-                                "Actual" = "b.Actual or self-reported",
-                                "Self-reported" = "b.Actual or self-reported",
-                                "Intended" = "a.Intended")
+                                "a.Actual" = "b.Actual or self-reported",
+                                "b.Self-reported" = "b.Actual or self-reported",
+                                "c.Intended" = "a.Intended")
+
+
 
 # collapse categories
 # any request vs. no request
