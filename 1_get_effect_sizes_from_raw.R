@@ -1026,8 +1026,6 @@ get_rr_unadj(condition = "head",
 
 ################################# 3838 ACE 2013a #################################
 
-# ~~~ HAS PROBLEMS
-
 setwd(original.data.dir)
 setwd('Animal Charity Evaluators 2013a, #3838')
 setwd("Dataset and codebook")
@@ -1035,7 +1033,7 @@ setwd("Dataset and codebook")
 dat = read_xlsx("ACE leafleting trial with group assignment.xlsx")
 
 # sample size
-# reported: 477+123+23
+# reported: 477+123+23 = 623
 #  agrees :)
 nrow(dat)
 # sanity check: breakdown by groups also matches reported
@@ -1043,41 +1041,26 @@ table(dat$`GROUP ASSIGNMENT`)
 
 # per the "Guide to Leafleting Data" codebook, higher scores are better (1 = 5x/day to 7 = Never)
 
-# ~~~ HERE IS WHERE THE PROBLEMS START
-# sanity check and confirmation of effect direction coding
-# "The first categorized respondents’ consumption of red meat, poultry, and fish as having increased,
-#    decreased, or stayed the same over the three months, using the frequencies respondents
-#    reported for their consumption at the start and end of the three month period.
-#    In the sample as a whole, fewer reported increasing than decreasing how often they ate
-#    red meat (17% and 21%), poultry (16% and 19%), and fish (10%, 22%).
-#    proportion reducing red meat; matches
-mean(dat$red...26 > dat$red...6, na.rm=TRUE)
-#  poultry (reported: 19%); doesn't match
-mean(dat$poultry...27 > dat$poultry...7, na.rm=TRUE)
-#  fish (reported: 22%)
-mean(dat$fish...28 > dat$fish...8, na.rm = TRUE)
-# ??????
-# if I reverse all the inequalities, fish matches but red meat no longer does
-
-# try to reproduce proportion who stopped eating red meat
-dat %>%
-  #filter( red...6 < 7 ) %>%  # maybe they filtered on people who at least some red meat at baseline?
-  group_by(`GROUP ASSIGNMENT`) %>%
-  summarise( mean( red...26 == 7, na.rm = TRUE ) )
-# ???
+# sanity check vs. their code, leafleting.R (line 87)
+# 7 = "never consume" (higher scores are better)
+# MATCHES THEIRS; MEANS THAT THE HIGHER-NUMBERED VARIABLES (E.G., RED..26) ARE ACTUALLY
+#  THE BASELINE MEASUREMENTS!
+sum( dat$red...26 != 7 & dat$red...6 == 7, na.rm = TRUE )  # number who quit eating red meat (their code: 13)
+# number who started eating red meat
+sum( dat$red...26 == 7 & dat$red...6 != 7, na.rm = TRUE )  # number who started (their code: 7)
 
 
 # total consumption frequency post-intervention
-dat$post.consump = dat$dairy...25 + dat$red...26 + dat$poultry...27 + dat$fish...28 + dat$eggs...29
+dat$pre.consump = dat$dairy...25 + dat$red...26 + dat$poultry...27 + dat$fish...28 + dat$eggs...29
 # and pre-intervention (as a covariate)
-dat$pre.consump = dat$dairy...5 + dat$red...6 + dat$poultry...7 + dat$fish...8 + dat$eggs...9
+dat$post.consump = dat$dairy...5 + dat$red...6 + dat$poultry...7 + dat$fish...8 + dat$eggs...9
 
 # interventions
 # based on sample sizes given in text, "N" is control, "C" is "Compassionate Choices",
 #  and "E" is "Even If You Like Meat"
 table(dat$`GROUP ASSIGNMENT`)
 
-( bl.med = median( dat$post.consump[ dat$`GROUP ASSIGNMENT` == "N" ], na.rm = TRUE ) )
+( bl.med = median( dat$pre.consump, na.rm = TRUE ) )
 dat$Y = dat$post.consump > bl.med  # HIGHER scores are better
 
 # sample size
@@ -1098,18 +1081,33 @@ get_rr_adj( condition.var.name = "GROUP ASSIGNMENT",
             .dat = dat[ dat$`GROUP ASSIGNMENT` != "C", ] )
 
 
-# sanity checks
-dat %>% group_by(`GROUP ASSIGNMENT`) %>% summarise(mean(Y, na.rm=TRUE))
-# controlling for baseline status explains apparent discrepancy between RRs and raw
-#  probabilities from table above
+# # sanity checks
+# dat %>% group_by(`GROUP ASSIGNMENT`) %>% summarise( preY = mean( pre.consump > bl.med, na.rm = TRUE),
+#                                                     postY = mean(Y, na.rm=TRUE))
+# # controlling for baseline status explains apparent discrepancy between RRs and raw
+# #  probabilities from table above
+# 
+# # as means
+# dat %>% group_by(`GROUP ASSIGNMENT`) %>% summarise( pre = mean(pre.consump, na.rm=TRUE),
+#                                                     post = mean(post.consump, na.rm=TRUE) )
 
-# confirm that effects are in undesired direction:
-summary( glm( Y ~ (`GROUP ASSIGNMENT` == "C") + pre.consump, 
-              data = dat[ dat$`GROUP ASSIGNMENT` %in% c("C", "N"), ],
-              family = "poisson" ) )
-summary( glm( Y ~ (`GROUP ASSIGNMENT` == "E") + pre.consump, 
-              data = dat[ dat$`GROUP ASSIGNMENT` %in% c("E", "N"), ],
-              family = "poisson" ) )
+
+# # confirm that effects are in undesired direction:
+# summary( glm( Y ~ (`GROUP ASSIGNMENT` == "C") + pre.consump, 
+#               data = dat[ dat$`GROUP ASSIGNMENT` %in% c("C", "N"), ],
+#               family = "poisson" ) )
+# # without controlling for baseline consumption
+# summary( glm( Y ~ (`GROUP ASSIGNMENT` == "C"), 
+#               data = dat[ dat$`GROUP ASSIGNMENT` %in% c("C", "N"), ],
+#               family = "poisson" ) )
+# 
+# summary( glm( Y ~ (`GROUP ASSIGNMENT` == "E") + pre.consump, 
+#               data = dat[ dat$`GROUP ASSIGNMENT` %in% c("E", "N"), ],
+#               family = "poisson" ) )
+# # without controlling for baseline consumption
+# summary( glm( Y ~ (`GROUP ASSIGNMENT` == "E"), 
+#               data = dat[ dat$`GROUP ASSIGNMENT` %in% c("E", "N"), ],
+#               family = "poisson" ) )
 
 
 ################################# 3837 ACE 2013b #################################

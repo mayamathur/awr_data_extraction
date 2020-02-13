@@ -1195,12 +1195,6 @@ d = rbind( d, read.csv("rouk_prepped_effect_sizes.csv")[,-1] )
 
 
 ##### **ACE 2013a #####
-# ~~~ HAS PROBLEMS (see get_effect_sizes_from_raw.R)
-# so currently using their own SMD from their meta-analysis
-
-# in a pinch, could use their SMDs from their own meta-analysis 
-#  which are stratified by specific food outcome, so would need averaging:
-#  https://animalcharityevaluators.org/advocacy-interventions/interventions/leafleting/#report
 
 # "Compassionate Choices"
 d = dplyr::add_row(.data = d,
@@ -1212,8 +1206,8 @@ d = dplyr::add_row(.data = d,
                    use.rr.analysis = 1,
                    use.grams.analysis = 0,
                    use.veg.analysis = 0,
-                   yi = -0.4794118,
-                   vi = 0.1210723 )
+                   yi = -0.3883008,
+                   vi = 0.1138651 )
 
 # "Even if You Like Meat"
 d = dplyr::add_row(.data = d,
@@ -1225,8 +1219,8 @@ d = dplyr::add_row(.data = d,
                    use.rr.analysis = 1,
                    use.grams.analysis = 0,
                    use.veg.analysis = 0,
-                   yi = -0.1441575,
-                   vi = 0.01128786 )
+                   yi = 0.001426734,
+                   vi = 0.008177298 )
 
 
 ##### **ACE 2013b #####
