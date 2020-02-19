@@ -50,10 +50,12 @@ length(x2)
 # **therefore, inexact duplicates = 60-49 = 11
 #  (this matches a hand count of the "extra" refids beyond 1 per article: #3790, #3783, #3866, #3867, #3835, #3855, #3848, #3849, #3850, #3851, #3852, #3861)
 
-# **42 eligible articles with usable statistics:
+# **42-1 = 41 eligible articles with usable statistics:
+# the -1 is because Mensink article contributed two separate SSWS challenges
 sum(d.arts$`Stats source (public data, data from author, paper, hopeless)` != "Hopeless")
 
-# **8 SSWS:
+# **8-1 = 7 SSWS:
+# the -1 is because Mensink article contributed two separate SSWS challenges
 sum(d.arts$`Excluded challenge` & d.arts$`Stats source (public data, data from author, paper, hopeless)` != "Hopeless")
 
 # **34 articles in main analysis:
