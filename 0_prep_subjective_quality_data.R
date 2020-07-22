@@ -8,6 +8,7 @@ data.dir = "~/Dropbox/Personal computer/Independent studies/2019/AWR (animal wel
 
 library(dplyr)
 library(tidyverse)
+library(readxl)
 
 setwd(data.dir)
 setwd("Dual review of quality")

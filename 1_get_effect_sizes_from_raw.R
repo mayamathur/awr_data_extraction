@@ -100,6 +100,8 @@ dat = dat[ dat$ReadDescFilter == "read desc", ]
 expect_equal( nrow(dat), 114 )
 
 # missing data: 1/114
+# but note that per the article, actually original sample was 117 but they had 
+#  made exclusions before giving us this dataset
 # "CT" = control; "FF" = factory farming
 table(is.na(dat$CTeaten) | is.na(dat$FFeaten))
 dat = dat[ !is.na(dat$CTeaten) & !is.na(dat$FFeaten), ]
