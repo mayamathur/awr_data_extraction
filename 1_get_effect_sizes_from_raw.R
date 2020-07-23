@@ -10,6 +10,13 @@ code.dir = "~/Dropbox/Personal computer/Independent studies/2019/AWR (animal wel
 setwd(code.dir)
 source("helper_extraction.R")
 
+# load packages
+# this will reinstall the versions of all packages as they existed on 
+#  the date MBM analyzed
+# https://cran.r-project.org/web/packages/checkpoint/vignettes/checkpoint.html
+library(checkpoint)
+checkpoint("2020-02-12")
+
 library(dplyr)
 library(mediation)
 library(foreign)
@@ -18,9 +25,6 @@ library(metafor)
 library(data.table)
 library(readxl)
 library(tidyverse)
-
-# library(checkpoint)
-# checkpoint("2015-04-26", checkpointLocation = tempdir())
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #

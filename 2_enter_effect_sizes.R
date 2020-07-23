@@ -48,6 +48,13 @@
 #                                           PRELIMINARIES                                             #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
+# load packages
+# this will reinstall the versions of all packages as they existed on 
+#  the date MBM analyzed
+# https://cran.r-project.org/web/packages/checkpoint/vignettes/checkpoint.html
+library(checkpoint)
+checkpoint("2020-02-12")
+
 library(metafor)
 library(dplyr)
 library(testthat)
@@ -59,6 +66,9 @@ code.dir = "~/Dropbox/Personal computer/Independent studies/2019/AWR (animal wel
 # location of original datasets and code for reproducible studies
 original.data.dir = "~/Dropbox/Personal computer/Independent studies/2019/AWR (animal welfare review meat consumption)/Literature search/Full texts for review/*INCLUDED STUDIES"
 setwd(code.dir); source("helper_extraction.R")
+
+# should we re-run the lengthy script that enters each effect size?
+reenter.effect.sizes = FALSE
 
 
 d = as.data.frame( matrix( ncol = 10, nrow = 0 ) )
@@ -73,12 +83,20 @@ names(d) = c( "authoryear",
               "yi",
               "vi")
 
+# cast data types in empty df to avoid add_row trouble
+d$authoryear = as.character(d$authoryear)
+d$substudy = as.character(d$substudy)
+d$interpretation = as.character(d$interpretation)
+d$effect.measure = as.character(d$effect.measure)
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 #                                  STEP 1 - MAIN-ANALYSIS STUDIES                                      #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
 # asterisks denote studies with raw data
 
+if ( reenter.effect.sizes == TRUE ) {
+  
 ##### **Amiot 2018 (PLOS) #####
 # MM audited 2020-2-2
 d = dplyr::add_row(.data = d,
@@ -1363,6 +1381,8 @@ d = dplyr::add_row(.data = d,
 setwd(data.dir)
 write.csv(d, "data_prepped_step1.csv", row.names = FALSE)
 
+} # end massive loop "if (reenter.effect.sizes == TRUE)"
+
 
 
 
@@ -1370,6 +1390,8 @@ write.csv(d, "data_prepped_step1.csv", row.names = FALSE)
 #                                     STEP 2 - HIGH-BIAS CHALLENGES                                      #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
+if ( reenter.effect.sizes == TRUE ) {
+  
 # read it back in
 setwd(data.dir)
 d = read.csv("data_prepped_step1.csv")
@@ -1596,7 +1618,7 @@ d = dplyr::add_row(.data = d,
 setwd(data.dir)
 write.csv(d, "data_prepped_step2.csv", row.names = FALSE)
 
-
+} # end another "if (reenter.effect.sizes == TRUE)" statement
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 #                                     STEP 3 - MERGE IN QUALITATIVE DATA AND PREP ANALYSIS VARIABLES                                      #
@@ -1604,9 +1626,11 @@ write.csv(d, "data_prepped_step2.csv", row.names = FALSE)
 
 # MM audited 2020-2-5
 
+
 # read it back in
 setwd(data.dir)
 d = read.csv("data_prepped_step2.csv")
+expect_equal( nrow(d), 108 )  # includes SSWS
 
 # how many unique studies?
 length(unique(d$authoryear))
@@ -1796,6 +1820,8 @@ d = d %>%
     
     # study design, intervention, and outcome variables
     perc.male = `Percent male`,
+    avg.age = `Mean or median age`,
+    students = `Students (\"No\", \"General undergraduate\", \"Social sciences undergraduate\")`,
     country = `Subject country`,
     design = Design,
     n.paper = `N (total analyzed sample size in paper, combining all substudies included here)`,
@@ -1809,6 +1835,7 @@ d = d %>%
     x.min.exposed = `Total time exposed to intervention (minutes)`,
     y.cat = `Outcome category (purchase or consumption)`,
     y.lag.days = `Outcome time lag from intervention (days)`,
+    y.other.eligible.foods = `Other food outcomes available?`,
     
     # quality variables
     qual.y.prox = `Outcome proximity (intended, self-reported, actual)`,
@@ -1822,6 +1849,7 @@ d = d %>%
     prose.control = `Control condition`,
     prose.outcome = `Outcome (Y)`,
     prose.population = `Population`,
+    prose.y.other.eligible = `Additional eligible food outcomes`,
     prose.notes = `Notes`
   )
 
@@ -1940,6 +1968,7 @@ d.small = d %>% dplyr::select( unique,
                                x.rec,
                                prose.outcome,
                                y.cat,
+                               y.other.eligible.foods,
                                
                                design,
                                randomized,
