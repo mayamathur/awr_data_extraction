@@ -18,9 +18,8 @@ d = d[ d$use.rr.analysis == 1 & d$exclude.main == 0, ]
 d = droplevels(d)
 expect_equal( nrow(d), 100 )
 
-# for component-coding, exclude ones that had no text
-d = d %>% filter( !is.na(x.has.text) & x.has.text == 1 )
-expect_equal( nrow(d), 83 )
+# temp only
+d = d %>% filter(is.na(x.has.text) | x.has.text == FALSE)
 
 
 # simplify dataset for coders
@@ -29,7 +28,7 @@ d = d %>% select( authoryear, unique, ref ) %>%
 
 setwd("~/Dropbox/Personal computer/Independent studies/2019/AWR (animal welfare review meat consumption)/Linked to OSF (AWR)/Data extraction/Dual review of intervention components")
 
-
+write.csv(d, "component_coding_template.csv", row.names = FALSE)
 # # COMMENTED OUT TO AVOID OVERWRITING PEOPLE'S WORK
 # write.csv(d, "component_coding_jp.csv", row.names = FALSE)
 # write.csv(d, "component_coding_dr.csv", row.names = FALSE)

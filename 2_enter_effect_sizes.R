@@ -1626,7 +1626,6 @@ write.csv(d, "data_prepped_step2.csv", row.names = FALSE)
 
 # MM audited 2020-2-5
 
-
 # read it back in
 setwd(data.dir)
 d = read.csv("data_prepped_step2.csv")
@@ -1675,12 +1674,12 @@ d2$unique
 
 # look for IDs from effect sizes that aren't in the qualitative data spreadsheet
 #  (should be none)
-d$unique[ !d$unique %in% d2$unique ]
+expect_equal( d$unique[ !d$unique %in% d2$unique ], character(0) )
 
 # studies in qualitative data for which we haven't entered effect sizes
 # should occur only for hopeless studies (i.e., impossible to get stats)
 known.hopeless = c( "Dowsett 2018",
-                    "Diaz 2019",
+                    #"Diaz 2019",  # removed from spreadsheet because we couldn't determine its eligibility
                     "de Lanauze 2019",
                     "Summer Vegan Pledge (Animal Aid) 2018",
                     "Summer Vegan Pledge (Animal Aid) 2019",
@@ -1701,9 +1700,9 @@ d = merge( d,
 
 # MM audited 2020-2-5
 
+# read in subjective quality data
 setwd(data.dir)
 setwd("Dual review of quality")
-
 d3 = read.csv("subjective_data_full_prepped.csv")
 
 # check for studies lacking entries in subjective data
@@ -1717,10 +1716,30 @@ d = merge( d,
               by = "authoryear" )
 
 
+############################### MERGE IN INTERVENTION COMPONENTS DATA ###############################
+
+# ~~~ TEMP ONLY: using only MM's data until we've reconciled them all
+
+#setwd(data.dir)
+setwd("~/Dropbox/Personal computer/Independent studies/2019/AWR (animal welfare review meat consumption)/Linked to OSF (AWR)/Data extraction/Dual review of intervention components")
+d4 = read.csv("component_coding_mm.csv")
+
+# check for studies lacking entries in subjective data
+# should be only high-bias challenges
+d$authoryear[ !d$authoryear %in% d4$authoryear ]
+
+# merge with main dataset
+d = merge( d,
+           d4[ , c("unique", "mind.attribution", "social.norms", "id.victim", "impl.suggest", "pets") ],
+           all.x = TRUE,
+           by = "unique" )
+
+# should still have same size
+expect_equal( nrow(d), 108 )
+
 # save intermediate dataset
 setwd(data.dir)
 write.csv(d, "data_prepped_step3.csv", row.names = FALSE)
-
 
 
 
@@ -1818,13 +1837,15 @@ d = d %>%
     mm.fave = `Among MM's favorites methodologically, exclusive of small sample size`,
     stats.source = `Stats source (public data, data from author, paper, hopeless)`,
     
-    # study design, intervention, and outcome variables
+    # study design characteristics
     perc.male = `Percent male`,
     avg.age = `Mean or median age`,
     students = `Students (\"No\", \"General undergraduate\", \"Social sciences undergraduate\")`,
     country = `Subject country`,
     design = Design,
     n.paper = `N (total analyzed sample size in paper, combining all substudies included here)`,
+    
+    # intervention characteristics
     x.has.text = `Intervention has text`,
     x.suffer = `Intervention has specific description or images of animal suffering`,
     x.has.visuals = `Intervention has visuals`,
@@ -1833,6 +1854,14 @@ d = d %>%
     x.rec = `Intervention recommendation (reduce, go vegan, go vegetarian, no request, other)`,
     x.tailored = `Intervention personally tailored`,
     x.min.exposed = `Total time exposed to intervention (minutes)`,
+    # subjective ones that were dual-coded:
+    x.mind.attr = mind.attribution,
+    x.soc.norm = social.norms,
+    x.id.victim = id.victim,
+    x.impl = impl.suggest,
+    x.pets = pets,
+    
+    # outcome characteristics
     y.cat = `Outcome category (purchase or consumption)`,
     y.lag.days = `Outcome time lag from intervention (days)`,
     y.other.eligible.foods = `Other food outcomes available?`,
@@ -1964,11 +1993,17 @@ d.small = d %>% dplyr::select( unique,
                                x.has.visuals,
                                x.suffer,
                                x.pure.animals,
+                               x.mind.attr,
+                               x.soc.norm,
+                               x.id.victim,
+                               x.impl,
+                               x.pets, # bm
                                x.min.exposed,
                                x.rec,
                                prose.outcome,
                                y.cat,
                                y.other.eligible.foods,
+                               prose.y.other.eligible,
                                
                                design,
                                randomized,

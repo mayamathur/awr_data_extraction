@@ -9,6 +9,7 @@ data.dir = "~/Dropbox/Personal computer/Independent studies/2019/AWR (animal wel
 library(dplyr)
 library(tidyverse)
 library(readxl)
+library(irr)
 
 setwd(data.dir)
 setwd("Dual review of quality")
@@ -31,7 +32,6 @@ d3[ d3 == "nd" ] = NA
 d3[ d3 == "?" ] = NA
 
 # for some reason, reads in years in an absurd format (e.g., "2018.0" as a string)
-library(tidyverse)
 d3$Year = str_remove(d3$Year, "[.]0")
 
 # clean up formatting (all lowercase)
@@ -39,8 +39,15 @@ d3$qual.sdb = tolower(d3$qual.sdb)
 d3$qual.exch = tolower(d3$qual.exch)
 d3$qual.gen = tolower(d3$qual.gen)
 
+# clean up mispellings
+d3[ d3 == "Weask"] = "Weak"
+d3[ d3 == "Unknown"] = "Unclear"
+
 # make merger variable
 d3$authoryear = paste( d3$`First author last name`, d3$Year, sep = " " )
+
+
+############################### SAVE DATASET ###############################
 
 # save dataset
 setwd(data.dir)
