@@ -1,7 +1,5 @@
 
 
-
-
 # Notes:
 #
 #  ** = had raw data; see 1_get_effect_sizes_from_raw.R for how we calculated the estimates
@@ -369,6 +367,8 @@ escalc_add_row( authoryear = "Cordts 2014",
 # sanity check
 expect_equal( exp( d$yi[ d$authoryear == "Cordts 2014" ] ),
               (42/150) / (71/556) )
+# mean age from table with categories
+(.053*mean(c(18,24)) + .261*mean(c(25,39)) + .523*mean(c(40,59)) + .163*60)/(.053+.261+.523+.163)
 
 
 ##### **Palomo-Velez 2018 #####
@@ -1720,17 +1720,34 @@ d = merge( d,
 
 # ~~~ TEMP ONLY: using only MM's data until we've reconciled them all
 
-#setwd(data.dir)
 setwd("~/Dropbox/Personal computer/Independent studies/2019/AWR (animal welfare review meat consumption)/Linked to OSF (AWR)/Data extraction/Dual review of intervention components")
-d4 = read.csv("component_coding_mm.csv")
+
+d4 = read_xlsx("*component_coding_reconciled.xlsx")
+d4 = d4 %>% filter( !is.na(authoryear) ) # remove spacer row
+
+expect_equal( nrow(d4), 100 )
+
+# rename columns 
+d4 = rename(d4, x.mind.attr = "mind.attribution",
+            x.soc.norm = "social.norms",
+            x.id.victim = "id.victim",
+            x.impl = "impl.suggest",
+            x.pets = "pets")
+
+# recode "Unclear" as NA
+vars = c("x.mind.attr", "x.soc.norm", "x.id.victim", "x.impl", "x.pets")
+d4 = d4 %>% replace_with_na_all( condition = ~.x == "Unclear" ) 
+d4 = d4 %>% mutate_at( vars, as.numeric )
+# sanity check (compare to before recoding "Unclear")
+# table(d4$x.soc.norm, useNA = "ifany")
 
 # check for studies lacking entries in subjective data
-# should be only high-bias challenges
+# should be only SSWS studies
 d$authoryear[ !d$authoryear %in% d4$authoryear ]
 
 # merge with main dataset
 d = merge( d,
-           d4[ , c("unique", "mind.attribution", "social.norms", "id.victim", "impl.suggest", "pets") ],
+           d4[ , c("unique", vars) ],
            all.x = TRUE,
            by = "unique" )
 
@@ -1855,11 +1872,11 @@ d = d %>%
     x.tailored = `Intervention personally tailored`,
     x.min.exposed = `Total time exposed to intervention (minutes)`,
     # subjective ones that were dual-coded:
-    x.mind.attr = mind.attribution,
-    x.soc.norm = social.norms,
-    x.id.victim = id.victim,
-    x.impl = impl.suggest,
-    x.pets = pets,
+    x.mind.attr = x.mind.attr,
+    x.soc.norm = x.soc.norm,
+    x.id.victim = x.id.victim,
+    x.impl = x.impl,
+    x.pets = x.pets,
     
     # outcome characteristics
     y.cat = `Outcome category (purchase or consumption)`,

@@ -578,6 +578,7 @@ dat = read_xlsx("data.xlsx", sheet = 2)
 # clean up coding
 dat$condition = tolower(dat$`4- Booklet Version`)
 dat$sex = tolower(dat$Gender)
+#dat$age = tolower(dat$Gender)
 
 # each food variable is the number of weekly weels containing that food
 # lower totals are better per "Initial survey.pdf"

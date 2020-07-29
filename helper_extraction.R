@@ -114,7 +114,36 @@ hyphen_mean = Vectorize( function(string) {
   
 }, vectorize.args = "string" )
 
-fake = hyphen_mean(c("14-28", "28"))
+#fake = hyphen_mean(c("14-28", "28"))
+
+
+# for prepping intervention component data:
+# for two vectors, returns a vector of the same length in which
+#  0 indicates no disagreement between corresponding entries of the two vectors, 
+#  1 means one coder had a 0 while the other had a 1, 
+#  and -1 means one coder had NA while the other had 0/1
+my_diff_NA = function(x1, x2){
+  # # test only
+  # x1 = c(1,1,NA,1,NA)
+  # x2 = c(1,0,1,1,NA)
+  
+  diffs = x1 - x2
+  
+  # entries for which either x1 or x2 is NA
+  inds = which( is.na(x1) | is.na(x2) )
+  
+  # when one coder has NA and the other doesn't, should be coded as 
+  #  a discrepancy, but use -1 to differentiate from a 0 vs. 1 discrepancy
+  nas.disagree = ( is.na(x1[inds]) != is.na(x2[inds]) )
+  nas.disagree[ nas.disagree == TRUE ] = -1
+  nas.disagree[ nas.disagree == FALSE ] = 0
+  
+  diffs[inds] = nas.disagree
+  return( as.numeric(diffs) )
+}
+
+
+
 
 ################################ EFFECT-SIZE CONVERSIONS ################################
 
