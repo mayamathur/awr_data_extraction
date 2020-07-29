@@ -1,8 +1,5 @@
 
 
-library(grateful)
-cite_packages()
-# need to manually move the citations.html file
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 #                                           PRELIMINARIES                                             #
@@ -15,21 +12,28 @@ code.dir = "~/Dropbox/Personal computer/Independent studies/2019/AWR (animal wel
 setwd(code.dir)
 source("helper_extraction.R")
 
+
+# must be done before checkpoint to avoid errors
+library(foreign)
+library(metafor)
+library(dplyr)
+
 # load packages
 # this will reinstall the versions of all packages as they existed on 
 #  the date MBM analyzed
 # https://cran.r-project.org/web/packages/checkpoint/vignettes/checkpoint.html
 library(checkpoint)
 checkpoint("2020-02-12")
-
-library(dplyr)
 library(mediation)
-library(foreign)
 library(sandwich)
 library(metafor)
 library(readxl)
 library(tidyverse)
 library(sjstats)
+library(data.table)
+
+# library(grateful)
+# cite_packages()
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
@@ -44,6 +48,9 @@ setwd(original.data.dir)
 setwd("Amiot 2018, #243")
 
 dat = read.spss("data.sav", to.data.frame=TRUE)
+
+# mean age
+mean(dat$age)
 
 # confirm which variables are total meat consumption at each time point
 attr(dat, "variable.labels")[names(dat)=="CE"]
@@ -115,8 +122,9 @@ expect_equal( nrow(dat), 114 )
 table(is.na(dat$CTeaten) | is.na(dat$FFeaten))
 dat = dat[ !is.na(dat$CTeaten) & !is.na(dat$FFeaten), ]
 
-# sex
+# sex and age
 prop.table(table(dat$Gender))
+mean(dat$Age)
 
 # sanity check (compare visually to Fig 5)
 mean(dat$CTeaten)
@@ -147,9 +155,10 @@ dat = data.table( read.csv("dtfu_prepped_data.csv") )
 # sample size
 sum( !is.na(dat$cond.f) & !is.na(dat$diet.f1) & !is.na(dat$diet.f2) & !is.na(dat$campus) )
 
-# percent male
+# percent male and age
 # per the "RECODE GENDER" section of their code, 1=female, 2=male, 3=other, 4=NA
 mean( dat$gender[ dat$gender %in% c(1,2,3) ] == 2 )
+mean(dat$age)
 
 # they fit a cumulative logit mixed model
 # verbatim from their code (cumulative logit mixed-model)
@@ -225,8 +234,11 @@ dat = dat[ !is.na(dat$FFQtotalSumMeat.3) & !is.na(dat$FFQtotalSumMeat.1), ]
 # sample size
 nrow(dat)
 
-# % male
+# % male and age
 1 - mean(dat$female, na.rm = TRUE)
+
+# calculate age as article's publication year minus subjects' years of birth
+mean( 2016 - dat$yearBorn, na.rm = TRUE )
 
 bl.med = median(dat$FFQtotalSumMeat.1)
 dat$Y = dat$FFQtotalSumMeat.3 < bl.med
@@ -255,12 +267,12 @@ setwd("Caldwell 2016, #3794")
 dat = read.csv("CleanWelfareReformsData.csv")
 
 # exclude conditions that aren't meat consumption
-# sex
 dat %>% filter( experimentGroup %in% c("porkLegislation",
                                        "controlPorkLegislation",
                                        "porkPolicy",
                                        "controlPorkPolicy" ) ) %>%
-  summarise( prop.male = mean( gender[ !gender %in% c("", "Prefer not to answer") ] == "Male" ) )
+  summarise( prop.male = mean( gender[ !gender %in% c("", "Prefer not to answer") ] == "Male" ),
+             age = mean( age, na.rm = TRUE) )
 
 # missing data situation unclear given lack of codebook
 
@@ -285,7 +297,7 @@ get_rr_unadj(condition = "porkPolicy",
 
 
 
-################################# CALDWELL 2017a #################################
+################################# CALDWELL 2017 #################################
 
 # their summary spreadsheet already had needed stats, so now just getting the % male
 #  and confirming number in control group
@@ -297,6 +309,7 @@ dat = read_csv( "cleanVideoDataForAnalysis_forPublic.csv" )
 
 # percent male: 51.7
 1 - mean(dat$female, na.rm = TRUE)
+mean(dat$ageCont, na.rm = TRUE)
 
 # sample sizes by condition
 dat %>% group_by(videoTreatment) %>% summarise(n())
@@ -345,14 +358,23 @@ names(draw) = c( "authoryear",
                  "use.veg.analysis",
                  "yi",
                  "vi")
+# cast data types in empty df to avoid add_row trouble
+draw$authoryear = as.character(draw$authoryear)
+draw$substudy = as.character(draw$substudy)
+draw$interpretation = as.character(draw$interpretation)
+draw$effect.measure = as.character(draw$effect.measure)
 
 for (j in 1:length( all.conditions ) ) {
 
   temp = dat %>% filter( X %in% c( all.conditions[j], "control") )
 
   # print percent male
-  print( paste( all.conditions[j], "percent male:",
+  print( paste( toupper(all.conditions[j]), "percent male:",
                 round( 100* mean( temp$gender == "Male", na.rm = TRUE ), 1 ) ) )
+  
+  # print mean age
+  print( paste( "mean age:",
+                mean(temp$age, na.rm = TRUE) ) )
 
   es = get_rr_unadj( condition = all.conditions[j],
                      condition.var.name = "X",
@@ -369,8 +391,7 @@ for (j in 1:length( all.conditions ) ) {
                    use.grams.analysis = 0,
                    use.veg.analysis = 0,
                    yi = as.numeric(es$yi),
-                   vi = as.numeric(es$vi)
-  )
+                   vi = as.numeric(es$vi) )
 }
 
 write.csv(draw, "rouk_prepped_effect_sizes.csv")
@@ -396,8 +417,9 @@ dat1 = dat1[ dat1$CONDITION %in% c("Neutral essay", "Moral essay"), ]
 dat1 = droplevels(dat1)
 nrow(dat1)
 
-# percent male
+# percent male and age
 prop.table(table(dat1$Gender))
+mean(dat1$Age)
 
 # dichotomize at control median
 cntrl.med = median( dat1$MEAT_BUYINGLIKEHOOD[dat1$CONDITION == "Neutral essay"] )
@@ -422,7 +444,10 @@ dat2 = droplevels(dat2)
 
 # sample size: 161
 nrow(dat2)
+
+# sex and age
 prop.table(table(dat2$SEX))
+mean(dat2$AGE)
 
 cntrl.med = median( dat2$MEAT_BUYINGLIKEHOOD[dat2$CONDITION == "CONTROL"] )
 dat2$Y = dat2$MEAT_BUYINGLIKEHOOD < cntrl.med
@@ -446,7 +471,10 @@ dat3 = droplevels(dat3)
 
 # sample size: 270
 nrow(dat3)
+
+# sex and age
 prop.table(table(dat3$SEX))
+mean(dat3$AGE)
 
 cntrl.med = median( dat3$MEAT_BUYINGLIKEHOOD[dat3$CONDITION == "CONTROL"] )
 dat3$Y = dat3$MEAT_BUYINGLIKEHOOD < cntrl.med
@@ -513,6 +541,12 @@ names(draw) = c( "authoryear",
                  "yi",
                  "vi")
 
+# cast data types in empty df to avoid add_row trouble
+draw$authoryear = as.character(draw$authoryear)
+draw$substudy = as.character(draw$substudy)
+draw$interpretation = as.character(draw$interpretation)
+draw$effect.measure = as.character(draw$effect.measure)
+
 # sample size
 sum( !is.na(dats[[1]]$condition) & !is.na(dats[[1]]$consumption) ) + sum( !is.na(dats[[2]]$condition) & !is.na(dats[[2]]$consumption) )
 
@@ -527,7 +561,11 @@ for ( i in 1:length(dats) ) {
   # calculate proportion male
   # coding scheme from author email
   print( paste("Prop. male = ", mean( dats[[i]]$gender == 1, na.rm = TRUE ) ) )
-
+  
+  # and mean age
+  # note that dats[[2] doesn't have ages or percent male
+  print( paste("Mean age = ", mean( dats[[i]]$age, na.rm = TRUE ) ) )
+  
   agg = dats[[i]] %>% group_by(condition) %>%
     summarise( Preduce = mean(Y),
                N.tot = n(),
@@ -578,7 +616,14 @@ dat = read_xlsx("data.xlsx", sheet = 2)
 # clean up coding
 dat$condition = tolower(dat$`4- Booklet Version`)
 dat$sex = tolower(dat$Gender)
-#dat$age = tolower(dat$Gender)
+
+# make continuous age variable
+table(dat$`2-Age`)
+dat$ageCont = NA
+dat$ageCont[ dat$`2-Age` %in% c("13 to 17", "13-17") ] = mean(c(13,17))
+dat$ageCont[ dat$`2-Age` %in% c("18 to 22", "18-22") ] = mean(c(18,22))
+dat$ageCont[ dat$`2-Age` %in% c("23 to 29", "23-29") ] = mean(c(23,29))
+dat$ageCont[ dat$`2-Age` %in% c("30", "30 or above", "30+") ] = 30
 
 # each food variable is the number of weekly weels containing that food
 # lower totals are better per "Initial survey.pdf"
@@ -619,6 +664,12 @@ names(draw) = c( "authoryear",
                  "yi",
                  "vi")
 
+# cast data types in empty df to avoid add_row trouble
+draw$authoryear = as.character(draw$authoryear)
+draw$substudy = as.character(draw$substudy)
+draw$interpretation = as.character(draw$interpretation)
+draw$effect.measure = as.character(draw$effect.measure)
+
 # get ES for each condition
 all.conditions = unique( dat$condition[ !dat$condition == "control" ] )
 
@@ -632,10 +683,13 @@ for (j in 1:length( all.conditions ) ) {
                    baseline.var.name = "pre.total",
                    .dat = dat2 )
 
-  # print percent male
+  # print percent male and mean age
   prop.male = mean( dat2$sex[ !is.na(dat2$post.total) ] == "male" )
-  print( paste( all.conditions[j], "percent male:",
+  print( paste( toupper(all.conditions[j]), "percent male:",
                 round( 100* prop.male, 2 ) ) )
+  
+  print( paste( "mean age:",
+                mean(dat2$ageCont) ) )
   cat("\n\n")
 
 
@@ -720,6 +774,16 @@ dat$condition[ dat$condition == "vegan" ] = 'vegan leaflet'
 dat %>% filter( Gender %in% c("female", "Female", "male", "Male", "other") ) %>%
   summarise( prop.male = mean( Gender %in% c("male", "Male") ) )
 
+# mean age
+# also super messy
+dat$ageCont = NA
+dat$ageCont[ dat$Age %in% c("13-17") ] = mean(c(13,17))
+dat$ageCont[ dat$Age %in% c("18-2", "18-22") ] = mean(c(18,22))
+dat$ageCont[ dat$Age %in% c("23-29") ] = mean(c(23,29))
+dat$ageCont[ dat$Age %in% c("30 above", "30 or above") ] = 30
+table(is.na(dat$ageCont))
+mean(dat$ageCont, na.rm = TRUE)
+
 # analyzed N: 553
 sum( !is.na(dat$Total_Chg) & !is.na(dat$Total_Current) & !is.na(dat$condition) )
 
@@ -796,6 +860,8 @@ dat = read_xlsx("cleanImpactStudyData.ForAnalysis.xlsx")
 # analyzed N: 1279
 sum( !is.na(dat$group) & !is.na(dat$totalAnimalProductConsumption) )
 
+# mean age
+mean(dat$age)
 
 ##### Calculate Main RR #####
 # use animal product consumption per our hierarchy of outcomes
@@ -827,8 +893,9 @@ dat = read.spss("study2a.sav", to.data.frame=TRUE)
 # missing data
 mean( is.na(dat$eat_1) )
 
-# percent male
+# percent male and age
 prop.table(table(dat$gender))
+mean(dat$age)
 
 # sample size: 168
 nrow(dat)
@@ -893,8 +960,9 @@ attr(dat, "variable.labels")[names(dat)=="veg_1"]
 # missing data
 mean( is.na(dat$eat_1) )
 
-# percent male
+# percent male and age
 prop.table(table(dat$gender))
+mean(dat$age, na.rm = TRUE)
 
 # sample size: 101
 nrow(dat)
@@ -925,8 +993,9 @@ attr(dat, "variable.labels")[names(dat)=="eat_1"]
 # missing data
 mean( is.na(dat$eat_1) )
 
-# percent male
+# percent male and age
 prop.table(table(dat$gender))
+mean(dat$age)
 
 # sample size: 187
 nrow(dat)
@@ -961,8 +1030,9 @@ dat %>% group_by(con) %>%
 # missing data
 mean( is.na(dat$eat_1) )
 
-# percent male
+# percent male and age
 prop.table(table(dat$gender))
+mean(dat$age, na.rm = TRUE)
 
 # sample size: 190
 nrow(dat)
@@ -1000,8 +1070,10 @@ dat1 = dat[ !is.na(dat$ethnic_us), ]
 # missing data
 mean( is.na(dat1$veg_1) )
 
-# percent male
+# percent male and age
 prop.table(table(dat1$gender))
+mean(dat1$age, na.rm = TRUE)
+
 
 # sample size: 178
 nrow(dat1)
@@ -1021,8 +1093,9 @@ dat2 = dat[ !is.na(dat$ethnic_ecuador), ]
 # missing data
 mean( is.na(dat2$veg_1) )
 
-# percent male
+# percent male and age
 prop.table(table(dat2$gender))
+mean(dat2$age, na.rm = TRUE)
 
 # sample size: 183
 nrow(dat2)
@@ -1050,6 +1123,8 @@ dat = read_xlsx("ACE leafleting trial with group assignment.xlsx")
 nrow(dat)
 # sanity check: breakdown by groups also matches reported
 table(dat$`GROUP ASSIGNMENT`)
+
+# dataset does not have age or sex
 
 # per the "Guide to Leafleting Data" codebook, higher scores are better (1 = 5x/day to 7 = Never)
 
@@ -1172,8 +1247,9 @@ table(dat$GROUPS)
 # remove subjects who unintentionally received FF presentation
 dat = dat %>% filter( GROUPS != "Control but attended FF presentation" )
 
-# percent male
+# percent male and age
 mean( dat$Sex == "Male", na.rm = TRUE )
+mean(dat$Age, na.rm = TRUE)
 
 # sample size
 sum( !is.na(dat$GROUPS) & !is.na(dat$pre.consump) & !is.na(dat$post.consump) )
@@ -1202,6 +1278,19 @@ dt = read.spss("VO (experimental) data.sav", to.data.frame=TRUE)
 # sex
 ( sum(dc$gender == "Male") + sum(dt$gender == "Male") ) / ( nrow(dc) +  nrow(dt) )
 
+# age
+age = c( as.character(dc$age), as.character(dt$age) )
+table(age)
+ageCont = NA
+ageCont[ age %in% "17-21" ] = mean(c(17,21)) 
+ageCont[ age %in% "22-26" ] = mean(c(22,26)) 
+ageCont[ age %in% "27-31" ] = mean(c(27,31)) 
+ageCont[ age %in% "32-35" ] = mean(c(32,35)) 
+ageCont[ age %in% "35 and above" ] = 35 
+table(is.na(ageCont))
+mean(ageCont, na.rm = TRUE)
+
+
 # sample size: 1040
 nrow(dc) + nrow(dt)
 
@@ -1228,6 +1317,19 @@ dt = read.spss("VR (experimental) data.sav", to.data.frame=TRUE)
 
 # sex
 ( sum(dc$gender == "Male") + sum(dt$gender == "Male") ) / ( nrow(dc) +  nrow(dt) )
+
+
+# age
+age = c( as.character(dc$age), as.character(dt$age) )
+table(age)
+ageCont = NA
+ageCont[ age %in% "17-21" ] = mean(c(17,21)) 
+ageCont[ age %in% "22-26" ] = mean(c(22,26)) 
+ageCont[ age %in% "27-31" ] = mean(c(27,31)) 
+ageCont[ age %in% "32-35" ] = mean(c(32,35)) 
+ageCont[ age %in% "35 and above" ] = 35 
+table(is.na(ageCont))
+mean(ageCont, na.rm = TRUE)
 
 # sample size: 1000
 nrow(dc) + nrow(dt)
