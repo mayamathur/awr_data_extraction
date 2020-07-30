@@ -908,6 +908,12 @@ escalc_add_row( authoryear = "Byrd-Bredbenner 2010",
 
 ##### Novotna 2019 #####
 # MM audited 2020-2-3
+
+# mean age from categorical breakdown on page 25
+ns = c(80, 17, 1)
+midpoints = c( mean(c(18,25)), mean(c(26,40)), mean(c(41,59)) )
+sum(ns * midpoints) / sum(ns)
+
 # extract post-intervention means and CI limits
 #  in WebPlotDigitizer
 mn.cntrl = 2.96
@@ -1626,6 +1632,8 @@ write.csv(d, "data_prepped_step2.csv", row.names = FALSE)
 
 # MM audited 2020-2-5
 
+# bm
+
 # read it back in
 setwd(data.dir)
 d = read.csv("data_prepped_step2.csv")
@@ -1856,8 +1864,8 @@ d = d %>%
     
     # study design characteristics
     perc.male = `Percent male`,
-    avg.age = `Mean or median age`,
-    students = `Students (\"No\", \"General undergraduate\", \"Social sciences undergraduate\")`,
+    age = `Mean or median age`,
+    students = `Students ("No", "General undergraduates", "Social sciences undergraduates", "Mixed")`,
     country = `Subject country`,
     design = Design,
     n.paper = `N (total analyzed sample size in paper, combining all substudies included here)`,

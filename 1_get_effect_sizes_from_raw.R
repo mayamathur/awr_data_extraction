@@ -1584,6 +1584,10 @@ data$post.consump = data$oftenBeef_post +
   data$oftenPork_post +
   data$oftenTurkey_post
 
+# recode age variable
+data$birthYear2 = as.numeric( as.character( data$birthYear ) )  # the "NULL" entries automatically become NAs
+data$age = 2018 - data$birthYear2  # using 2018 because article describes study as "Spring 2018 leafleting study"
+
 
 cntrl.med = median( data$post.consump[ data$group == "Control" ], na.rm = TRUE )
 data$Y = data$post.consump < cntrl.med
@@ -1600,10 +1604,12 @@ mod = glm( Y ~ ( group == "Compassionate Choices" ) + pre.consump,
 summary(mod)
 vcovCL(mod, type="HC0", cluster = ~ school_code)
 
-# percent male and analyzed N
+# percent male, age, and analyzed N
 ( agg.cc = data %>% filter(group != "What Is Speciesism") %>%
     summarise( N = sum( !is.na(post.consump) & !is.na(pre.consump) ),
-               male = mean(gender == 2) ) ) # per codebook, 2 is male
+               male = mean(gender == 2),  # per codebook, 2 is male
+               age = mean(age, na.rm = TRUE )) ) 
+
 
 
 ##### Speciesism: Calculate Main RR #####
@@ -1617,7 +1623,8 @@ vcovCL(mod, type="HC0", cluster = ~ school_code)
 # percent male and analyzed N
 ( agg.s = data %>% filter(group != "Compassionate Choices") %>%
     summarise( N = sum( !is.na(post.consump) & !is.na(pre.consump) ),
-               male = mean(gender == 2) ) ) # per codebook, 2 is male
+               male = mean(gender == 2), # per codebook, 2 is male
+               age = mean(age, na.rm = TRUE ) ) ) 
 
 
 ##### Overall Analyzed N and Missing Data #####
@@ -1719,8 +1726,9 @@ bl.med = median( dat$post.consump[ dat$condition == "control" ] )
 dat$Y = dat$post.consump < bl.med
 
 
-##### Sex #####
+##### Sex and Age #####
 mean( dat$`What is your gender?` == 1, na.rm = TRUE )
+mean( dat$`How old are you?`, na.rm = TRUE )
 
 ##### Missing Data #####
 
@@ -1945,6 +1953,8 @@ for (j in 1:length( all.conditions ) ) {
   # print percent male
   print( paste( all.conditions[j], "percent male:",
                 round( 100* mean( temp$What.is.your.gender. == "Male", na.rm = TRUE ), 1 ) ) )
+  
+  # does not seem to have an age variable
   
   # print percent missing
   print( paste( all.conditions[j], "percent missing:",
