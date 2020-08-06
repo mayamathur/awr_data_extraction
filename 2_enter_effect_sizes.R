@@ -1933,7 +1933,8 @@ d$reproducible = (d$qual.prereg == "Yes") & (d$qual.public.data == "Yes")
 d$x.long = d$x.min.exposed >= 5
 # recode percent male as a 10-percentage point increase
 d$perc.male.10 = d$perc.male/10
-
+# recode age as a 5-year increase
+d$age.5 = d$age/5
 
 ##### Recode Categorical Variables to Force Levels #####
 library(car)
