@@ -26,7 +26,6 @@ dats = list(dd, dm)
 ############################### PREP INDIVIDUAL CODERS' SUBJECTIVE RISKS OF BIAS ###############################
 
 
-
 # remove blank spacer rows
 dats = lapply( dats, FUN = function(.d) .d = .d[ !is.na(.d$authoryear), ] )
 expect_equal( unlist( lapply(dats, nrow) ), c(100, 100) )
@@ -42,11 +41,8 @@ lapply( dats, FUN = function(.d) apply(.d[,rated.vars], 2, table) )
 dats = lapply( dats, FUN = function(.d) .d %>% mutate_at( rated.vars, as.numeric ) )
 lapply( dats, FUN = function(.d) apply(.d[,rated.vars], 2, table) )
 
-x1 = dats[[1]][,rated.vars]
-x2 = dats[[2]][,rated.vars]
 
-
-# initialize empty dataframe with same headers
+# initialize empty dataframe of interrater discrepancies with same headers
 diffs = dats[[1]]
 diffs[ , c(rated.vars, "notes") ] = NA
 diffs = diffs %>% mutate_at( rated.vars, as.numeric )
