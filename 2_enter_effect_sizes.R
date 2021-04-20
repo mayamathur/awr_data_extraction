@@ -57,6 +57,7 @@ library(dplyr)
 library(testthat)
 library(readxl)
 library(stringr)
+library(naniar)
 
 data.dir = "~/Dropbox/Personal computer/Independent studies/2019/AWR (animal welfare review meat consumption)/Linked to OSF (AWR)/Data extraction"
 code.dir = "~/Dropbox/Personal computer/Independent studies/2019/AWR (animal welfare review meat consumption)/Linked to OSF (AWR)/Data extraction/awr_data_extraction_git"
@@ -1631,7 +1632,6 @@ write.csv(d, "data_prepped_step2.csv", row.names = FALSE)
 
 # MM audited 2020-2-5
 
-
 # read it back in
 setwd(data.dir)
 d = read.csv("data_prepped_step2.csv")
@@ -1724,7 +1724,6 @@ d = merge( d,
 
 ############################### MERGE IN INTERVENTION COMPONENTS DATA ###############################
 
-# ~~~ TEMP ONLY: using only MM's data until we've reconciled them all
 
 setwd("~/Dropbox/Personal computer/Independent studies/2019/AWR (animal welfare review meat consumption)/Linked to OSF (AWR)/Data extraction/Dual review of intervention components")
 
