@@ -1392,7 +1392,7 @@ write.csv(d, "data_prepped_step1.csv", row.names = FALSE)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
-#                                     STEP 2 - HIGH-BIAS CHALLENGES                                      #
+#                                     STEP 2 - SSWS                                      #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
 if ( reenter.effect.sizes == TRUE ) {
@@ -1631,7 +1631,6 @@ write.csv(d, "data_prepped_step2.csv", row.names = FALSE)
 
 # MM audited 2020-2-5
 
-# bm
 
 # read it back in
 setwd(data.dir)
@@ -1713,7 +1712,7 @@ setwd("Dual review of quality")
 d3 = read.csv("subjective_data_full_prepped.csv")
 
 # check for studies lacking entries in subjective data
-# should be only high-bias challenges
+# should be only SSWS
 d$authoryear[ !d$authoryear %in% d3$authoryear ]
 
 # merge with main dataset
