@@ -45,12 +45,11 @@
 #                                           PRELIMINARIES                                             #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
-# load packages
-# this will reinstall the versions of all packages as they existed on 
-#  the date MBM analyzed
-# https://cran.r-project.org/web/packages/checkpoint/vignettes/checkpoint.html
-library(checkpoint)
-checkpoint("2020-02-12")
+# This script uses renv to preserve the R environment specs (e.g., package versions.)
+library(renv)
+# run this if you want to reproduce results using the R environment we had:
+# library(here); setwd(here)
+# renv::restore()
 
 library(metafor)
 library(dplyr)
@@ -2020,7 +2019,7 @@ d.small = d %>% dplyr::select( unique,
                                x.soc.norm,
                                x.id.victim,
                                x.impl,
-                               x.pets, # bm
+                               x.pets, 
                                x.min.exposed,
                                x.rec,
                                prose.outcome,
